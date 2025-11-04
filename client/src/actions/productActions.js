@@ -1,5 +1,8 @@
 import axios from 'axios';
 
+// Set base URL for axios
+const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+
 export const listProducts = (keyword = '', pageNumber = '') => async (
   dispatch
 ) => {
@@ -7,7 +10,7 @@ export const listProducts = (keyword = '', pageNumber = '') => async (
     dispatch({ type: 'PRODUCT_LIST_REQUEST' });
 
     const { data } = await axios.get(
-      `/api/products?keyword=${keyword}&pageNumber=${pageNumber}`
+      `${API_BASE_URL}/products?keyword=${keyword}&pageNumber=${pageNumber}`
     );
 
     dispatch({
@@ -29,7 +32,7 @@ export const listProductDetails = (id) => async (dispatch) => {
   try {
     dispatch({ type: 'PRODUCT_DETAILS_REQUEST' });
 
-    const { data } = await axios.get(`/api/products/${id}`);
+    const { data } = await axios.get(`${API_BASE_URL}/products/${id}`);
 
     dispatch({
       type: 'PRODUCT_DETAILS_SUCCESS',
@@ -66,7 +69,7 @@ export const createProductReview = (productId, review) => async (
       }
     };
 
-    await axios.post(`/api/products/${productId}/reviews`, review, config);
+    await axios.post(`${API_BASE_URL}/products/${productId}/reviews`, review, config);
 
     dispatch({
       type: 'PRODUCT_CREATE_REVIEW_SUCCESS'
@@ -100,7 +103,7 @@ export const updateProduct = (product) => async (dispatch, getState) => {
     };
 
     const { data } = await axios.put(
-      `/api/products/${product._id}`,
+      `${API_BASE_URL}/products/${product._id}`,
       product,
       config
     );
@@ -139,7 +142,7 @@ export const createProduct = (product) => async (dispatch, getState) => {
     };
 
     const { data } = await axios.post(
-      `/api/products`,
+      `${API_BASE_URL}/products`,
       product,
       config
     );
@@ -176,7 +179,7 @@ export const deleteProduct = (id) => async (dispatch, getState) => {
       }
     };
 
-    await axios.delete(`/api/products/${id}`, config);
+    await axios.delete(`${API_BASE_URL}/products/${id}`, config);
 
     dispatch({
       type: 'PRODUCT_DELETE_SUCCESS'

@@ -92,7 +92,10 @@ const ProductEdit = () => {
           }
         };
 
-        const { data } = await axios.post('/api/upload', { image: base64Image }, config);
+        // Set base URL for axios
+        const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+        
+        const { data } = await axios.post(`${API_BASE_URL}/upload`, { image: base64Image }, config);
         
         setImage(data.url);
         setCloudinaryId(data.cloudinaryId);

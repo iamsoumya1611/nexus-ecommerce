@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import axios from 'axios';
 import { createProduct } from '../../actions/productActions';
 import { PRODUCT_CREATE_RESET } from '../../constants/productConstants';
 import axios from 'axios';
@@ -59,7 +60,10 @@ const ProductCreate = () => {
           }
         };
 
-        const { data } = await axios.post('/api/upload', { image: base64Image }, config);
+        // Set base URL for axios
+        const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+        
+        const { data } = await axios.post(`${API_BASE_URL}/upload`, { image: base64Image }, config);
         
         setImage(data.url);
         setUploading(false);

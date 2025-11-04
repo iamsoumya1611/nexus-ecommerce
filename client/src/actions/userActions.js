@@ -1,5 +1,8 @@
 import axios from 'axios';
 
+// Set base URL for axios
+const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+
 export const login = (email, password) => async (dispatch) => {
   try {
     dispatch({
@@ -13,7 +16,7 @@ export const login = (email, password) => async (dispatch) => {
     };
 
     const { data } = await axios.post(
-      '/api/users/login',
+      `${API_BASE_URL}/users/login`,
       { email, password },
       config
     );
@@ -59,7 +62,7 @@ export const register = (name, email, password) => async (dispatch) => {
     };
 
     const { data } = await axios.post(
-      '/api/users/register',
+      `${API_BASE_URL}/users/register`,
       { name, email, password },
       config
     );
@@ -102,7 +105,7 @@ export const getUserDetails = (id) => async (dispatch, getState) => {
       }
     };
 
-    const { data } = await axios.get(`/api/users/${id}`, config);
+    const { data } = await axios.get(`${API_BASE_URL}/users/${id}`, config);
 
     dispatch({
       type: 'USER_DETAILS_SUCCESS',
@@ -136,7 +139,7 @@ export const updateUserProfile = (user) => async (dispatch, getState) => {
       }
     };
 
-    const { data } = await axios.put('/api/users/profile', user, config);
+    const { data } = await axios.put(`${API_BASE_URL}/users/profile`, user, config);
 
     dispatch({
       type: 'USER_UPDATE_PROFILE_SUCCESS',
