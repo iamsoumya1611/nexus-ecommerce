@@ -18,7 +18,7 @@ const Home = () => {
   }, [dispatch]);
 
   // Get featured products (first 4 for display)
-  const featuredProducts = products.slice(0, 4);
+  const featuredProducts = products && products.length > 0 ? products.slice(0, 4) : [];
 
   return (
     <div className="container mx-auto px-4 py-8">
