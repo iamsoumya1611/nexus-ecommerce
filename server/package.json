@@ -9,7 +9,7 @@
     "dev-frontend": "cd ../client && npm start",
     "dev-all": "concurrently \"npm run dev\" \"npm run dev-frontend\"",
     "build": "node build-client.js",
-    "postinstall": "cd .. && npm run build-client",
+    "postinstall": "node build-client.js",
     "import-products": "node seeder.js",
     "destroy-products": "node seeder.js -d"
   },

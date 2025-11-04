@@ -8,7 +8,7 @@
     "dev": "cd server && npm run dev",
     "dev-frontend": "cd client && npm start",
     "dev-all": "concurrently \"npm run dev\" \"npm run dev-frontend\"",
-    "build-client": "cd server && npm run build",
+    "build-client": "cd server && node build-client.js",
     "postinstall": "cd server && npm run postinstall",
     "import-products": "cd server && npm run import-products",
     "destroy-products": "cd server && npm run destroy-products"

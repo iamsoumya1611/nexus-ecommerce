@@ -2,7 +2,7 @@ services:
   - type: web
     name: nexus-ecommerce
     env: node
-    buildCommand: npm install && cd .. && npm run build-client
+    buildCommand: npm install && node build-client.js
     startCommand: npm start
     envVars:
       - key: NODE_ENV
