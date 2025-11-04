@@ -4,8 +4,8 @@ const connectDB = async () => {
   try {
     // Use MONGODB_URI for production and DEV_MONGO_URI for development
     const mongoURI = process.env.NODE_ENV === 'production' 
-      ? process.env.MONGODB_URI 
-      : (process.env.DEV_MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/ecommerce');
+      ? process.env.MONGO_URI
+      : (process.env.DEV_MONGO_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/ecommerce');
 
     const conn = await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
