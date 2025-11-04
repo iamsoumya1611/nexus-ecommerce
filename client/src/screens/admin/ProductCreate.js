@@ -4,7 +4,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import { createProduct } from '../../actions/productActions';
 import { PRODUCT_CREATE_RESET } from '../../constants/productConstants';
-import axios from 'axios';
 
 const ProductCreate = () => {
   const [name, setName] = useState('');
