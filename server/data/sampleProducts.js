@@ -1,0 +1,91 @@
+const sampleProducts = [
+  {
+    name: 'Samsung Galaxy S23 Ultra',
+    description: 'Latest Samsung flagship smartphone with 200MP camera and S Pen',
+    price: 119999,
+    category: 'Electronics',
+    brand: 'Samsung',
+    model: 'Galaxy S23 Ultra',
+    storage: '256GB',
+    color: 'Phantom Black',
+    screenSize: '6.8 inches',
+    image: '/images/samsung-galaxy-s23-ultra.jpg',
+    countInStock: 15,
+    rating: 4.8,
+    numReviews: 124
+  },
+  {
+    name: 'iPhone 14 Pro Max',
+    description: 'Apple flagship smartphone with A16 Bionic chip and Dynamic Island',
+    price: 129900,
+    category: 'Electronics',
+    brand: 'Apple',
+    model: 'iPhone 14 Pro Max',
+    storage: '128GB',
+    color: 'Deep Purple',
+    screenSize: '6.7 inches',
+    image: '/images/iphone-14-pro-max.jpg',
+    countInStock: 8,
+    rating: 4.7,
+    numReviews: 98
+  },
+  {
+    name: 'Men\'s Cotton T-Shirt',
+    description: 'Comfortable and stylish cotton t-shirt for everyday wear',
+    price: 799,
+    category: 'Fashion',
+    brand: 'Nike',
+    size: 'L',
+    material: 'Cotton',
+    color: 'Black',
+    gender: 'Men',
+    image: '/images/nike-tshirt.jpg',
+    countInStock: 50,
+    rating: 4.3,
+    numReviews: 42
+  },
+  {
+    name: 'Women\'s Running Shoes',
+    description: 'Lightweight running shoes with excellent cushioning and support',
+    price: 8999,
+    category: 'Fashion',
+    brand: 'Adidas',
+    size: 'US 7',
+    material: 'Mesh',
+    color: 'White',
+    gender: 'Women',
+    image: '/images/adidas-running-shoes.jpg',
+    countInStock: 25,
+    rating: 4.6,
+    numReviews: 67
+  },
+  {
+    name: 'The Great Gatsby',
+    description: 'Classic novel by F. Scott Fitzgerald',
+    price: 399,
+    category: 'Books',
+    brand: '',
+    author: 'F. Scott Fitzgerald',
+    publisher: 'Scribner',
+    pages: 180,
+    image: '/images/the-great-gatsby.jpg',
+    countInStock: 100,
+    rating: 4.2,
+    numReviews: 89
+  },
+  {
+    name: 'Kitchen Blender',
+    description: 'High-powered blender for smoothies and food preparation',
+    price: 4599,
+    category: 'Home & Kitchen',
+    brand: 'Philips',
+    weight: '2.5 kg',
+    dimensions: '20 x 20 x 40 cm',
+    image: '/images/kitchen-blender.jpg',
+    countInStock: 30,
+    rating: 4.1,
+    numReviews: 34
+  }
+];
+
+module.exports = sampleProducts;
