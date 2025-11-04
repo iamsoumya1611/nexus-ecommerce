@@ -27,8 +27,11 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ecommerce
 if (process.env.NODE_ENV === 'production') {
   const buildPath = path.join(__dirname, '../client/build');
   
+  console.log('Checking for build directory at:', buildPath);
+  
   // Check if build directory exists
   if (fs.existsSync(buildPath)) {
+    console.log('Build directory found, serving static files');
     app.use(express.static(buildPath));
     
     // Handle React routing, return all requests to React app
@@ -36,6 +39,7 @@ if (process.env.NODE_ENV === 'production') {
       res.sendFile(path.join(buildPath, 'index.html'));
     });
   } else {
+    console.log('Build directory not found at:', buildPath);
     app.get('/', (req, res) => {
       res.send('E-Commerce API is running... (Frontend build not found)');
     });
