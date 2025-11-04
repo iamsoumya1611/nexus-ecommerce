@@ -1,0 +1,128 @@
+/* Main content area */
+main {
+  min-height: 80vh;
+  padding: 2rem 0;
+}
+
+/* Product grid */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+}
+
+/* Rating stars */
+.rating {
+  color: var(--warning-color);
+  margin-right: 0.5rem;
+}
+
+.rating span {
+  margin: 0 0.1rem;
+}
+
+/* Price styling */
+.price {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+/* Breadcrumb navigation */
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  list-style: none;
+  background-color: var(--accent-color);
+  border-radius: var(--border-radius);
+}
+
+.breadcrumb-item + .breadcrumb-item {
+  padding-left: 0.5rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+  display: inline-block;
+  padding-right: 0.5rem;
+  color: var(--gray-color);
+  content: "/";
+}
+
+.breadcrumb-item.active {
+  color: var(--gray-color);
+}
+
+/* Checkout steps */
+.checkout-steps {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.step {
+  text-align: center;
+  position: relative;
+  flex: 1;
+  max-width: 150px;
+}
+
+.step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 1.5rem;
+  right: -50%;
+  width: 100%;
+  height: 2px;
+  background-color: var(--gray-color);
+  z-index: 1;
+}
+
+.step.active::after {
+  background-color: var(--primary-color);
+}
+
+.step-number {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background-color: var(--accent-color);
+  color: var(--gray-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  margin: 0 auto 0.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.step.active .step-number {
+  background-color: var(--primary-color);
+  color: var(--light-color);
+}
+
+.step.completed .step-number {
+  background-color: var(--success-color);
+  color: var(--light-color);
+}
+
+.step-label {
+  font-size: 0.875rem;
+  color: var(--gray-color);
+}
+
+.step.active .step-label,
+.step.completed .step-label {
+  color: var(--dark-color);
+  font-weight: 600;
+}
