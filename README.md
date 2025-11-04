@@ -58,6 +58,10 @@ A full-featured e-commerce platform built with the MERN stack.
    # Client: npm run dev-frontend
    ```
 
+## Deployment
+
+This application is configured for deployment to Vercel. See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
+
 ## Admin Features
 
 - **Product Management:**

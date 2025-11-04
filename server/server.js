@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
+const fs = require('fs');
 
 dotenv.config();
 
@@ -20,6 +22,25 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ecommerce
 })
 .then(() => console.log('MongoDB connected'))
 .catch(err => console.log(err));
+
+// Serve static files from the React app build directory
+if (process.env.NODE_ENV === 'production') {
+  const buildPath = path.join(__dirname, '../client/build');
+  
+  // Check if build directory exists
+  if (fs.existsSync(buildPath)) {
+    app.use(express.static(buildPath));
+    
+    // Handle React routing, return all requests to React app
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(buildPath, 'index.html'));
+    });
+  } else {
+    app.get('/', (req, res) => {
+      res.send('E-Commerce API is running... (Frontend build not found)');
+    });
+  }
+}
 
 // Routes
 app.get('/', (req, res) => {
