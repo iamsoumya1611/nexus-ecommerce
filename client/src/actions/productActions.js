@@ -21,9 +21,9 @@ export const listProducts = (keyword = '', pageNumber = '') => async (
     dispatch({
       type: 'PRODUCT_LIST_FAIL',
       payload:
-        error.response && error.response.data.message
+        error.response && error.response.data && error.response.data.message
           ? error.response.data.message
-          : error.message
+          : error.message || 'Failed to fetch products'
     });
   }
 };
@@ -31,6 +31,11 @@ export const listProducts = (keyword = '', pageNumber = '') => async (
 export const listProductDetails = (id) => async (dispatch) => {
   try {
     dispatch({ type: 'PRODUCT_DETAILS_REQUEST' });
+
+    // Validate product ID
+    if (!id) {
+      throw new Error('Product ID is required');
+    }
 
     const { data } = await axios.get(`${API_BASE_URL}/products/${id}`);
 
@@ -42,9 +47,9 @@ export const listProductDetails = (id) => async (dispatch) => {
     dispatch({
       type: 'PRODUCT_DETAILS_FAIL',
       payload:
-        error.response && error.response.data.message
+        error.response && error.response.data && error.response.data.message
           ? error.response.data.message
-          : error.message
+          : error.message || 'Failed to fetch product details'
     });
   }
 };
@@ -62,6 +67,11 @@ export const createProductReview = (productId, review) => async (
       userLogin: { userInfo }
     } = getState();
 
+    // Check if user is logged in
+    if (!userInfo) {
+      throw new Error('You must be logged in to submit a review');
+    }
+
     const config = {
       headers: {
         'Content-Type': 'application/json',
@@ -78,9 +88,9 @@ export const createProductReview = (productId, review) => async (
     dispatch({
       type: 'PRODUCT_CREATE_REVIEW_FAIL',
       payload:
-        error.response && error.response.data.message
+        error.response && error.response.data && error.response.data.message
           ? error.response.data.message
-          : error.message
+          : error.message || 'Failed to create review'
     });
   }
 };
@@ -95,12 +105,22 @@ export const updateProduct = (product) => async (dispatch, getState) => {
       userLogin: { userInfo }
     } = getState();
 
+    // Check if user is logged in
+    if (!userInfo) {
+      throw new Error('You must be logged in to update a product');
+    }
+
     const config = {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${userInfo.token}`
       }
     };
+
+    // Validate product data
+    if (!product || !product._id) {
+      throw new Error('Invalid product data');
+    }
 
     const { data } = await axios.put(
       `${API_BASE_URL}/products/${product._id}`,
@@ -116,9 +136,9 @@ export const updateProduct = (product) => async (dispatch, getState) => {
     dispatch({
       type: 'PRODUCT_UPDATE_FAIL',
       payload:
-        error.response && error.response.data.message
+        error.response && error.response.data && error.response.data.message
           ? error.response.data.message
-          : error.message
+          : error.message || 'Failed to update product'
     });
   }
 };
@@ -133,6 +153,11 @@ export const createProduct = (product) => async (dispatch, getState) => {
     const {
       userLogin: { userInfo }
     } = getState();
+
+    // Check if user is logged in
+    if (!userInfo) {
+      throw new Error('You must be logged in to create a product');
+    }
 
     const config = {
       headers: {
@@ -155,9 +180,9 @@ export const createProduct = (product) => async (dispatch, getState) => {
     dispatch({
       type: 'PRODUCT_CREATE_FAIL',
       payload:
-        error.response && error.response.data.message
+        error.response && error.response.data && error.response.data.message
           ? error.response.data.message
-          : error.message
+          : error.message || 'Failed to create product'
     });
   }
 };
@@ -173,11 +198,21 @@ export const deleteProduct = (id) => async (dispatch, getState) => {
       userLogin: { userInfo }
     } = getState();
 
+    // Check if user is logged in
+    if (!userInfo) {
+      throw new Error('You must be logged in to delete a product');
+    }
+
     const config = {
       headers: {
         Authorization: `Bearer ${userInfo.token}`
       }
     };
+
+    // Validate product ID
+    if (!id) {
+      throw new Error('Product ID is required');
+    }
 
     await axios.delete(`${API_BASE_URL}/products/${id}`, config);
 
@@ -188,9 +223,9 @@ export const deleteProduct = (id) => async (dispatch, getState) => {
     dispatch({
       type: 'PRODUCT_DELETE_FAIL',
       payload:
-        error.response && error.response.data.message
+        error.response && error.response.data && error.response.data.message
           ? error.response.data.message
-          : error.message
+          : error.message || 'Failed to delete product'
     });
   }
 };

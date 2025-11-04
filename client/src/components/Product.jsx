@@ -2,8 +2,14 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const Product = ({ product }) => {
+  // Check if product exists
+  if (!product) {
+    return null;
+  }
+
   // Format price to INR
   const formatPrice = (price) => {
+    if (typeof price !== 'number') return '₹0';
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
@@ -13,15 +19,19 @@ const Product = ({ product }) => {
 
   // Render star ratings
   const renderRating = (rating) => {
+    // Ensure rating is a number
+    const numericRating = typeof rating === 'number' ? rating : 0;
+    const numReviews = product.numReviews || 0;
+    
     return (
       <div className="flex items-center">
         {[...Array(5)].map((_, i) => (
           <i 
             key={i} 
-            className={`fas fa-star ${i < Math.floor(rating) ? 'text-yellow-400' : 'text-gray-300'}`}
+            className={`fas fa-star ${i < Math.floor(numericRating) ? 'text-yellow-400' : 'text-gray-300'}`}
           ></i>
         ))}
-        <span className="text-primary-700 text-sm font-medium ml-2">({product.numReviews})</span>
+        <span className="text-primary-700 text-sm font-medium ml-2">({numReviews})</span>
       </div>
     );
   };
@@ -29,6 +39,8 @@ const Product = ({ product }) => {
   // Get specification details based on category
   const getSpecifications = () => {
     const specs = [];
+    
+    if (!product.category) return specs;
     
     if (product.category === 'Electronics') {
       if (product.brand) specs.push({ label: 'Brand', value: product.brand });
@@ -67,16 +79,19 @@ const Product = ({ product }) => {
       {/* Product Image */}
       <div className="relative">
         <img 
-          src={product.image} 
+          src={product.image || '/placeholder.svg'} 
           className="w-full h-56 object-cover" 
-          alt={product.name} 
+          alt={product.name || 'Product'} 
+          onError={(e) => {
+            e.target.src = '/placeholder.svg';
+          }}
         />
         {product.rating >= 4.5 && (
           <div className="absolute top-3 left-3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
             <i className="fas fa-star mr-1"></i> Top Rated
           </div>
         )}
-        {product.price < 1000 && (
+        {product.price < 1000 && product.price > 0 && (
           <div className="absolute top-3 right-3 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
             <i className="fas fa-tag mr-1"></i> Great Deal
           </div>
@@ -88,14 +103,14 @@ const Product = ({ product }) => {
         <div className="flex justify-between items-start mb-2">
           <h3 className="text-lg font-bold text-primary-900 line-clamp-2">
             <Link to={`/product/${product._id}`} className="hover:text-primary-700 transition-colors">
-              {product.name}
+              {product.name || 'Unnamed Product'}
             </Link>
           </h3>
         </div>
         
         <div className="mb-3">
           <span className="inline-block bg-primary-100 text-primary-800 text-xs px-2 py-1 rounded-full">
-            {product.category}
+            {product.category || 'Uncategorized'}
           </span>
         </div>
         
@@ -110,7 +125,7 @@ const Product = ({ product }) => {
         </div>
         
         <p className="text-primary-700 text-sm mb-4 flex-grow line-clamp-2">
-          {product.description}
+          {product.description || 'No description available'}
         </p>
         
         <div className="mt-auto">

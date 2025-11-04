@@ -4,34 +4,40 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 const fs = require('fs');
+const logger = require('./utils/logger');
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// CORS configuration
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.FRONTEND_URL || 'https://your-render-app-url.onrender.com' 
+    : 'http://localhost:3000',
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Database connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ecommerce', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('MongoDB connected'))
-.catch(err => console.log(err));
+const connectDB = require('./config/db');
+connectDB();
 
 // Serve static files from the React app build directory
 if (process.env.NODE_ENV === 'production') {
   const buildPath = path.join(__dirname, '../client/build');
   
-  console.log('Checking for build directory at:', buildPath);
+  logger.info('Checking for build directory at:', buildPath);
   
   // Check if build directory exists
   if (fs.existsSync(buildPath)) {
-    console.log('Build directory found, serving static files');
+    logger.info('Build directory found, serving static files');
     app.use(express.static(buildPath));
     
     // Handle React routing, return all requests to React app
@@ -39,7 +45,7 @@ if (process.env.NODE_ENV === 'production') {
       res.sendFile(path.join(buildPath, 'index.html'));
     });
   } else {
-    console.log('Build directory not found at:', buildPath);
+    logger.warn('Build directory not found at:', buildPath);
     app.get('/', (req, res) => {
       res.send('E-Commerce API is running... (Frontend build not found)');
     });
@@ -49,6 +55,11 @@ if (process.env.NODE_ENV === 'production') {
 // Routes
 app.get('/', (req, res) => {
   res.send('E-Commerce API is running...');
+});
+
+// Health check endpoint for Render
+app.get('/health', (req, res) => {
+  res.status(200).send('Server is healthy');
 });
 
 // User routes
@@ -75,6 +86,17 @@ app.use('/api/payment', require('./routes/paymentRoutes'));
 // Recommendation routes
 app.use('/api/recommendations', require('./routes/recommendationRoutes'));
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  logger.error(err.stack);
+  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  res.status(statusCode);
+  res.json({
+    message: err.message,
+    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+  });
+});
+
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  logger.info(`Server running on port ${PORT}`);
 });

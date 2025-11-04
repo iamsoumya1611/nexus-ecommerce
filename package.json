@@ -1,0 +1,33 @@
+{
+  "name": "nexus-ecommerce",
+  "version": "1.0.0",
+  "description": "A full-featured e-commerce platform built with the MERN stack",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "cd server && node server.js",
+    "dev": "cd server && npm run dev",
+    "dev-frontend": "cd client && npm start",
+    "dev-all": "concurrently \"npm run dev\" \"npm run dev-frontend\"",
+    "build-client": "cd server && npm run build",
+    "postinstall": "cd server && npm run postinstall",
+    "import-products": "cd server && npm run import-products",
+    "destroy-products": "cd server && npm run destroy-products"
+  },
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/nexus-ecommerce.git"
+  },
+  "keywords": [
+    "ecommerce",
+    "mern",
+    "mongodb",
+    "express",
+    "react",
+    "node"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

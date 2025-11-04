@@ -1,5 +1,6 @@
 const Product = require('../models/Product');
 const asyncHandler = require('express-async-handler');
+const logger = require('../utils/logger');
 
 // @desc    Fetch all products
 // @route   GET /api/products
@@ -17,11 +18,14 @@ const getProducts = asyncHandler(async (req, res) => {
       }
     : {};
 
+  logger.info(`Fetching products - page: ${page}, keyword: ${req.query.keyword || 'none'}`);
+
   const count = await Product.countDocuments({ ...keyword });
   const products = await Product.find({ ...keyword })
     .limit(pageSize)
     .skip(pageSize * (page - 1));
 
+  logger.info(`Successfully fetched ${products.length} products`);
   res.json({ products, page, pages: Math.ceil(count / pageSize) });
 });
 
@@ -29,11 +33,15 @@ const getProducts = asyncHandler(async (req, res) => {
 // @route   GET /api/products/:id
 // @access  Public
 const getProductById = asyncHandler(async (req, res) => {
+  logger.info(`Fetching product with ID: ${req.params.id}`);
+
   const product = await Product.findById(req.params.id);
 
   if (product) {
+    logger.info(`Successfully fetched product with ID: ${req.params.id}`);
     res.json(product);
   } else {
+    logger.warn(`Product not found with ID: ${req.params.id}`);
     res.status(404);
     throw new Error('Product not found');
   }
@@ -43,12 +51,16 @@ const getProductById = asyncHandler(async (req, res) => {
 // @route   DELETE /api/products/:id
 // @access  Private/Admin
 const deleteProduct = asyncHandler(async (req, res) => {
+  logger.info(`Deleting product with ID: ${req.params.id}`);
+
   const product = await Product.findById(req.params.id);
 
   if (product) {
     await product.remove();
+    logger.info(`Successfully deleted product with ID: ${req.params.id}`);
     res.json({ message: 'Product removed' });
   } else {
+    logger.warn(`Product not found for deletion with ID: ${req.params.id}`);
     res.status(404);
     throw new Error('Product not found');
   }
@@ -82,6 +94,8 @@ const createProduct = asyncHandler(async (req, res) => {
     specifications
   } = req.body;
 
+  logger.info(`Creating new product: ${name}`);
+
   const product = new Product({
     name,
     price,
@@ -108,6 +122,7 @@ const createProduct = asyncHandler(async (req, res) => {
   });
 
   const createdProduct = await product.save();
+  logger.info(`Successfully created product with ID: ${createdProduct._id}`);
   res.status(201).json(createdProduct);
 });
 
@@ -139,6 +154,8 @@ const updateProduct = asyncHandler(async (req, res) => {
     specifications
   } = req.body;
 
+  logger.info(`Updating product with ID: ${req.params.id}`);
+
   const product = await Product.findById(req.params.id);
 
   if (product) {
@@ -167,8 +184,10 @@ const updateProduct = asyncHandler(async (req, res) => {
     product.specifications = specifications || new Map();
 
     const updatedProduct = await product.save();
+    logger.info(`Successfully updated product with ID: ${req.params.id}`);
     res.json(updatedProduct);
   } else {
+    logger.warn(`Product not found for update with ID: ${req.params.id}`);
     res.status(404);
     throw new Error('Product not found');
   }
@@ -180,6 +199,8 @@ const updateProduct = asyncHandler(async (req, res) => {
 const createProductReview = asyncHandler(async (req, res) => {
   const { rating, comment } = req.body;
 
+  logger.info(`Creating review for product ID: ${req.params.id}`);
+
   const product = await Product.findById(req.params.id);
 
   if (product) {
@@ -188,6 +209,7 @@ const createProductReview = asyncHandler(async (req, res) => {
     );
 
     if (alreadyReviewed) {
+      logger.warn(`User already reviewed product ID: ${req.params.id}`);
       res.status(400);
       throw new Error('Product already reviewed');
     }
@@ -207,8 +229,10 @@ const createProductReview = asyncHandler(async (req, res) => {
       product.reviews.length;
 
     await product.save();
+    logger.info(`Successfully added review for product ID: ${req.params.id}`);
     res.status(201).json({ message: 'Review added' });
   } else {
+    logger.warn(`Product not found for review with ID: ${req.params.id}`);
     res.status(404);
     throw new Error('Product not found');
   }
@@ -218,8 +242,11 @@ const createProductReview = asyncHandler(async (req, res) => {
 // @route   GET /api/products/top
 // @access  Public
 const getTopProducts = asyncHandler(async (req, res) => {
+  logger.info('Fetching top rated products');
+
   const products = await Product.find({}).sort({ rating: -1 }).limit(3);
 
+  logger.info(`Successfully fetched ${products.length} top rated products`);
   res.json(products);
 });
 

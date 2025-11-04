@@ -28,15 +28,15 @@ const Home = () => {
       
       <div className="mb-16">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-brown-900 mb-4">Featured Products</h2>
-          <p className="text-brown-700 max-w-2xl mx-auto">
+          <h2 className="text-3xl font-bold text-primary-900 mb-4">Featured Products</h2>
+          <p className="text-primary-700 max-w-2xl mx-auto">
             Discover our most popular items loved by thousands of customers
           </p>
         </div>
         
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brown-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
           </div>
         ) : error ? (
           <div className="alert alert-danger" role="alert">
@@ -44,9 +44,15 @@ const Home = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product) => (
-              <Product product={product} key={product._id} />
-            ))}
+            {featuredProducts && featuredProducts.length > 0 ? (
+              featuredProducts.map((product) => (
+                <Product product={product} key={product._id} />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8">
+                <p className="text-primary-700">No products found</p>
+              </div>
+            )}
           </div>
         )}
       </div>

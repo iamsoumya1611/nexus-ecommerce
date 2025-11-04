@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const { generateToken } = require('../config/jwt');
 const asyncHandler = require('express-async-handler');
+const logger = require('../utils/logger');
 
 // @desc    Register a new user
 // @route   POST /api/users/register
@@ -8,9 +9,12 @@ const asyncHandler = require('express-async-handler');
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
+  logger.info(`Attempting to register user with email: ${email}`);
+
   const userExists = await User.findOne({ email });
 
   if (userExists) {
+    logger.warn(`Registration failed - User already exists with email: ${email}`);
     res.status(400);
     throw new Error('User already exists');
   }
@@ -22,6 +26,7 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   if (user) {
+    logger.info(`Successfully registered user with email: ${email}`);
     res.status(201).json({
       _id: user._id,
       name: user.name,
@@ -30,6 +35,7 @@ const registerUser = asyncHandler(async (req, res) => {
       token: generateToken(user._id)
     });
   } else {
+    logger.error(`Invalid user data for email: ${email}`);
     res.status(400);
     throw new Error('Invalid user data');
   }
@@ -41,9 +47,12 @@ const registerUser = asyncHandler(async (req, res) => {
 const authUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
+  logger.info(`Attempting to authenticate user with email: ${email}`);
+
   const user = await User.findOne({ email });
 
   if (user && (await user.matchPassword(password))) {
+    logger.info(`Successfully authenticated user with email: ${email}`);
     res.json({
       _id: user._id,
       name: user.name,
@@ -52,6 +61,7 @@ const authUser = asyncHandler(async (req, res) => {
       token: generateToken(user._id)
     });
   } else {
+    logger.warn(`Authentication failed for email: ${email}`);
     res.status(401);
     throw new Error('Invalid email or password');
   }
@@ -61,9 +71,12 @@ const authUser = asyncHandler(async (req, res) => {
 // @route   GET /api/users/profile
 // @access  Private
 const getUserProfile = asyncHandler(async (req, res) => {
+  logger.info(`Fetching profile for user ID: ${req.user._id}`);
+
   const user = await User.findById(req.user._id);
 
   if (user) {
+    logger.info(`Successfully fetched profile for user ID: ${req.user._id}`);
     res.json({
       _id: user._id,
       name: user.name,
@@ -71,6 +84,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
       isAdmin: user.isAdmin
     });
   } else {
+    logger.warn(`User not found for ID: ${req.user._id}`);
     res.status(404);
     throw new Error('User not found');
   }
@@ -80,6 +94,8 @@ const getUserProfile = asyncHandler(async (req, res) => {
 // @route   PUT /api/users/profile
 // @access  Private
 const updateUserProfile = asyncHandler(async (req, res) => {
+  logger.info(`Updating profile for user ID: ${req.user._id}`);
+
   const user = await User.findById(req.user._id);
 
   if (user) {
@@ -91,6 +107,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 
     const updatedUser = await user.save();
 
+    logger.info(`Successfully updated profile for user ID: ${req.user._id}`);
     res.json({
       _id: updatedUser._id,
       name: updatedUser.name,
@@ -99,6 +116,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
       token: generateToken(updatedUser._id)
     });
   } else {
+    logger.warn(`User not found for ID: ${req.user._id}`);
     res.status(404);
     throw new Error('User not found');
   }
