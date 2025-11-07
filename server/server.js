@@ -22,7 +22,7 @@ const corsOptions = {
       'http://localhost:3000',
       'http://localhost:5000',
       'https://nexus-ecommerce-chi.vercel.app',
-      'https://nexus-ecommerce-api.onrender.com'
+      'https://nexus-ecommerce.onrender.com'
     ];
     
     // Check if the origin is in our allowed list
@@ -32,7 +32,7 @@ const corsOptions = {
       // For production, we might want to be more permissive with subdomains
       if (process.env.NODE_ENV === 'production') {
         // Allow any vercel.app or onrender.com subdomain
-        if (origin && (origin.endsWith('.vercel.app') || origin.endsWith('.onrender.com'))) {
+        if (origin.endsWith('.vercel.app') || origin.endsWith('.onrender.com')) {
           callback(null, true);
         } else {
           callback(new Error('Not allowed by CORS'));
@@ -51,7 +51,7 @@ app.use(cors(corsOptions));
 
 // Handle preflight requests explicitly for all routes
 app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.header('origin') || '*');
+  res.header('Access-Control-Allow-Origin', req.header('origin'));
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
@@ -99,34 +99,29 @@ app.get('/health', (req, res) => {
   res.status(200).send('Server is healthy');
 });
 
-// Additional health check endpoint
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'OK', message: 'API is running' });
-});
-
 // User routes
-app.use('/api/users', require('./routes/userRoutes'));
+app.use('/users', require('./routes/userRoutes'));
 
 // Product routes
-app.use('/api/products', require('./routes/productRoutes'));
+app.use('/products', require('./routes/productRoutes'));
 
 // Cart routes
-app.use('/api/cart', require('./routes/cartRoutes'));
+app.use('/cart', require('./routes/cartRoutes'));
 
 // Order routes
-app.use('/api/orders', require('./routes/orderRoutes'));
+app.use('/orders', require('./routes/orderRoutes'));
 
 // Admin routes
-app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/admin', require('./routes/adminRoutes'));
 
 // Upload routes
-app.use('/api/upload', require('./routes/uploadRoutes'));
+app.use('/upload', require('./routes/uploadRoutes'));
 
 // Payment routes
-app.use('/api/payment', require('./routes/paymentRoutes'));
+app.use('/payment', require('./routes/paymentRoutes'));
 
 // Recommendation routes
-app.use('/api/recommendations', require('./routes/recommendationRoutes'));
+app.use('/recommendations', require('./routes/recommendationRoutes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

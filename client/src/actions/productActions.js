@@ -20,7 +20,7 @@ export const listProducts = (keyword = '', pageNumber = '') => async (dispatch) 
 
     // Make API call to get products
     const { data } = await axios.get(
-      `${API_BASE_URL}/api/products?keyword=${keyword}&pageNumber=${pageNumber}`
+      `${API_BASE_URL}/products?keyword=${keyword}&pageNumber=${pageNumber}`
     );
 
     // Dispatch success action with the received data
@@ -53,7 +53,7 @@ export const listProductDetails = (id) => async (dispatch) => {
     }
 
     // Make API call to get product details
-    const { data } = await axios.get(`${API_BASE_URL}/api/products/${id}`);
+    const { data } = await axios.get(`${API_BASE_URL}/products/${id}`);
 
     // Dispatch success action with the received data
     dispatch({
@@ -96,7 +96,7 @@ export const createProductReview = (productId, review) => async (dispatch, getSt
     };
 
     // Make API call to create review
-    await axios.post(`${API_BASE_URL}/api/products/${productId}/reviews`, review, config);
+    await axios.post(`${API_BASE_URL}/products/${productId}/reviews`, review, config);
 
     // Dispatch success action
     dispatch({ type: 'PRODUCT_CREATE_REVIEW_SUCCESS' });
@@ -142,7 +142,7 @@ export const updateProduct = (product) => async (dispatch, getState) => {
 
     // Make API call to update product
     const { data } = await axios.put(
-      `${API_BASE_URL}/api/products/${product._id}`,
+      `${API_BASE_URL}/products/${product._id}`,
       product,
       config
     );
@@ -188,7 +188,7 @@ export const createProduct = (product) => async (dispatch, getState) => {
     };
 
     // Make API call to create product
-    const { data } = await axios.post(`${API_BASE_URL}/api/products`, product, config);
+    const { data } = await axios.post(`${API_BASE_URL}/products`, product, config);
 
     // Dispatch success action with new product data
     dispatch({
@@ -235,7 +235,7 @@ export const deleteProduct = (id) => async (dispatch, getState) => {
     }
 
     // Make API call to delete product
-    await axios.delete(`${API_BASE_URL}/api/products/${id}`, config);
+    await axios.delete(`${API_BASE_URL}/products/${id}`, config);
 
     // Dispatch success action
     dispatch({ type: 'PRODUCT_DELETE_SUCCESS' });
