@@ -7,26 +7,37 @@ import CategoryShowcase from '../components/CategoryShowcase';
 import Testimonials from '../components/Testimonials';
 import Newsletter from '../components/Newsletter';
 
+// Home Screen Component
+// This is the main landing page of the e-commerce application
 const Home = () => {
+  // Redux dispatch function to send actions to the store
   const dispatch = useDispatch();
 
+  // Get product list state from Redux store
   const productList = useSelector((state) => state.productList);
   const { loading, error, products } = productList;
 
+  // useEffect hook to fetch products when component mounts
   useEffect(() => {
+    // Dispatch action to fetch product list
     dispatch(listProducts());
-  }, [dispatch]);
+  }, [dispatch]); // Dependency array - runs when dispatch function changes
 
-  // Get featured products (first 4 for display)
+  // Get first 4 products to display as featured products
   const featuredProducts = Array.isArray(products) ? products.slice(0, 4) : [];
 
   return (
+    // Main container with padding and margin
     <div className="container mx-auto px-4 py-8">
+      {/* Hero section - displays promotional content */}
       <Hero />
       
+      {/* Category showcase - displays product categories */}
       <CategoryShowcase />
       
+      {/* Featured Products Section */}
       <div className="mb-16">
+        {/* Section header with title and description */}
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-primary-900 mb-4">Featured Products</h2>
           <p className="text-primary-700 max-w-2xl mx-auto">
@@ -34,21 +45,27 @@ const Home = () => {
           </p>
         </div>
         
+        {/* Product display area with loading and error handling */}
         {loading ? (
+          // Show loading spinner while products are being fetched
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
           </div>
         ) : error ? (
+          // Show error message if there was a problem fetching products
           <div className="alert alert-danger" role="alert">
             {error}
           </div>
         ) : (
+          // Display products in a grid layout
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredProducts && featuredProducts.length > 0 ? (
+              // Map through featured products and render Product components
               featuredProducts.map((product) => (
                 <Product product={product} key={product._id} />
               ))
             ) : (
+              // Show message if no products are available
               <div className="col-span-full text-center py-8">
                 <p className="text-primary-700">No products found</p>
               </div>
@@ -57,8 +74,10 @@ const Home = () => {
         )}
       </div>
       
+      {/* Testimonials section - displays customer reviews */}
       <Testimonials />
       
+      {/* Newsletter section - allows users to subscribe */}
       <Newsletter />
     </div>
   );

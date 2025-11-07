@@ -4,57 +4,79 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { listProductDetails, createProductReview } from '../actions/productActions';
 import { addToCart } from '../actions/cartActions';
 
+// Product Screen Component
+// This component displays detailed information about a single product
 const Product = () => {
-  const [qty, setQty] = useState(1);
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState('');
+  // State variables for form inputs
+  const [qty, setQty] = useState(1);              // Quantity selector
+  const [rating, setRating] = useState(0);        // Review rating
+  const [comment, setComment] = useState('');     // Review comment
 
+  // Redux dispatch function to send actions to the store
   const dispatch = useDispatch();
+  
+  // Navigation function to redirect users
   const navigate = useNavigate();
 
+  // Get product ID from URL parameters
   const { id } = useParams();
 
+  // Get product details state from Redux store
   const productDetails = useSelector((state) => state.productDetails);
   const { loading, error, product } = productDetails;
 
+  // Get user login state from Redux store
   const userLogin = useSelector((state) => state.userLogin);
   const { userInfo } = userLogin;
 
+  // Get product review creation state from Redux store
   const productCreateReview = useSelector((state) => state.productCreateReview);
   const { success: successProductReview, error: errorProductReview } = productCreateReview;
 
+  // useEffect hook to fetch product details when component mounts or when ID/Review changes
   useEffect(() => {
     dispatch(listProductDetails(id));
   }, [dispatch, id, successProductReview]);
 
+  // Handle adding product to cart
   const addToCartHandler = () => {
     dispatch(addToCart(id, qty));
-    navigate('/cart');
+    navigate('/cart'); // Redirect to cart page
   };
 
+  // Handle form submission for product review
   const submitHandler = (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent default form submission
     dispatch(createProductReview(id, { rating, comment }));
   };
 
   return (
     <>
+      {/* Main container with padding */}
       <div className="container mx-auto px-4 py-8">
+        {/* Back button to return to home page */}
         <Link className="btn btn-light mb-4 inline-flex items-center" to="/">
           <i className="fas fa-arrow-left mr-2"></i>
           Go Back
         </Link>
+        
+        {/* Loading and error handling */}
         {loading ? (
+          // Show loading spinner while product details are being fetched
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brown-500"></div>
           </div>
         ) : error ? (
+          // Show error message if there was a problem fetching product details
           <div className="alert alert-danger" role="alert">
             {error}
           </div>
         ) : (
+          // Display product details
           <>
+            {/* Product details grid - image on left, info on right */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Product image */}
               <div>
                 <img 
                   src={product.image} 
@@ -62,12 +84,16 @@ const Product = () => {
                   className="w-full rounded-lg shadow-lg" 
                 />
               </div>
+              
+              {/* Product information */}
               <div>
+                {/* Product name and rating */}
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h2 className="text-2xl font-bold text-brown-900">{product.name}</h2>
                     <div className="rating mb-2">
                       <span>
+                        {/* Display 5-star rating based on product rating */}
                         {[...Array(5)].map((_, i) => (
                           <i 
                             key={i} 
@@ -78,9 +104,14 @@ const Product = () => {
                       <span className="text-brown-700 text-sm ml-2">({product.numReviews} reviews)</span>
                     </div>
                   </div>
+                  {/* Product price */}
                   <h3 className="price text-2xl">₹{product.price}</h3>
                 </div>
+                
+                {/* Product description */}
                 <p className="text-brown-700 mb-4">{product.description}</p>
+                
+                {/* Product brand and category */}
                 <div className="mb-4">
                   <span className="inline-block bg-brown-100 text-brown-800 text-sm px-3 py-1 rounded-full mr-2">
                     Brand: {product.brand}
@@ -89,6 +120,8 @@ const Product = () => {
                     Category: {product.category}
                   </span>
                 </div>
+                
+                {/* Stock status */}
                 <div className="mb-6">
                   <h5 className="font-medium text-brown-900">
                     Status: 
@@ -97,6 +130,8 @@ const Product = () => {
                     </span>
                   </h5>
                 </div>
+                
+                {/* Add to cart section - only shown if product is in stock */}
                 {product.countInStock > 0 && (
                   <div className="card p-6">
                     <h5 className="text-lg font-semibold mb-4">Add to Cart</h5>
@@ -104,6 +139,7 @@ const Product = () => {
                       <label htmlFor="qty" className="block text-sm font-medium text-brown-700 mb-2">
                         Quantity
                       </label>
+                      {/* Quantity selector - options based on available stock */}
                       <select
                         id="qty"
                         className="form-input w-full"
@@ -117,6 +153,7 @@ const Product = () => {
                         ))}
                       </select>
                     </div>
+                    {/* Add to cart button */}
                     <button
                       onClick={addToCartHandler}
                       className="btn btn-primary w-full flex items-center justify-center"
@@ -128,11 +165,17 @@ const Product = () => {
                 )}
               </div>
             </div>
+            
+            {/* Reviews section */}
             <div className="mt-12">
               <h3 className="text-2xl font-bold text-brown-900 mb-6">Reviews</h3>
+              
+              {/* Message if no reviews exist */}
               {product.reviews && product.reviews.length === 0 && (
                 <div className="alert alert-info">No reviews yet</div>
               )}
+              
+              {/* Display existing reviews */}
               <div className="space-y-4">
                 {product.reviews && product.reviews.map((review) => (
                   <div key={review._id} className="card p-4">
@@ -144,6 +187,7 @@ const Product = () => {
                     </div>
                     <div className="rating my-2">
                       <span>
+                        {/* Display 5-star rating for each review */}
                         {[...Array(5)].map((_, i) => (
                           <i 
                             key={i} 
@@ -156,24 +200,33 @@ const Product = () => {
                   </div>
                 ))}
               </div>
+              
+              {/* Review submission form */}
               <div className="mt-8">
                 <h4 className="text-xl font-bold text-brown-900 mb-4">Write a Customer Review</h4>
+                
+                {/* Error message if review submission failed */}
                 {errorProductReview && (
                   <div className="alert alert-danger" role="alert">
                     {errorProductReview}
                   </div>
                 )}
+                
+                {/* Success message if review was submitted successfully */}
                 {successProductReview && (
                   <div className="alert alert-success" role="alert">
                     Review submitted successfully
                   </div>
                 )}
+                
+                {/* Review form - only shown if user is logged in */}
                 {userInfo ? (
                   <form onSubmit={submitHandler} className="card p-6">
                     <div className="mb-4">
                       <label htmlFor="rating" className="block text-sm font-medium text-brown-700 mb-2">
                         Rating
                       </label>
+                      {/* Rating selector */}
                       <select
                         id="rating"
                         className="form-input w-full"
@@ -193,6 +246,7 @@ const Product = () => {
                       <label htmlFor="comment" className="block text-sm font-medium text-brown-700 mb-2">
                         Comment
                       </label>
+                      {/* Comment text area */}
                       <textarea
                         id="comment"
                         className="form-input w-full"
@@ -202,11 +256,13 @@ const Product = () => {
                         required
                       ></textarea>
                     </div>
+                    {/* Submit review button */}
                     <button type="submit" className="btn btn-primary">
                       Submit Review
                     </button>
                   </form>
                 ) : (
+                  // Message for non-logged in users
                   <div className="alert alert-info">
                     Please <Link to="/login" className="text-brown-700 font-medium">sign in</Link> to write a review
                   </div>
