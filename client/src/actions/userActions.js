@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 // Set base URL for API requests
 // This allows us to easily switch between development and production environments
@@ -34,6 +35,9 @@ export const login = (email, password) => async (dispatch) => {
       payload: data
     });
 
+    // Show success toast notification
+    toast.success('Login successful!');
+
     // Save user info to localStorage for persistence
     localStorage.setItem('userInfo', JSON.stringify(data));
   } catch (error) {
@@ -45,6 +49,13 @@ export const login = (email, password) => async (dispatch) => {
           ? error.response.data.message
           : error.message
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Login failed. Please try again.'
+    );
   }
 };
 
@@ -62,6 +73,9 @@ export const logout = () => (dispatch) => {
   dispatch({ type: 'USER_DETAILS_RESET' });
   dispatch({ type: 'ORDER_LIST_MY_RESET' });
   dispatch({ type: 'CART_CLEAR_ITEMS' });
+  
+  // Show success toast notification
+  toast.success('You have been logged out successfully.');
 };
 
 // User registration function
@@ -97,6 +111,9 @@ export const register = (name, email, password) => async (dispatch) => {
       payload: data
     });
 
+    // Show success toast notification
+    toast.success('Registration successful! Welcome to our platform.');
+
     // Save user info to localStorage for persistence
     localStorage.setItem('userInfo', JSON.stringify(data));
   } catch (error) {
@@ -108,6 +125,13 @@ export const register = (name, email, password) => async (dispatch) => {
           ? error.response.data.message
           : error.message
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Registration failed. Please try again.'
+    );
   }
 };
 
@@ -145,6 +169,13 @@ export const getUserDetails = (id) => async (dispatch, getState) => {
           ? error.response.data.message
           : error.message
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to fetch user details.'
+    );
   }
 };
 
@@ -181,6 +212,9 @@ export const updateUserProfile = (user) => async (dispatch, getState) => {
       payload: data
     });
 
+    // Show success toast notification
+    toast.success('Profile updated successfully!');
+
     // Update user info in localStorage for persistence
     localStorage.setItem('userInfo', JSON.stringify(data));
   } catch (error) {
@@ -192,5 +226,12 @@ export const updateUserProfile = (user) => async (dispatch, getState) => {
           ? error.response.data.message
           : error.message
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to update profile. Please try again.'
+    );
   }
 };

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 // Set base URL for API requests
 // This allows us to easily switch between development and production environments
@@ -37,6 +38,13 @@ export const listProducts = (keyword = '', pageNumber = '') => async (dispatch) 
           ? error.response.data.message
           : error.message || 'Failed to fetch products'
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to fetch products. Please try again.'
+    );
   }
 };
 
@@ -69,6 +77,13 @@ export const listProductDetails = (id) => async (dispatch) => {
           ? error.response.data.message
           : error.message || 'Failed to fetch product details'
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to fetch product details. Please try again.'
+    );
   }
 };
 
@@ -100,6 +115,9 @@ export const createProductReview = (productId, review) => async (dispatch, getSt
 
     // Dispatch success action
     dispatch({ type: 'PRODUCT_CREATE_REVIEW_SUCCESS' });
+    
+    // Show success toast notification
+    toast.success('Review submitted successfully!');
   } catch (error) {
     // Dispatch fail action with error message
     dispatch({
@@ -109,6 +127,13 @@ export const createProductReview = (productId, review) => async (dispatch, getSt
           ? error.response.data.message
           : error.message || 'Failed to create review'
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to submit review. Please try again.'
+    );
   }
 };
 
@@ -152,6 +177,9 @@ export const updateProduct = (product) => async (dispatch, getState) => {
       type: 'PRODUCT_UPDATE_SUCCESS',
       payload: data
     });
+    
+    // Show success toast notification
+    toast.success('Product updated successfully!');
   } catch (error) {
     // Dispatch fail action with error message
     dispatch({
@@ -161,6 +189,13 @@ export const updateProduct = (product) => async (dispatch, getState) => {
           ? error.response.data.message
           : error.message || 'Failed to update product'
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to update product. Please try again.'
+    );
   }
 };
 
@@ -195,6 +230,9 @@ export const createProduct = (product) => async (dispatch, getState) => {
       type: 'PRODUCT_CREATE_SUCCESS',
       payload: data
     });
+    
+    // Show success toast notification
+    toast.success('Product created successfully!');
   } catch (error) {
     // Dispatch fail action with error message
     dispatch({
@@ -204,6 +242,13 @@ export const createProduct = (product) => async (dispatch, getState) => {
           ? error.response.data.message
           : error.message || 'Failed to create product'
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to create product. Please try again.'
+    );
   }
 };
 
@@ -239,6 +284,9 @@ export const deleteProduct = (id) => async (dispatch, getState) => {
 
     // Dispatch success action
     dispatch({ type: 'PRODUCT_DELETE_SUCCESS' });
+    
+    // Show success toast notification
+    toast.success('Product deleted successfully!');
   } catch (error) {
     // Dispatch fail action with error message
     dispatch({
@@ -248,5 +296,12 @@ export const deleteProduct = (id) => async (dispatch, getState) => {
           ? error.response.data.message
           : error.message || 'Failed to delete product'
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to delete product. Please try again.'
+    );
   }
 };

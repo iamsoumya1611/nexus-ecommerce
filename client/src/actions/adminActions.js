@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 // Set base URL for axios
 const API_BASE_URL = process.env.REACT_APP_API_URL || '';
@@ -32,6 +33,13 @@ export const listAdminProducts = () => async (dispatch, getState) => {
           ? error.response.data.message
           : error.message
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to fetch products. Please try again.'
+    );
   }
 };
 
@@ -54,6 +62,9 @@ export const deleteProduct = (id) => async (dispatch, getState) => {
     dispatch({
       type: 'PRODUCT_DELETE_SUCCESS'
     });
+    
+    // Show success toast notification
+    toast.success('Product deleted successfully!');
   } catch (error) {
     dispatch({
       type: 'PRODUCT_DELETE_FAIL',
@@ -62,6 +73,13 @@ export const deleteProduct = (id) => async (dispatch, getState) => {
           ? error.response.data.message
           : error.message
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to delete product. Please try again.'
+    );
   }
 };
 
@@ -85,6 +103,9 @@ export const createProduct = () => async (dispatch, getState) => {
       type: 'PRODUCT_CREATE_SUCCESS',
       payload: data
     });
+    
+    // Show success toast notification
+    toast.success('Product created successfully!');
   } catch (error) {
     dispatch({
       type: 'PRODUCT_CREATE_FAIL',
@@ -93,6 +114,13 @@ export const createProduct = () => async (dispatch, getState) => {
           ? error.response.data.message
           : error.message
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to create product. Please try again.'
+    );
   }
 };
 
@@ -125,6 +153,13 @@ export const listAdminUsers = () => async (dispatch, getState) => {
           ? error.response.data.message
           : error.message
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to fetch users. Please try again.'
+    );
   }
 };
 
@@ -158,6 +193,13 @@ export const listUsers = () => async (dispatch, getState) => {
           ? error.response.data.message
           : error.message,
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to fetch users. Please try again.'
+    );
   }
 };
 
@@ -182,6 +224,9 @@ export const deleteUser = (id) => async (dispatch, getState) => {
     dispatch({
       type: 'USER_DELETE_SUCCESS',
     });
+    
+    // Show success toast notification
+    toast.success('User deleted successfully!');
   } catch (error) {
     dispatch({
       type: 'USER_DELETE_FAIL',
@@ -190,6 +235,13 @@ export const deleteUser = (id) => async (dispatch, getState) => {
           ? error.response.data.message
           : error.message,
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to delete user. Please try again.'
+    );
   }
 };
 
@@ -216,6 +268,9 @@ export const updateUser = (user) => async (dispatch, getState) => {
       type: 'USER_UPDATE_SUCCESS',
       payload: data,
     });
+    
+    // Show success toast notification
+    toast.success('User updated successfully!');
   } catch (error) {
     dispatch({
       type: 'USER_UPDATE_FAIL',
@@ -224,6 +279,13 @@ export const updateUser = (user) => async (dispatch, getState) => {
           ? error.response.data.message
           : error.message,
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to update user. Please try again.'
+    );
   }
 };
 
@@ -258,6 +320,13 @@ export const listAdminOrders = () => async (dispatch, getState) => {
           ? error.response.data.message
           : error.message,
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to fetch orders. Please try again.'
+    );
   }
 };
 
@@ -283,6 +352,9 @@ export const deliverOrder = (orderId) => async (dispatch, getState) => {
       type: 'ORDER_DELIVER_SUCCESS',
       payload: data,
     });
+    
+    // Show success toast notification
+    toast.success('Order marked as delivered!');
   } catch (error) {
     dispatch({
       type: 'ORDER_DELIVER_FAIL',
@@ -291,5 +363,12 @@ export const deliverOrder = (orderId) => async (dispatch, getState) => {
           ? error.response.data.message
           : error.message,
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to update order status. Please try again.'
+    );
   }
 };

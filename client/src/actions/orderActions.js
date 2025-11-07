@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 // Set base URL for axios
 const API_BASE_URL = process.env.REACT_APP_API_URL || '';
@@ -26,6 +27,9 @@ export const createOrder = (order) => async (dispatch, getState) => {
       type: 'ORDER_CREATE_SUCCESS',
       payload: data
     });
+    
+    // Show success toast notification
+    toast.success('Order placed successfully!');
   } catch (error) {
     dispatch({
       type: 'ORDER_CREATE_FAIL',
@@ -34,6 +38,13 @@ export const createOrder = (order) => async (dispatch, getState) => {
           ? error.response.data.message
           : error.message
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to place order. Please try again.'
+    );
   }
 };
 
@@ -67,6 +78,13 @@ export const getOrderDetails = (id) => async (dispatch, getState) => {
           ? error.response.data.message
           : error.message
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to fetch order details. Please try again.'
+    );
   }
 };
 
@@ -100,6 +118,9 @@ export const payOrder = (orderId, paymentResult) => async (
       type: 'ORDER_PAY_SUCCESS',
       payload: data
     });
+    
+    // Show success toast notification
+    toast.success('Payment processed successfully!');
   } catch (error) {
     dispatch({
       type: 'ORDER_PAY_FAIL',
@@ -108,6 +129,13 @@ export const payOrder = (orderId, paymentResult) => async (
           ? error.response.data.message
           : error.message
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to process payment. Please try again.'
+    );
   }
 };
 
@@ -141,5 +169,12 @@ export const listMyOrders = () => async (dispatch, getState) => {
           ? error.response.data.message
           : error.message
     });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to fetch orders. Please try again.'
+    );
   }
 };

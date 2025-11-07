@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 // Set base URL for axios
 const API_BASE_URL = process.env.REACT_APP_API_URL || '';
@@ -22,6 +23,9 @@ export const addToCart = (id, qty) => async (dispatch, getState) => {
     'cartItems',
     JSON.stringify(getState().cart.cartItems)
   );
+  
+  // Show success toast notification
+  toast.success('Item added to cart!');
 };
 
 export const removeFromCart = (id) => (dispatch, getState) => {
@@ -34,6 +38,9 @@ export const removeFromCart = (id) => (dispatch, getState) => {
     'cartItems',
     JSON.stringify(getState().cart.cartItems)
   );
+  
+  // Show success toast notification
+  toast.success('Item removed from cart!');
 };
 
 export const saveShippingAddress = (data) => (dispatch) => {
