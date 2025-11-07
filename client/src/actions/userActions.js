@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Set base URL for API requests
 // This allows us to easily switch between development and production environments
-const API_BASE_URL = process.env.REACT_APP_API_URL || '/';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 // ACTION CREATORS
 // These functions create actions that will be dispatched to the Redux store
@@ -23,7 +23,7 @@ export const login = (email, password) => async (dispatch) => {
 
     // Make API call to authenticate user
     const { data } = await axios.post(
-      `${API_BASE_URL}/users/login`,
+      `${API_BASE_URL}/api/users/login`,
       { email, password },
       config
     );
@@ -80,7 +80,7 @@ export const register = (name, email, password) => async (dispatch) => {
 
     // Make API call to register new user
     const { data } = await axios.post(
-      `${API_BASE_URL}/users/register`,
+      `${API_BASE_URL}/api/users/register`,
       { name, email, password },
       config
     );
@@ -129,7 +129,7 @@ export const getUserDetails = (id) => async (dispatch, getState) => {
     };
 
     // Make API call to get user details
-    const { data } = await axios.get(`${API_BASE_URL}/users/${id}`, config);
+    const { data } = await axios.get(`${API_BASE_URL}/api/users/${id}`, config);
 
     // Dispatch success action with user data
     dispatch({
@@ -167,7 +167,7 @@ export const updateUserProfile = (user) => async (dispatch, getState) => {
     };
 
     // Make API call to update user profile
-    const { data } = await axios.put(`${API_BASE_URL}/users/profile`, user, config);
+    const { data } = await axios.put(`${API_BASE_URL}/api/users/profile`, user, config);
 
     // Dispatch success actions
     dispatch({

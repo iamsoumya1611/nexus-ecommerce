@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Set base URL for axios
-const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 // Product Actions
 export const listAdminProducts = () => async (dispatch, getState) => {
@@ -18,7 +18,7 @@ export const listAdminProducts = () => async (dispatch, getState) => {
       }
     };
 
-    const { data } = await axios.get(`${API_BASE_URL}/admin/products`, config);
+    const { data } = await axios.get(`${API_BASE_URL}/api/admin/products`, config);
 
     dispatch({
       type: 'ADMIN_PRODUCT_LIST_SUCCESS',
@@ -49,7 +49,7 @@ export const deleteProduct = (id) => async (dispatch, getState) => {
       }
     };
 
-    await axios.delete(`${API_BASE_URL}/products/${id}`, config);
+    await axios.delete(`${API_BASE_URL}/api/products/${id}`, config);
 
     dispatch({
       type: 'PRODUCT_DELETE_SUCCESS'
@@ -79,7 +79,7 @@ export const createProduct = () => async (dispatch, getState) => {
       }
     };
 
-    const { data } = await axios.post(`${API_BASE_URL}/products`, {}, config);
+    const { data } = await axios.post(`${API_BASE_URL}/api/products`, {}, config);
 
     dispatch({
       type: 'PRODUCT_CREATE_SUCCESS',
@@ -111,7 +111,7 @@ export const listAdminUsers = () => async (dispatch, getState) => {
       }
     };
 
-    const { data } = await axios.get(`${API_BASE_URL}/admin/users`, config);
+    const { data } = await axios.get(`${API_BASE_URL}/api/admin/users`, config);
 
     dispatch({
       type: 'ADMIN_USER_LIST_SUCCESS',
@@ -144,7 +144,7 @@ export const listUsers = () => async (dispatch, getState) => {
       },
     };
 
-    const { data } = await axios.get(`${API_BASE_URL}/users`, config);
+    const { data } = await axios.get(`${API_BASE_URL}/api/users`, config);
 
     dispatch({
       type: 'USER_LIST_SUCCESS',
@@ -177,7 +177,7 @@ export const deleteUser = (id) => async (dispatch, getState) => {
       },
     };
 
-    await axios.delete(`${API_BASE_URL}/users/${id}`, config);
+    await axios.delete(`${API_BASE_URL}/api/users/${id}`, config);
 
     dispatch({
       type: 'USER_DELETE_SUCCESS',
@@ -210,7 +210,7 @@ export const updateUser = (user) => async (dispatch, getState) => {
       },
     };
 
-    const { data } = await axios.put(`${API_BASE_URL}/users/${user._id}`, user, config);
+    const { data } = await axios.put(`${API_BASE_URL}/api/users/${user._id}`, user, config);
 
     dispatch({
       type: 'USER_UPDATE_SUCCESS',
@@ -227,58 +227,28 @@ export const updateUser = (user) => async (dispatch, getState) => {
   }
 };
 
-export const updateUserToAdmin = (id, isAdmin) => async (dispatch, getState) => {
-  try {
-    dispatch({ type: 'USER_UPDATE_ADMIN_REQUEST' });
-
-    const {
-      userLogin: { userInfo }
-    } = getState();
-
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${userInfo.token}`
-      }
-    };
-
-    const { data } = await axios.put(`${API_BASE_URL}/admin/users/${id}`, { isAdmin }, config);
-
-    dispatch({
-      type: 'USER_UPDATE_ADMIN_SUCCESS',
-      payload: data
-    });
-  } catch (error) {
-    dispatch({
-      type: 'USER_UPDATE_ADMIN_FAIL',
-      payload:
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message
-    });
-  }
-};
-
 // Order Actions
 export const listAdminOrders = () => async (dispatch, getState) => {
   try {
-    dispatch({ type: 'ADMIN_ORDER_LIST_REQUEST' });
+    dispatch({
+      type: 'ADMIN_ORDER_LIST_REQUEST',
+    });
 
     const {
-      userLogin: { userInfo }
+      userLogin: { userInfo },
     } = getState();
 
     const config = {
       headers: {
-        Authorization: `Bearer ${userInfo.token}`
-      }
+        Authorization: `Bearer ${userInfo.token}`,
+      },
     };
 
-    const { data } = await axios.get(`${API_BASE_URL}/admin/orders`, config);
+    const { data } = await axios.get(`${API_BASE_URL}/api/admin/orders`, config);
 
     dispatch({
       type: 'ADMIN_ORDER_LIST_SUCCESS',
-      payload: data
+      payload: data,
     });
   } catch (error) {
     dispatch({
@@ -286,30 +256,32 @@ export const listAdminOrders = () => async (dispatch, getState) => {
       payload:
         error.response && error.response.data.message
           ? error.response.data.message
-          : error.message
+          : error.message,
     });
   }
 };
 
 export const deliverOrder = (orderId) => async (dispatch, getState) => {
   try {
-    dispatch({ type: 'ORDER_DELIVER_REQUEST' });
+    dispatch({
+      type: 'ORDER_DELIVER_REQUEST',
+    });
 
     const {
-      userLogin: { userInfo }
+      userLogin: { userInfo },
     } = getState();
 
     const config = {
       headers: {
-        Authorization: `Bearer ${userInfo.token}`
-      }
+        Authorization: `Bearer ${userInfo.token}`,
+      },
     };
 
-    const { data } = await axios.put(`${API_BASE_URL}/orders/${orderId}/deliver`, {}, config);
+    const { data } = await axios.put(`${API_BASE_URL}/api/orders/${orderId}/deliver`, {}, config);
 
     dispatch({
       type: 'ORDER_DELIVER_SUCCESS',
-      payload: data
+      payload: data,
     });
   } catch (error) {
     dispatch({
@@ -317,7 +289,7 @@ export const deliverOrder = (orderId) => async (dispatch, getState) => {
       payload:
         error.response && error.response.data.message
           ? error.response.data.message
-          : error.message
+          : error.message,
     });
   }
 };

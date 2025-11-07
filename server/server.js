@@ -100,28 +100,28 @@ app.get('/health', (req, res) => {
 });
 
 // User routes
-app.use('/users', require('./routes/userRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
 
 // Product routes
-app.use('/products', require('./routes/productRoutes'));
+app.use('/api/products', require('./routes/productRoutes'));
 
 // Cart routes
-app.use('/cart', require('./routes/cartRoutes'));
+app.use('/api/cart', require('./routes/cartRoutes'));
 
 // Order routes
-app.use('/orders', require('./routes/orderRoutes'));
+app.use('/api/orders', require('./routes/orderRoutes'));
 
 // Admin routes
-app.use('/admin', require('./routes/adminRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
 
 // Upload routes
-app.use('/upload', require('./routes/uploadRoutes'));
+app.use('/api/upload', require('./routes/uploadRoutes'));
 
 // Payment routes
-app.use('/payment', require('./routes/paymentRoutes'));
+app.use('/api/payment', require('./routes/paymentRoutes'));
 
 // Recommendation routes
-app.use('/recommendations', require('./routes/recommendationRoutes'));
+app.use('/api/recommendations', require('./routes/recommendationRoutes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 // Set base URL for axios
-const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 export const addToCart = (id, qty) => async (dispatch, getState) => {
-  const { data } = await axios.get(`${API_BASE_URL}/products/${id}`);
+  const { data } = await axios.get(`${API_BASE_URL}/api/products/${id}`);
 
   dispatch({
     type: 'CART_ADD_ITEM',
