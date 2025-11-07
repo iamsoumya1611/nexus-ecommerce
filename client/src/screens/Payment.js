@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { savePaymentMethod } from '../actions/cartActions';
@@ -7,7 +7,7 @@ const Payment = () => {
   const cart = useSelector((state) => state.cart);
   const { shippingAddress } = cart;
 
-  const [paymentMethod, setPaymentMethod] = useState('Stripe');
+  const [paymentMethod, setPaymentMethod] = useState('Razorpay');
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -32,14 +32,14 @@ const Payment = () => {
             <input
               type="radio"
               className="form-check-input"
-              id="stripe"
+              id="razorpay"
               name="paymentMethod"
-              value="Stripe"
+              value="Razorpay"
               checked
               onChange={(e) => setPaymentMethod(e.target.value)}
             />
-            <label className="form-check-label" htmlFor="stripe">
-              Stripe
+            <label className="form-check-label" htmlFor="razorpay">
+              Razorpay
             </label>
           </div>
         </div>

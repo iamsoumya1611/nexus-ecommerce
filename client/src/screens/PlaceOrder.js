@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { createOrder } from '../actions/orderActions';
+import { processPayment } from '../actions/paymentActions';
 
 const PlaceOrder = () => {
   const dispatch = useDispatch();
@@ -19,15 +20,23 @@ const PlaceOrder = () => {
   const orderCreate = useSelector((state) => state.orderCreate);
   const { order, success, error } = orderCreate;
 
+  const paymentProcess = useSelector((state) => state.paymentProcess);
+  const { loading: paymentLoading } = paymentProcess;
+
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     if (success) {
       navigate(`/order/${order._id}`);
     }
   }, [navigate, success, order]);
 
-  const placeOrderHandler = () => {
-    dispatch(
-      createOrder({
+  const placeOrderHandler = async () => {
+    try {
+      setLoading(true);
+      
+      // Create order first
+      const orderData = {
         orderItems: cartItems,
         shippingAddress,
         paymentMethod,
@@ -35,8 +44,65 @@ const PlaceOrder = () => {
         shippingPrice,
         taxPrice,
         totalPrice
-      })
-    );
+      };
+      
+      dispatch(createOrder(orderData));
+    } catch (error) {
+      console.error('Error placing order:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const razorpayPaymentHandler = async () => {
+    try {
+      setLoading(true);
+      
+      // Process payment through Razorpay
+      const paymentData = await dispatch(processPayment(
+        Math.round(parseFloat(totalPrice) * 100) / 100, // Convert to proper format
+        'INR',
+        `order_${Date.now()}`
+      ));
+      
+      if (paymentData && paymentData.success) {
+        // Load Razorpay SDK
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
+        
+        script.onload = () => {
+          const options = {
+            key: process.env.REACT_APP_RAZORPAY_KEY_ID || 'rzp_test_your_key_id',
+            amount: paymentData.order.amount,
+            currency: paymentData.order.currency,
+            name: 'Nexus E-commerce',
+            description: 'Test Transaction',
+            order_id: paymentData.order.id,
+            handler: async function (response) {
+              // Payment successful, create order
+              placeOrderHandler();
+            },
+            prefill: {
+              name: shippingAddress.firstName + ' ' + shippingAddress.lastName,
+              email: 'customer@example.com',
+              contact: '9999999999'
+            },
+            theme: {
+              color: '#3399cc'
+            }
+          };
+          
+          const rzp = new window.Razorpay(options);
+          rzp.open();
+        };
+      }
+    } catch (error) {
+      console.error('Error processing payment:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -116,14 +182,25 @@ const PlaceOrder = () => {
                 </li>
               </ul>
               {error && <p className="text-danger">{error}</p>}
-              <button
-                type="button"
-                className="btn btn-primary btn-block"
-                disabled={cartItems.length === 0}
-                onClick={placeOrderHandler}
-              >
-                Place Order
-              </button>
+              {paymentMethod === 'Razorpay' ? (
+                <button
+                  type="button"
+                  className="btn btn-primary btn-block"
+                  disabled={cartItems.length === 0 || loading || paymentLoading}
+                  onClick={razorpayPaymentHandler}
+                >
+                  {(loading || paymentLoading) ? 'Processing...' : 'Pay with Razorpay'}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn-primary btn-block"
+                  disabled={cartItems.length === 0 || loading}
+                  onClick={placeOrderHandler}
+                >
+                  {loading ? 'Processing...' : 'Place Order'}
+                </button>
+              )}
             </div>
           </div>
         </div>

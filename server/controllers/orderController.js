@@ -67,12 +67,33 @@ const updateOrderToPaid = asyncHandler(async (req, res) => {
   if (order) {
     order.isPaid = true;
     order.paidAt = Date.now();
-    order.paymentResult = {
-      id: req.body.id,
-      status: req.body.status,
-      update_time: req.body.update_time,
-      email_address: req.body.payer.email_address,
-    };
+    
+    // Handle different payment methods
+    if (req.body.paymentResult) {
+      // Stripe payment result
+      order.paymentResult = {
+        id: req.body.paymentResult.id,
+        status: req.body.paymentResult.status,
+        update_time: req.body.paymentResult.update_time,
+        email_address: req.body.paymentResult.payer.email_address,
+      };
+    } else if (req.body.razorpay_payment_id) {
+      // Razorpay payment result
+      order.paymentResult = {
+        id: req.body.razorpay_payment_id,
+        status: 'completed',
+        update_time: Date.now(),
+        email_address: req.user.email,
+      };
+    } else {
+      // Default payment result
+      order.paymentResult = {
+        id: req.body.id || 'payment_id',
+        status: req.body.status || 'completed',
+        update_time: Date.now(),
+        email_address: req.user.email,
+      };
+    }
 
     const updatedOrder = await order.save();
 

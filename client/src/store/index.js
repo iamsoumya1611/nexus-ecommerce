@@ -30,6 +30,10 @@ import {
   adminOrderListReducer,
   orderDeliverReducer
 } from '../reducers/adminReducers';
+import {
+  paymentProcessReducer,
+  paymentVerifyReducer
+} from '../reducers/paymentReducers';
 
 const reducer = combineReducers({
   productList: productListReducer,
@@ -47,6 +51,8 @@ const reducer = combineReducers({
   orderDetails: orderDetailsReducer,
   orderPay: orderPayReducer,
   orderListMy: orderListMyReducer,
+  paymentProcess: paymentProcessReducer,
+  paymentVerify: paymentVerifyReducer,
   // Admin reducers
   adminProductList: adminProductListReducer,
   adminUserList: adminUserListReducer,
