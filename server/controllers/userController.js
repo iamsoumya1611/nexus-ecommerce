@@ -16,7 +16,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
     if (userExists) {
       logger.warn(`Registration failed - User already exists with email: ${email}`);
-      res.status(400);
+      res.status(409); // Conflict status code
       throw new Error('User already exists');
     }
 
@@ -77,7 +77,7 @@ const authUser = asyncHandler(async (req, res) => {
       });
     } else {
       logger.warn(`Authentication failed for email: ${email}`);
-      res.status(401);
+      res.status(401); // Unauthorized status code
       throw new Error('Invalid email or password');
     }
   } catch (error) {

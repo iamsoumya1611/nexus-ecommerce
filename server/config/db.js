@@ -3,12 +3,12 @@ const logger = require('../utils/logger');
 
 const connectDB = async () => {
   try {
-    // Use MONGODB_URI for production and DEV_MONGO_URI for development
     const mongoURI = process.env.NODE_ENV === 'production' 
       ? process.env.MONGO_URI
       : (process.env.DEV_MONGO_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/ecommerce');
 
-    logger.info('Attempting to connect to MongoDB with URI:', mongoURI);
+    logger.info('Attempting to connect to MongoDB');
+    logger.info('Environment:', process.env.NODE_ENV);
     
     const conn = await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
