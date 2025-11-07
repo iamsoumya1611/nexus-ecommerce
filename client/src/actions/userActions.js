@@ -23,7 +23,7 @@ export const login = (email, password) => async (dispatch) => {
 
     // Make API call to authenticate user
     const { data } = await axios.post(
-      `${API_BASE_URL}/api/users/login`,
+      `${API_BASE_URL}/users/login`,
       { email, password },
       config
     );
@@ -80,7 +80,7 @@ export const register = (name, email, password) => async (dispatch) => {
 
     // Make API call to register new user
     const { data } = await axios.post(
-      `${API_BASE_URL}/api/users/register`,
+      `${API_BASE_URL}/users/register`,
       { name, email, password },
       config
     );
@@ -129,7 +129,7 @@ export const getUserDetails = (id) => async (dispatch, getState) => {
     };
 
     // Make API call to get user details
-    const { data } = await axios.get(`${API_BASE_URL}/api/users/${id}`, config);
+    const { data } = await axios.get(`${API_BASE_URL}/users/${id}`, config);
 
     // Dispatch success action with user data
     dispatch({
@@ -167,7 +167,7 @@ export const updateUserProfile = (user) => async (dispatch, getState) => {
     };
 
     // Make API call to update user profile
-    const { data } = await axios.put(`${API_BASE_URL}/api/users/profile`, user, config);
+    const { data } = await axios.put(`${API_BASE_URL}/users/profile`, user, config);
 
     // Dispatch success actions
     dispatch({
