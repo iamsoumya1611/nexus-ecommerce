@@ -6,7 +6,7 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h5 className="text-lg font-bold mb-4">ShopEase</h5>
+            <h5 className="text-lg font-bold mb-4">Nexus</h5>
             <p className="text-primary-100">
               Your one-stop destination for all your shopping needs. Quality products at affordable prices.
             </p>
