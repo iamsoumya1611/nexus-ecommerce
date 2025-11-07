@@ -8,8 +8,13 @@ const {
 } = require('../controllers/userController');
 const { protect } = require('../middleware/authMiddleware');
 
-router.route('/register').post(registerUser);
-router.route('/login').post(authUser);
+// User registration route
+router.post('/register', registerUser);
+
+// User login route
+router.post('/login', authUser);
+
+// User profile routes
 router.route('/profile')
   .get(protect, getUserProfile)
   .put(protect, updateUserProfile);

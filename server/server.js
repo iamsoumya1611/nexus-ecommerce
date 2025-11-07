@@ -66,39 +66,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 const connectDB = require('./config/db');
 connectDB();
 
-// Serve static files from the React app build directory
-if (process.env.NODE_ENV === 'production') {
-  const buildPath = path.join(__dirname, '../client/build');
-  
-  logger.info('Checking for build directory at:', buildPath);
-  
-  // Check if build directory exists
-  if (fs.existsSync(buildPath)) {
-    logger.info('Build directory found, serving static files');
-    app.use(express.static(buildPath));
-    
-    // Handle React routing, return all requests to React app
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(buildPath, 'index.html'));
-    });
-  } else {
-    logger.warn('Build directory not found at:', buildPath);
-    app.get('/', (req, res) => {
-      res.send('E-Commerce API is running... (Frontend build not found)');
-    });
-  }
-}
-
-// Routes
-app.get('/', (req, res) => {
-  res.send('E-Commerce API is running...');
-});
-
-// Health check endpoint for Render
-app.get('/health', (req, res) => {
-  res.status(200).send('Server is healthy');
-});
-
+// API Routes - These should be before static file serving
 // User routes
 app.use('/users', require('./routes/userRoutes'));
 
@@ -123,6 +91,48 @@ app.use('/payment', require('./routes/paymentRoutes'));
 // Recommendation routes
 app.use('/recommendations', require('./routes/recommendationRoutes'));
 
+// Health check endpoint for Render
+app.get('/health', (req, res) => {
+  res.status(200).send('Server is healthy');
+});
+
+// Serve static files from the React app build directory
+if (process.env.NODE_ENV === 'production') {
+  const buildPath = path.join(__dirname, '../client/build');
+  
+  logger.info('Checking for build directory at:', buildPath);
+  
+  // Check if build directory exists
+  if (fs.existsSync(buildPath)) {
+    logger.info('Build directory found, serving static files');
+    app.use(express.static(buildPath));
+    
+    // Handle React routing, return all requests to React app
+    // This should be AFTER all API routes
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(buildPath, 'index.html'));
+    });
+  } else {
+    logger.warn('Build directory not found at:', buildPath);
+    app.get('/', (req, res) => {
+      res.send('E-Commerce API is running... (Frontend build not found)');
+    });
+  }
+}
+
+// Root route - This should be after static file serving
+app.get('/', (req, res) => {
+  res.send('E-Commerce API is running...');
+});
+
+// Handle 404 errors - This should be after all routes
+app.use('*', (req, res) => {
+  res.status(404);
+  res.json({
+    message: 'Route not found'
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   logger.error('Unhandled error:', err);
@@ -131,14 +141,6 @@ app.use((err, req, res, next) => {
   res.json({
     message: err.message,
     stack: process.env.NODE_ENV === 'production' ? null : err.stack,
-  });
-});
-
-// Handle 404 errors
-app.use('*', (req, res) => {
-  res.status(404);
-  res.json({
-    message: 'Route not found'
   });
 });
 
