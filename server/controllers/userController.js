@@ -7,37 +7,51 @@ const logger = require('../utils/logger');
 // @route   POST /api/users/register
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body;
+  try {
+    const { name, email, password } = req.body;
 
-  logger.info(`Attempting to register user with email: ${email}`);
+    logger.info(`Attempting to register user with email: ${email}`);
 
-  const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email });
 
-  if (userExists) {
-    logger.warn(`Registration failed - User already exists with email: ${email}`);
-    res.status(400);
-    throw new Error('User already exists');
-  }
+    if (userExists) {
+      logger.warn(`Registration failed - User already exists with email: ${email}`);
+      res.status(400);
+      throw new Error('User already exists');
+    }
 
-  const user = await User.create({
-    name,
-    email,
-    password
-  });
-
-  if (user) {
-    logger.info(`Successfully registered user with email: ${email}`);
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      isAdmin: user.isAdmin,
-      token: generateToken(user._id)
+    logger.info(`Creating new user with email: ${email}`);
+    const user = await User.create({
+      name,
+      email,
+      password
     });
-  } else {
-    logger.error(`Invalid user data for email: ${email}`);
-    res.status(400);
-    throw new Error('Invalid user data');
+
+    if (user) {
+      logger.info(`Successfully registered user with email: ${email}`);
+      const token = generateToken(user._id);
+      logger.info(`Generated token for user ${email}`);
+      res.status(201).json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        isAdmin: user.isAdmin,
+        token: token
+      });
+    } else {
+      logger.error(`Invalid user data for email: ${email}`);
+      res.status(400);
+      throw new Error('Invalid user data');
+    }
+  } catch (error) {
+    logger.error(`Registration error for email: ${req.body.email}`, error);
+    // If it's already an express async handler error, rethrow it
+    if (error instanceof Error && error.message) {
+      throw error;
+    }
+    // Otherwise, create a new error
+    res.status(500);
+    throw new Error('Internal server error during registration');
   }
 });
 
