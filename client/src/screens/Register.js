@@ -15,7 +15,7 @@ const Register = () => {
   const location = useLocation();
 
   const userRegister = useSelector((state) => state.userRegister);
-  const { loading, error, userInfo } = userRegister;
+  const { loading, userInfo } = userRegister;
 
   const redirect = location.search ? location.search.split('=')[1] : '/';
 
@@ -42,11 +42,6 @@ const Register = () => {
           {message && (
             <div className="alert alert-danger" role="alert">
               {message}
-            </div>
-          )}
-          {error && (
-            <div className="alert alert-danger" role="alert">
-              {error}
             </div>
           )}
           {loading && (

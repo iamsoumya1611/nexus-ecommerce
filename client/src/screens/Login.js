@@ -12,7 +12,7 @@ const Login = () => {
   const location = useLocation();
 
   const userLogin = useSelector((state) => state.userLogin);
-  const { loading, error, userInfo } = userLogin;
+  const { loading, userInfo } = userLogin;
 
   const redirect = location.search ? location.search.split('=')[1] : '/';
 
@@ -32,11 +32,6 @@ const Login = () => {
       <div className="max-w-md mx-auto">
         <div className="card p-8">
           <h2 className="text-2xl font-bold text-center text-primary-900 mb-6">Welcome Back</h2>
-          {error && (
-            <div className="alert alert-danger" role="alert">
-              {error}
-            </div>
-          )}
           {loading && (
             <div className="flex justify-center my-4">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500"></div>
