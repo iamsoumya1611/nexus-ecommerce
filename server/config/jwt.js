@@ -1,15 +1,25 @@
 const jwt = require('jsonwebtoken');
+const logger = require('../utils/logger');
 
 const generateToken = (id) => {
-  // Ensure we have a proper secret key
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET is not defined in environment variables');
+  try {
+    // Ensure we have a proper secret key
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      logger.error('JWT_SECRET is not defined in environment variables');
+      throw new Error('JWT_SECRET is not defined in environment variables');
+    }
+    
+    logger.info('Generating token for user ID:', id);
+    const token = jwt.sign({ id }, secret, {
+      expiresIn: '30d',
+    });
+    logger.info('Token generated successfully');
+    return token;
+  } catch (error) {
+    logger.error('Error generating JWT token:', error);
+    throw new Error('Error generating authentication token');
   }
-  
-  return jwt.sign({ id }, secret, {
-    expiresIn: '30d',
-  });
 };
 
 module.exports = { generateToken };

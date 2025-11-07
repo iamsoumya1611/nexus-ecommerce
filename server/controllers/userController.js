@@ -47,23 +47,34 @@ const registerUser = asyncHandler(async (req, res) => {
 const authUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  logger.info(`Attempting to authenticate user with email: ${email}`);
+  try {
+    logger.info(`Attempting to authenticate user with email: ${email}`);
 
-  const user = await User.findOne({ email });
+    const user = await User.findOne({ email });
 
-  if (user && (await user.matchPassword(password))) {
-    logger.info(`Successfully authenticated user with email: ${email}`);
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      isAdmin: user.isAdmin,
-      token: generateToken(user._id)
-    });
-  } else {
-    logger.warn(`Authentication failed for email: ${email}`);
-    res.status(401);
-    throw new Error('Invalid email or password');
+    if (user && (await user.matchPassword(password))) {
+      logger.info(`Successfully authenticated user with email: ${email}`);
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        isAdmin: user.isAdmin,
+        token: generateToken(user._id)
+      });
+    } else {
+      logger.warn(`Authentication failed for email: ${email}`);
+      res.status(401);
+      throw new Error('Invalid email or password');
+    }
+  } catch (error) {
+    logger.error(`Authentication error for email: ${email}`, error);
+    // If it's already an express async handler error, rethrow it
+    if (error instanceof Error && error.message) {
+      throw error;
+    }
+    // Otherwise, create a new error
+    res.status(500);
+    throw new Error('Internal server error during authentication');
   }
 });
 

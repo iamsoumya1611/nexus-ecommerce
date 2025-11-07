@@ -47,8 +47,13 @@ const corsOptions = {
   optionsSuccessStatus: 200
 };
 
-// Middleware
+// Apply CORS middleware before any other middleware
 app.use(cors(corsOptions));
+
+// Handle preflight requests explicitly
+app.options('*', cors(corsOptions));
+
+// Middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
