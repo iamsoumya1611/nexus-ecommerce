@@ -14,6 +14,7 @@
     "destroy-products": "cd server && npm run destroy-products"
   },
   "dependencies": {
+    "axios": "^1.13.2",
     "concurrently": "^9.2.1"
   },
   "repository": {

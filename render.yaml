@@ -8,4 +8,4 @@ services:
       - key: NODE_ENV
         value: production
       - key: FRONTEND_URL
-        value: https://your-render-app-url.onrender.com
+        value: https://nexus-ecommerce.vercel.app
