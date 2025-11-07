@@ -34,7 +34,7 @@ const Footer = () => {
           <div>
             <h5 className="text-lg font-bold mb-4">Contact Us</h5>
             <ul className="space-y-2 text-primary-100">
-              <li>Email: support@nexus.com</li>
+              <li>Email: support@soumyadeveloper.site</li>
               <li>Phone: (123) 456-7890</li>
             </ul>
           </div>
