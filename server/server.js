@@ -35,7 +35,7 @@ const corsOptions = {
         if (origin.endsWith('.vercel.app') || origin.endsWith('.onrender.com')) {
           callback(null, true);
         } else {
-          callback(new Error('Not allowed by CORS'));
+          callback(null, true); // Allow all origins in production
         }
       } else {
         callback(new Error('Not allowed by CORS'));

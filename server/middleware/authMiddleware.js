@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const asyncHandler = require('express-async-handler');
+const logger = require('../utils/logger');
 
 const protect = asyncHandler(async (req, res, next) => {
   let token;
@@ -15,6 +16,8 @@ const protect = asyncHandler(async (req, res, next) => {
       // Ensure we have a proper secret key
       const secret = process.env.JWT_SECRET;
       if (!secret) {
+        logger.error('JWT_SECRET is not defined in environment variables');
+        res.status(500);
         throw new Error('JWT_SECRET is not defined in environment variables');
       }
 
@@ -24,7 +27,7 @@ const protect = asyncHandler(async (req, res, next) => {
 
       next();
     } catch (error) {
-      console.error(error);
+      logger.error('Token verification error:', error);
       res.status(401);
       throw new Error('Not authorized, token failed');
     }

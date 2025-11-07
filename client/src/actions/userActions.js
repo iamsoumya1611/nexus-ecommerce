@@ -129,7 +129,7 @@ export const getUserDetails = (id) => async (dispatch, getState) => {
     };
 
     // Make API call to get user details
-    const { data } = await axios.get(`${API_BASE_URL}/users/${id}`, config);
+    const { data } = await axios.get(`${API_BASE_URL}/users/profile`, config);
 
     // Dispatch success action with user data
     dispatch({
