@@ -8,4 +8,4 @@ services:
       - key: NODE_ENV
         value: production
       - key: FRONTEND_URL
-        value: https://nexus-ecommerce.vercel.app
+        value: https://nexus-ecommerce-chi.vercel.app

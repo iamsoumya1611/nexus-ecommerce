@@ -12,24 +12,40 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // CORS configuration
-let corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? process.env.FRONTEND_URL || 'https://nexus-ecommerce.vercel.app' 
-    : 'http://localhost:3000',
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // List of allowed origins
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:5000',
+      'https://nexus-ecommerce.vercel.app',
+      'https://nexus-ecommerce-chi.vercel.app',
+      'https://nexus-ecommerce.onrender.com'
+    ];
+    
+    // Check if the origin is in our allowed list
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      // For production, we might want to be more permissive with subdomains
+      if (process.env.NODE_ENV === 'production') {
+        // Allow any vercel.app or onrender.com subdomain
+        if (origin.endsWith('.vercel.app') || origin.endsWith('.onrender.com')) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    }
+  },
   credentials: true,
   optionsSuccessStatus: 200
 };
-
-// For production, allow multiple origins including common Vercel deployment URLs
-if (process.env.NODE_ENV === 'production') {
-  corsOptions.origin = [
-    process.env.FRONTEND_URL || 'https://nexus-ecommerce.vercel.app',
-    'https://nexus-ecommerce.vercel.app',
-    'https://nexus-ecommerce.onrender.com',
-    /\.vercel\.app$/,
-    /\.onrender\.com$/
-  ];
-}
 
 // Middleware
 app.use(cors(corsOptions));
