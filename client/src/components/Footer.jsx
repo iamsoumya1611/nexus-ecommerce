@@ -34,14 +34,14 @@ const Footer = () => {
           <div>
             <h5 className="text-lg font-bold mb-4">Contact Us</h5>
             <ul className="space-y-2 text-primary-100">
-              <li>Email: info@shopease.com</li>
+              <li>Email: support@nexus.com</li>
               <li>Phone: (123) 456-7890</li>
             </ul>
           </div>
         </div>
         <hr className="my-6 border-primary-700" />
         <div className="text-center text-primary-300">
-          <p>&copy; {new Date().getFullYear()} ShopEase. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Nexus. All rights reserved.</p>
         </div>
       </div>
     </footer>
