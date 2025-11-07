@@ -12,13 +12,24 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // CORS configuration
-const corsOptions = {
+let corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? process.env.FRONTEND_URL || 'https://your-render-app-url.onrender.com' 
+    ? process.env.FRONTEND_URL || 'https://nexus-ecommerce.vercel.app' 
     : 'http://localhost:3000',
   credentials: true,
   optionsSuccessStatus: 200
 };
+
+// For production, allow multiple origins including common Vercel deployment URLs
+if (process.env.NODE_ENV === 'production') {
+  corsOptions.origin = [
+    process.env.FRONTEND_URL || 'https://nexus-ecommerce.vercel.app',
+    'https://nexus-ecommerce.vercel.app',
+    'https://nexus-ecommerce.onrender.com',
+    /\.vercel\.app$/,
+    /\.onrender\.com$/
+  ];
+}
 
 // Middleware
 app.use(cors(corsOptions));
