@@ -140,3 +140,13 @@
 {"level":"warn","message":"Authentication failed for email: admin@example.com","service":"nexus-ecommerce","timestamp":"2025-11-11T18:50:54.694Z"}
 {"level":"error","message":"Authentication error for email: admin@example.com Invalid email or password","service":"nexus-ecommerce","stack":"Error: Invalid email or password\n    at H:\\My Learning\\Projects\\MERN\\Nexus-ecommerce\\server\\controllers\\userController.js:81:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-11-11T18:50:54.695Z"}
 {"level":"error","message":"Unhandled error: Invalid email or password","service":"nexus-ecommerce","stack":"Error: Invalid email or password\n    at H:\\My Learning\\Projects\\MERN\\Nexus-ecommerce\\server\\controllers\\userController.js:81:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-11-11T18:50:54.696Z"}
+{"level":"info","message":"Attempting to connect to MongoDB","service":"nexus-ecommerce","timestamp":"2025-11-11T18:54:24.415Z"}
+{"level":"info","message":"Environment:","service":"nexus-ecommerce","timestamp":"2025-11-11T18:54:24.422Z"}
+{"level":"info","message":"Checking for build directory at:","service":"nexus-ecommerce","timestamp":"2025-11-11T18:54:30.528Z"}
+{"level":"info","message":"Build directory found, serving static files","service":"nexus-ecommerce","timestamp":"2025-11-11T18:54:30.529Z"}
+{"level":"info","message":"Server running on port 5000","service":"nexus-ecommerce","timestamp":"2025-11-11T18:54:30.541Z"}
+{"level":"info","message":"MongoDB Connected: ac-lpuzls0-shard-00-02.vp5ywmd.mongodb.net","service":"nexus-ecommerce","timestamp":"2025-11-11T18:54:32.356Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-11T18:56:35.168Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-11T18:56:35.373Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-11T18:56:35.386Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-11T18:56:35.554Z"}

@@ -43,7 +43,7 @@ const Home = () => {
 
           <img className='w-full h-60 object-contain' src="https://res.cloudinary.com/dm4hy8ivc/image/upload/v1762881242/winter_season_offer_gscyrr.png" alt="Festive Offer" />
 
-          <a className='text-primary-700 hover:text-primary-900 font-medium' href="#">See More</a>
+          <button className='text-primary-700 hover:text-primary-900 font-medium bg-transparent border-none cursor-pointer'>See More</button>
         </div>
       </div>
 
