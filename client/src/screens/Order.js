@@ -6,7 +6,7 @@ import { getOrderDetails, payOrder } from '../actions/orderActions';
 const Order = () => {
   const { id } = useParams();
 
-  const [sdkReady, setSdkReady] = useState(false);
+  const [sdkReady] = useState(false);
 
   const dispatch = useDispatch();
 
