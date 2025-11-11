@@ -29,15 +29,38 @@ const Home = () => {
 
   return (
     // Main container with padding and margin
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 font-sans">
       {/* Hero section - displays promotional content */}
       <Hero />
 
-      <Slide />
-      
+      <div className="flex items-center flex-wrap lg:flex-nowrap">
+        <div className="w-full lg:w-[80%]">
+          <Slide title='Deal Of The Day' />
+        </div>
+
+        <div className="w-full lg:w-[20%] h-[370px] flex flex-col justify-evenly items-center bg-white rounded-md p-4 mt-4 lg:mt-0 lg:ml-4">
+          <h4 className='text-primary-700 font-semibold text-center'>Festive latest launches</h4>
+
+          <img className='w-full h-60 object-contain' src="https://res.cloudinary.com/dm4hy8ivc/image/upload/v1762881242/winter_season_offer_gscyrr.png" alt="" />
+
+          <a className='text-primary-700 hover:text-primary-900 font-medium' href="#">See More</a>
+        </div>
+      </div>
+
+      <Slide title="Today's Deal" />
+
+      <div className="">
+        <img className='block w-full lg:w-[80%] h-[300px] m-[13px] mx-auto' src="https://res.cloudinary.com/dm4hy8ivc/image/upload/v1762882112/desktop_banner_kikeem.png" alt="" />
+      </div>
+
+      <Slide title="Best Seller" />
+
+      <Slide title="Upto 80% Off" />
+
+
       {/* Category showcase - displays product categories */}
       <CategoryShowcase />
-      
+
       {/* Featured Products Section */}
       <div className="mb-16">
         {/* Section header with title and description */}
@@ -47,7 +70,7 @@ const Home = () => {
             Discover our most popular items loved by thousands of customers
           </p>
         </div>
-        
+
         {/* Product display area with loading and error handling */}
         {loading ? (
           // Show loading spinner while products are being fetched
@@ -76,10 +99,10 @@ const Home = () => {
           </div>
         )}
       </div>
-      
+
       {/* Testimonials section - displays customer reviews */}
       <Testimonials />
-      
+
       {/* Newsletter section - allows users to subscribe */}
       <Newsletter />
     </div>

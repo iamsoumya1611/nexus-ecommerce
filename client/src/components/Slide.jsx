@@ -2,6 +2,7 @@ import Divider from '@mui/material/Divider';
 import Carousel from 'react-multi-carousel';
 import 'react-multi-carousel/lib/styles.css';
 import { products } from '../productdata';
+import { colorPalette } from '../config/colors';
 // import './slide.css';
 
 const responsive = {
@@ -24,13 +25,13 @@ const responsive = {
     }
 };
 
-const Slide = () => {
+const Slide = (props) => {
     return (
-        <div className='w-full my-2 mx-auto'>
+        <div className='w-full my-2 mx-auto font-sans'>
             <div className='flex justify-between items-center mt-4 p-5'>
-                <h3 className='text-[#444] font-medium text-lg'>Deal of the Day</h3>
+                <h3 className='text-primary-700 font-semibold text-lg'>{props.title}</h3>
 
-                <button className="py-2 px-4 bg-indigo-700 text-white rounded-md">View All</button>
+                <button className="py-2 px-4 bg-primary-700 text-white rounded-md hover:bg-primary-800 transition-colors font-medium">View All</button>
             </div>
 
             <Divider />
@@ -50,15 +51,15 @@ const Slide = () => {
                 containerClass="carousel-container"
             >
                 {products.map((product) => (
-                    <div className="bg-white mt-2 p-2 flex flex-column items-center cursor-pointer">
+                    <div className="bg-white mt-2 p-2 flex flex-column items-center cursor-pointer hover:shadow-lg transition-shadow rounded-lg">
                         <div className="">
-                            <img className='w-36 h-36 mt-1' src={product.url} alt="productitem" />
+                            <img className='w-36 h-36 mt-1 object-contain' src={product.url} alt="productitem" />
 
-                            <p className="text-sm mt-2">{product.title.shortTitle}</p>
+                            <p className="text-sm mt-2 text-gray-900 font-medium">{product.title.shortTitle}</p>
 
-                            <p className='text-sm mt-2'>{product.discount}</p>
+                            <p className='text-sm mt-2 text-primary-500 font-semibold'>{product.discount}</p>
 
-                            <p className="text-sm mt-2">{product.tagline}</p>
+                            <p className="text-sm mt-2 text-gray-900">{product.tagline}</p>
                         </div>
                     </div>
                 ))}

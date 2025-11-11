@@ -41,6 +41,8 @@ const Footer = () => {
         </div>
         <hr className="my-6 border-primary-700" />
         <div className="text-center text-primary-300">
+
+          <img src="/logo-removebg.png" alt="" className="h-10 mx-auto" />
           <p>&copy; {new Date().getFullYear()} Nexus. All rights reserved.</p>
         </div>
       </div>
