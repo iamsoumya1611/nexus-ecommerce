@@ -34,6 +34,14 @@ try {
   process.chdir(clientDir);
   logger.info('Current directory after chdir:', process.cwd());
   
+  // Clean previous build
+  logger.info('Cleaning previous build...');
+  const buildPath = path.join(clientDir, 'build');
+  if (fs.existsSync(buildPath)) {
+    fs.rmSync(buildPath, { recursive: true, force: true });
+    logger.info('Previous build cleaned');
+  }
+  
   // Install dependencies
   logger.info('Installing client dependencies...');
   execSync('npm install', { stdio: 'inherit' });

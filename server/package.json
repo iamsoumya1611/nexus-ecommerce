@@ -10,7 +10,7 @@
     "dev-all": "concurrently \"npm run dev\" \"npm run dev-frontend\"",
     "build": "node build-client.js",
     "build-client": "node build-client.js",
-    "postinstall": "node build-client.js",
+    "postinstall": "echo 'Postinstall script running...' && node build-client.js",
     "import-products": "node seeder.js",
     "destroy-products": "node seeder.js -d"
   },
