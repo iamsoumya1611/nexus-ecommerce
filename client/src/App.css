@@ -1,4 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@@400;500;600;700&family=Roboto:ital,wght@400;500;600;700&display=swap');
+
+body{
+    font-family: 'Open Sans', sans-serif;
+}
+
+
 /* Main content area */
+
 main {
   min-height: 80vh;
   padding: 2rem 0;

@@ -6,6 +6,7 @@ import Hero from '../components/Hero';
 import CategoryShowcase from '../components/CategoryShowcase';
 import Testimonials from '../components/Testimonials';
 import Newsletter from '../components/Newsletter';
+import Slide from '../components/Slide';
 
 // Home Screen Component
 // This is the main landing page of the e-commerce application
@@ -31,6 +32,8 @@ const Home = () => {
     <div className="container mx-auto px-4 py-8">
       {/* Hero section - displays promotional content */}
       <Hero />
+
+      <Slide />
       
       {/* Category showcase - displays product categories */}
       <CategoryShowcase />
