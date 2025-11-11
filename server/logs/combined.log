@@ -112,3 +112,7 @@
 {"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-11T17:45:31.612Z"}
 {"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-11T17:45:31.617Z"}
 {"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-11T17:45:31.773Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-11T18:09:21.111Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-11T18:09:21.447Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-11T18:09:21.455Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-11T18:09:21.596Z"}

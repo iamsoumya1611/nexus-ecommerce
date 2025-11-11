@@ -41,22 +41,27 @@ const Home = () => {
         <div className="w-full lg:w-[20%] h-[370px] flex flex-col justify-evenly items-center bg-white rounded-md p-4 mt-4 lg:mt-0 lg:ml-4">
           <h4 className='text-primary-700 font-semibold text-center'>Festive latest launches</h4>
 
-          <img className='w-full h-60 object-contain' src="https://res.cloudinary.com/dm4hy8ivc/image/upload/v1762881242/winter_season_offer_gscyrr.png" alt="" />
+          <img className='w-full h-60 object-contain' src="https://res.cloudinary.com/dm4hy8ivc/image/upload/v1762881242/winter_season_offer_gscyrr.png" alt="Festive Offer" />
 
           <a className='text-primary-700 hover:text-primary-900 font-medium' href="#">See More</a>
         </div>
       </div>
 
-      <Slide title="Today's Deal" />
-
-      <div className="">
-        <img className='block w-full lg:w-[80%] h-[300px] m-[13px] mx-auto' src="https://res.cloudinary.com/dm4hy8ivc/image/upload/v1762882112/desktop_banner_kikeem.png" alt="" />
+      <div className="my-8">
+        <Slide title="Today's Deal" />
       </div>
 
-      <Slide title="Best Seller" />
+      <div className="my-8">
+        <img className='block w-full lg:w-[80%] h-[300px] mx-auto' src="https://res.cloudinary.com/dm4hy8ivc/image/upload/v1762882112/desktop_banner_kikeem.png" alt="Banner" />
+      </div>
 
-      <Slide title="Upto 80% Off" />
+      <div className="my-8">
+        <Slide title="Best Seller" />
+      </div>
 
+      <div className="my-8">
+        <Slide title="Upto 80% Off" />
+      </div>
 
       {/* Category showcase - displays product categories */}
       <CategoryShowcase />

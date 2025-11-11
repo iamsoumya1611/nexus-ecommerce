@@ -57,6 +57,7 @@
     ]
   },
   "devDependencies": {
+    "@tailwindcss/line-clamp": "^0.4.4",
     "core-js": "^3.37.1",
     "core-js-pure": "^3.37.1"
   }
