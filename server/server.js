@@ -71,6 +71,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Database connection
 const connectDB = require('./config/db');
+// Connect to database
 connectDB();
 
 // API Routes - These should be before static file serving

@@ -2,6 +2,7 @@ const User = require('../models/User');
 const { generateToken } = require('../config/jwt');
 const asyncHandler = require('express-async-handler');
 const logger = require('../utils/logger');
+const mongoose = require('mongoose');
 
 // @desc    Register a new user
 // @route   POST /api/users/register
@@ -11,6 +12,13 @@ const registerUser = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
 
     logger.info(`Attempting to register user with email: ${email}`);
+    
+    // Check if we have a database connection
+    if (mongoose.connection.readyState !== 1) {
+      logger.error('Database not connected');
+      res.status(500);
+      throw new Error('Database connection error. Please try again later.');
+    }
 
     const userExists = await User.findOne({ email });
 
@@ -63,6 +71,13 @@ const authUser = asyncHandler(async (req, res) => {
 
   try {
     logger.info(`Attempting to authenticate user with email: ${email}`);
+    
+    // Check if we have a database connection
+    if (mongoose.connection.readyState !== 1) {
+      logger.error('Database not connected');
+      res.status(500);
+      throw new Error('Database connection error. Please try again later.');
+    }
 
     const user = await User.findOne({ email });
 
@@ -97,6 +112,13 @@ const authUser = asyncHandler(async (req, res) => {
 // @access  Private
 const getUserProfile = asyncHandler(async (req, res) => {
   logger.info(`Fetching profile for user ID: ${req.user._id}`);
+  
+  // Check if we have a database connection
+  if (mongoose.connection.readyState !== 1) {
+    logger.error('Database not connected');
+    res.status(500);
+    throw new Error('Database connection error. Please try again later.');
+  }
 
   const user = await User.findById(req.user._id);
 
@@ -120,6 +142,13 @@ const getUserProfile = asyncHandler(async (req, res) => {
 // @access  Private
 const updateUserProfile = asyncHandler(async (req, res) => {
   logger.info(`Updating profile for user ID: ${req.user._id}`);
+  
+  // Check if we have a database connection
+  if (mongoose.connection.readyState !== 1) {
+    logger.error('Database not connected');
+    res.status(500);
+    throw new Error('Database connection error. Please try again later.');
+  }
 
   const user = await User.findById(req.user._id);
 
