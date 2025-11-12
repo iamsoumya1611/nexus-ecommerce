@@ -288,3 +288,9 @@
 {"level":"info","message":"Generated token for user soumyamajumder201817@gmail.com","service":"nexus-ecommerce","timestamp":"2025-11-12T15:03:43.976Z"}
 {"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T15:03:44.133Z"}
 {"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T15:03:44.310Z"}
+{"level":"info","message":"Attempting to connect to MongoDB","service":"nexus-ecommerce","timestamp":"2025-11-12T15:13:15.074Z"}
+{"level":"info","message":"Environment:","service":"nexus-ecommerce","timestamp":"2025-11-12T15:13:15.091Z"}
+{"level":"info","message":"Checking for build directory at:","service":"nexus-ecommerce","timestamp":"2025-11-12T15:13:18.349Z"}
+{"level":"info","message":"Build directory found, serving static files","service":"nexus-ecommerce","timestamp":"2025-11-12T15:13:18.351Z"}
+{"level":"info","message":"Server running on port 5000","service":"nexus-ecommerce","timestamp":"2025-11-12T15:13:18.359Z"}
+{"level":"info","message":"MongoDB Connected: ac-lpuzls0-shard-00-01.vp5ywmd.mongodb.net","service":"nexus-ecommerce","timestamp":"2025-11-12T15:13:19.298Z"}
