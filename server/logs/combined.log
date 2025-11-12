@@ -300,3 +300,15 @@
 {"level":"info","message":"Build directory found, serving static files","service":"nexus-ecommerce","timestamp":"2025-11-12T15:21:56.031Z"}
 {"level":"info","message":"Server running on port 5000","service":"nexus-ecommerce","timestamp":"2025-11-12T15:21:56.038Z"}
 {"level":"info","message":"MongoDB Connected: ac-lpuzls0-shard-00-02.vp5ywmd.mongodb.net","service":"nexus-ecommerce","timestamp":"2025-11-12T15:21:56.931Z"}
+{"level":"info","message":"Attempting to connect to MongoDB","service":"nexus-ecommerce","timestamp":"2025-11-12T15:30:17.805Z"}
+{"level":"info","message":"Environment:","service":"nexus-ecommerce","timestamp":"2025-11-12T15:30:17.815Z"}
+{"level":"info","message":"Checking for build directory at:","service":"nexus-ecommerce","timestamp":"2025-11-12T15:30:21.722Z"}
+{"level":"info","message":"Build directory found, serving static files","service":"nexus-ecommerce","timestamp":"2025-11-12T15:30:21.724Z"}
+{"level":"info","message":"Server running on port 5000","service":"nexus-ecommerce","timestamp":"2025-11-12T15:30:21.741Z"}
+{"level":"info","message":"MongoDB Connected: ac-lpuzls0-shard-00-01.vp5ywmd.mongodb.net","service":"nexus-ecommerce","timestamp":"2025-11-12T15:30:22.733Z"}
+{"level":"info","message":"Attempting to connect to MongoDB","service":"nexus-ecommerce","timestamp":"2025-11-12T15:30:29.859Z"}
+{"level":"info","message":"Environment:","service":"nexus-ecommerce","timestamp":"2025-11-12T15:30:29.869Z"}
+{"level":"info","message":"Checking for build directory at:","service":"nexus-ecommerce","timestamp":"2025-11-12T15:30:30.667Z"}
+{"level":"info","message":"Build directory found, serving static files","service":"nexus-ecommerce","timestamp":"2025-11-12T15:30:30.668Z"}
+{"level":"info","message":"Server running on port 5000","service":"nexus-ecommerce","timestamp":"2025-11-12T15:30:30.677Z"}
+{"level":"info","message":"MongoDB Connected: ac-lpuzls0-shard-00-00.vp5ywmd.mongodb.net","service":"nexus-ecommerce","timestamp":"2025-11-12T15:30:31.633Z"}

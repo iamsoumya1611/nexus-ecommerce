@@ -21,9 +21,13 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:5000',
-      'https://nexus-ecommerce-chi.vercel.app',
-      'https://nexus-ecommerce.onrender.com'
+      'https://nexus-ecommerce-chi.vercel.app'
     ];
+    
+    // In production, also allow the FRONTEND_URL from environment variables
+    if (process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL) {
+      allowedOrigins.push(process.env.FRONTEND_URL);
+    }
     
     // Check if the origin is in our allowed list
     if (allowedOrigins.indexOf(origin) !== -1) {
@@ -31,11 +35,11 @@ const corsOptions = {
     } else {
       // For production, we might want to be more permissive with subdomains
       if (process.env.NODE_ENV === 'production') {
-        // Allow any vercel.app or onrender.com subdomain
-        if (origin.endsWith('.vercel.app') || origin.endsWith('.onrender.com')) {
+        // Allow any vercel.app subdomain
+        if (origin.endsWith('.vercel.app')) {
           callback(null, true);
         } else {
-          callback(null, true); // Allow all origins in production
+          callback(null, true); // Allow all origins in production for now
         }
       } else {
         callback(new Error('Not allowed by CORS'));
@@ -50,13 +54,16 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Handle preflight requests explicitly for all routes
-app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.header('origin'));
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.sendStatus(200);
-});
+app.options('*', cors(corsOptions));
+
+// This is an alternative approach if the above doesn't work
+// app.options('*', (req, res) => {
+//   res.header('Access-Control-Allow-Origin', req.header('origin'));
+//   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+//   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+//   res.header('Access-Control-Allow-Credentials', 'true');
+//   res.sendStatus(200);
+// });
 
 // Middleware
 app.use(express.json({ limit: '50mb' }));
