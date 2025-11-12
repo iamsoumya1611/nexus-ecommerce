@@ -20,6 +20,13 @@ const registerUser = asyncHandler(async (req, res) => {
       throw new Error('Database connection error. Please try again later.');
     }
 
+    // Validate input
+    if (!name || !email || !password) {
+      logger.warn('Registration attempt with missing fields');
+      res.status(400);
+      throw new Error('Name, email, and password are required');
+    }
+
     const userExists = await User.findOne({ email });
 
     if (userExists) {
@@ -52,7 +59,11 @@ const registerUser = asyncHandler(async (req, res) => {
       throw new Error('Invalid user data');
     }
   } catch (error) {
-    logger.error(`Registration error for email: ${req.body.email}`, error);
+    logger.error(`Registration error for email: ${req.body.email}`, {
+      message: error.message,
+      stack: error.stack,
+      email: req.body.email
+    });
     // If it's already an express async handler error, rethrow it
     if (error instanceof Error && error.message) {
       throw error;
@@ -79,6 +90,13 @@ const authUser = asyncHandler(async (req, res) => {
       throw new Error('Database connection error. Please try again later.');
     }
 
+    // Validate input
+    if (!email || !password) {
+      logger.warn('Login attempt with missing email or password');
+      res.status(400);
+      throw new Error('Email and password are required');
+    }
+
     const user = await User.findOne({ email });
 
     if (user && (await user.matchPassword(password))) {
@@ -96,7 +114,11 @@ const authUser = asyncHandler(async (req, res) => {
       throw new Error('Invalid email or password');
     }
   } catch (error) {
-    logger.error(`Authentication error for email: ${email}`, error);
+    logger.error(`Authentication error for email: ${req.body.email}`, {
+      message: error.message,
+      stack: error.stack,
+      email: req.body.email
+    });
     // If it's already an express async handler error, rethrow it
     if (error instanceof Error && error.message) {
       throw error;

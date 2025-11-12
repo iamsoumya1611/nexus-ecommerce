@@ -152,7 +152,26 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   logger.info(`Server running on port ${PORT}`);
   // Added this comment to trigger a new deployment
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err, promise) => {
+  logger.error(`Unhandled Promise Rejection: ${err.message}`);
+  logger.error('Stack trace:', err.stack);
+  // Close server & exit process
+  server.close(() => {
+    process.exit(1);
+  });
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  logger.error(`Uncaught Exception: ${err.message}`);
+  logger.error('Stack trace:', err.stack);
+  server.close(() => {
+    process.exit(1);
+  });
 });
