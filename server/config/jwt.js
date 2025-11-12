@@ -3,8 +3,12 @@ const logger = require('../utils/logger');
 
 const generateToken = (id) => {
   try {
+    logger.info(`Generating token for user ID: ${id}`);
+    
     // Ensure we have a proper secret key
     const secret = process.env.JWT_SECRET;
+    logger.info(`JWT_SECRET present: ${!!secret}`);
+    
     if (!secret) {
       logger.error('JWT_SECRET is not defined in environment variables');
       throw new Error('JWT_SECRET is not defined in environment variables');
@@ -16,7 +20,7 @@ const generateToken = (id) => {
       throw new Error('User ID is required to generate token');
     }
     
-    logger.info('Generating token for user ID:', id);
+    logger.info('Generating JWT token with secret and user ID');
     const token = jwt.sign({ id }, secret, {
       expiresIn: '30d',
     });

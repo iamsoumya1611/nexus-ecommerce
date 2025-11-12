@@ -82,6 +82,7 @@ const authUser = asyncHandler(async (req, res) => {
 
   try {
     logger.info(`Attempting to authenticate user with email: ${email}`);
+    logger.info(`Request body: ${JSON.stringify(req.body)}`);
     
     // Check if we have a database connection
     if (mongoose.connection.readyState !== 1) {
@@ -97,17 +98,25 @@ const authUser = asyncHandler(async (req, res) => {
       throw new Error('Email and password are required');
     }
 
+    logger.info(`Finding user with email: ${email}`);
     const user = await User.findOne({ email });
+    logger.info(`User lookup result: ${user ? 'User found' : 'User not found'}`);
 
     if (user && (await user.matchPassword(password))) {
       logger.info(`Successfully authenticated user with email: ${email}`);
-      res.json({
+      const token = generateToken(user._id);
+      logger.info(`Token generated for user: ${user.email}`);
+      
+      const responseData = {
         _id: user._id,
         name: user.name,
         email: user.email,
         isAdmin: user.isAdmin,
-        token: generateToken(user._id)
-      });
+        token: token
+      };
+      
+      logger.info(`Sending response: ${JSON.stringify(responseData)}`);
+      res.json(responseData);
     } else {
       logger.warn(`Authentication failed for email: ${email}`);
       res.status(401); // Unauthorized status code

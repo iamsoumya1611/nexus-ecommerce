@@ -8,6 +8,13 @@ const logger = require('./utils/logger');
 
 dotenv.config();
 
+// Log environment variables for debugging (mask sensitive ones)
+logger.info('Environment variables check:');
+logger.info('NODE_ENV:', process.env.NODE_ENV);
+logger.info('PORT:', process.env.PORT);
+logger.info('MONGO_URI present:', !!process.env.MONGO_URI);
+logger.info('JWT_SECRET present:', !!process.env.JWT_SECRET);
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -72,6 +79,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Database connection
 const connectDB = require('./config/db');
 // Connect to database
+logger.info('Initializing database connection...');
 connectDB();
 
 // API Routes - These should be before static file serving
@@ -101,7 +109,24 @@ app.use('/recommendations', require('./routes/recommendationRoutes'));
 
 // Health check endpoint for Render
 app.get('/health', (req, res) => {
-  res.status(200).send('Server is healthy');
+  const healthData = {
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    mongoose: {
+      readyState: mongoose.connection.readyState,
+      host: mongoose.connection.host,
+      name: mongoose.connection.name
+    },
+    environment: {
+      NODE_ENV: process.env.NODE_ENV,
+      PORT: process.env.PORT
+    }
+  };
+  
+  logger.info('Health check accessed:', healthData);
+  res.status(200).json(healthData);
 });
 
 // Serve static files from the React app build directory
@@ -135,6 +160,7 @@ app.get('/', (req, res) => {
 
 // Handle 404 errors - This should be after all routes
 app.use('*', (req, res) => {
+  logger.warn(`Route not found: ${req.originalUrl}`);
   res.status(404);
   res.json({
     message: 'Route not found'
@@ -143,7 +169,13 @@ app.use('*', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  logger.error('Unhandled error:', err);
+  logger.error('Unhandled error:', {
+    message: err.message,
+    stack: err.stack,
+    url: req.originalUrl,
+    method: req.method,
+    body: req.body
+  });
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   res.status(statusCode);
   res.json({

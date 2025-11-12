@@ -9,7 +9,14 @@ const connectDB = async () => {
 
     logger.info('Attempting to connect to MongoDB');
     logger.info('Environment:', process.env.NODE_ENV);
+    logger.info('MongoURI present:', !!mongoURI);
     
+    // Mask the mongoURI for security but show its structure
+    if (mongoURI) {
+      const maskedURI = mongoURI.replace(/(mongodb(?:\+srv)?:\/\/)([^:]+):([^@]+)@/, '$1****:****@');
+      logger.info('MongoURI structure:', maskedURI);
+    }
+
     // Add connection options to handle connection issues
     const conn = await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
@@ -21,6 +28,7 @@ const connectDB = async () => {
     });
 
     logger.info(`MongoDB Connected: ${conn.connection.host}`);
+    logger.info(`MongoDB Database Name: ${conn.connection.name}`);
     return conn;
   } catch (error) {
     logger.error(`Error connecting to MongoDB: ${error.message}`);
