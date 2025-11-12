@@ -150,3 +150,57 @@
 {"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-11T18:56:35.373Z"}
 {"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-11T18:56:35.386Z"}
 {"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-11T18:56:35.554Z"}
+{"level":"info","message":"Attempting to connect to MongoDB","service":"nexus-ecommerce","timestamp":"2025-11-12T08:20:25.317Z"}
+{"level":"info","message":"Environment:","service":"nexus-ecommerce","timestamp":"2025-11-12T08:20:25.332Z"}
+{"level":"info","message":"Checking for build directory at:","service":"nexus-ecommerce","timestamp":"2025-11-12T08:21:03.658Z"}
+{"level":"info","message":"Build directory found, serving static files","service":"nexus-ecommerce","timestamp":"2025-11-12T08:21:03.661Z"}
+{"level":"info","message":"Server running on port 5000","service":"nexus-ecommerce","timestamp":"2025-11-12T08:21:03.760Z"}
+{"level":"error","message":"Error connecting to MongoDB: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/","service":"nexus-ecommerce","timestamp":"2025-11-12T08:21:33.992Z"}
+{"level":"info","message":"Attempting to connect to MongoDB","service":"nexus-ecommerce","timestamp":"2025-11-12T08:35:31.259Z"}
+{"level":"info","message":"Environment:","service":"nexus-ecommerce","timestamp":"2025-11-12T08:35:31.265Z"}
+{"level":"info","message":"Checking for build directory at:","service":"nexus-ecommerce","timestamp":"2025-11-12T08:35:41.180Z"}
+{"level":"info","message":"Build directory found, serving static files","service":"nexus-ecommerce","timestamp":"2025-11-12T08:35:41.181Z"}
+{"level":"info","message":"Server running on port 5000","service":"nexus-ecommerce","timestamp":"2025-11-12T08:35:41.189Z"}
+{"level":"error","message":"Error connecting to MongoDB: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/","service":"nexus-ecommerce","timestamp":"2025-11-12T08:36:11.288Z"}
+{"level":"info","message":"Attempting to connect to MongoDB","service":"nexus-ecommerce","timestamp":"2025-11-12T08:39:55.103Z"}
+{"level":"info","message":"Environment:","service":"nexus-ecommerce","timestamp":"2025-11-12T08:39:55.112Z"}
+{"level":"info","message":"Checking for build directory at:","service":"nexus-ecommerce","timestamp":"2025-11-12T08:39:57.927Z"}
+{"level":"info","message":"Build directory found, serving static files","service":"nexus-ecommerce","timestamp":"2025-11-12T08:39:57.928Z"}
+{"level":"info","message":"Server running on port 5000","service":"nexus-ecommerce","timestamp":"2025-11-12T08:39:57.937Z"}
+{"level":"info","message":"MongoDB Connected: ac-lpuzls0-shard-00-01.vp5ywmd.mongodb.net","service":"nexus-ecommerce","timestamp":"2025-11-12T08:39:58.894Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T08:40:21.425Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T08:40:21.608Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T08:40:21.719Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T08:40:21.889Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T08:43:22.573Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T08:43:22.731Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T08:43:22.761Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T08:43:22.968Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T08:49:01.916Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T08:49:02.072Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T08:49:02.076Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T08:49:02.240Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T08:49:52.549Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T08:49:52.701Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T08:49:52.709Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T08:49:52.860Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T08:49:55.543Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T08:49:55.700Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T08:49:55.724Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T08:49:55.875Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T08:49:57.020Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T08:49:57.177Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T08:49:57.209Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T08:49:57.372Z"}
+{"level":"info","message":"Attempting to connect to MongoDB","service":"nexus-ecommerce","timestamp":"2025-11-12T08:57:52.494Z"}
+{"level":"info","message":"Environment:","service":"nexus-ecommerce","timestamp":"2025-11-12T08:57:52.500Z"}
+{"level":"info","message":"Checking for build directory at:","service":"nexus-ecommerce","timestamp":"2025-11-12T08:57:59.934Z"}
+{"level":"info","message":"Build directory found, serving static files","service":"nexus-ecommerce","timestamp":"2025-11-12T08:57:59.936Z"}
+{"level":"info","message":"Server running on port 5000","service":"nexus-ecommerce","timestamp":"2025-11-12T08:57:59.956Z"}
+{"level":"info","message":"MongoDB Connected: ac-lpuzls0-shard-00-01.vp5ywmd.mongodb.net","service":"nexus-ecommerce","timestamp":"2025-11-12T08:58:00.929Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T09:00:47.276Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T09:00:47.480Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T09:00:47.534Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T09:00:47.719Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T09:43:00.503Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T09:43:01.078Z"}

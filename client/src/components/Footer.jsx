@@ -4,29 +4,73 @@ const Footer = () => {
   return (
     <footer className="bg-primary-900 text-white py-8 mt-12">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h5 className="text-lg font-bold mb-4">Nexus</h5>
-            <p className="text-primary-100">
-              Your one-stop destination for all your shopping needs. Quality products at affordable prices.
-            </p>
+            <h5 className="text-lg font-bold mb-4">Get to Know Us</h5>
+            <ul className="space-y-2">
+              <li>
+                <a href="/about" className="text-primary-100 hover:text-white transition-colors">
+                  About Us
+                </a>
+              </li>
+              <li>
+                <a href="/careers" className="text-primary-100 hover:text-white transition-colors">
+                  Careers
+                </a>
+              </li>
+              <li>
+                <a href="/press-releases" className="text-primary-100 hover:text-white transition-colors">
+                  Press Releases
+                </a>
+              </li>
+              <li>
+                <a href="/nexus-cares" className="text-primary-100 hover:text-white transition-colors">
+                  Nexus Cares
+                </a>
+              </li>
+            </ul>
           </div>
           <div>
-            <h5 className="text-lg font-bold mb-4">Quick Links</h5>
+            <h5 className="text-lg font-bold mb-4">Connect With Us</h5>
             <ul className="space-y-2">
               <li>
                 <a href="/" className="text-primary-100 hover:text-white transition-colors">
-                  Home
+                  Facebook
                 </a>
               </li>
               <li>
-                <a href="/cart" className="text-primary-100 hover:text-white transition-colors">
-                  Cart
+                <a href="/twitter" className="text-primary-100 hover:text-white transition-colors">
+                  Twitter
                 </a>
               </li>
               <li>
-                <a href="/login" className="text-primary-100 hover:text-white transition-colors">
-                  Login
+                <a href="/instagram" className="text-primary-100 hover:text-white transition-colors">
+                  Instagram
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h5 className="text-lg font-bold mb-4">Make Money with Us</h5>
+            <ul className="space-y-2">
+              <li>
+                <a href="/sell-on-nexus" className="text-primary-100 hover:text-white transition-colors">
+                  Sell on Nexus
+                </a>
+              </li>
+              <li>
+                <a href="/advertise" className="text-primary-100 hover:text-white transition-colors">
+                  Advertise
+                </a>
+              </li>
+              <li>
+                <a href="/business-solutions" className="text-primary-100 hover:text-white transition-colors">
+                  Business Solutions
+                </a>
+              </li>
+              <li>
+                <a href="/large-appliance-rental" className="text-primary-100 hover:text-white transition-colors">
+                  Large Appliances Rental
                 </a>
               </li>
             </ul>
@@ -35,7 +79,7 @@ const Footer = () => {
             <h5 className="text-lg font-bold mb-4">Contact Us</h5>
             <ul className="space-y-2 text-primary-100">
               <li>Email: support@soumyadeveloper.site</li>
-              <li>Phone: (123) 456-7890</li>
+              <li>Contact: +91 (629) 079-8965</li>
             </ul>
           </div>
         </div>
