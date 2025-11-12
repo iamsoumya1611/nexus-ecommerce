@@ -4,7 +4,7 @@
   "description": "A simple e-commerce platform built with MERN stack",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "nodemon server.js",
     "dev": "nodemon server.js",
     "dev-frontend": "cd ../client && npm start",
     "dev-all": "concurrently \"npm run dev\" \"npm run dev-frontend\"",
@@ -30,6 +30,6 @@
     "winston": "^3.10.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.11"
   }
 }

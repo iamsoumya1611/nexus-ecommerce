@@ -204,3 +204,87 @@
 {"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T09:00:47.719Z"}
 {"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T09:43:00.503Z"}
 {"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T09:43:01.078Z"}
+{"level":"info","message":"Attempting to authenticate user with email: user@example.com","service":"nexus-ecommerce","timestamp":"2025-11-12T14:45:20.913Z"}
+{"level":"warn","message":"Authentication failed for email: user@example.com","service":"nexus-ecommerce","timestamp":"2025-11-12T14:45:21.618Z"}
+{"level":"error","message":"Authentication error for email: user@example.com Invalid email or password","service":"nexus-ecommerce","stack":"Error: Invalid email or password\n    at H:\\My Learning\\Projects\\MERN\\Nexus-ecommerce\\server\\controllers\\userController.js:81:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-11-12T14:45:21.627Z"}
+{"level":"error","message":"Unhandled error: Invalid email or password","service":"nexus-ecommerce","stack":"Error: Invalid email or password\n    at H:\\My Learning\\Projects\\MERN\\Nexus-ecommerce\\server\\controllers\\userController.js:81:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-11-12T14:45:21.636Z"}
+{"level":"info","message":"Attempting to authenticate user with email: admin@example.com","service":"nexus-ecommerce","timestamp":"2025-11-12T14:45:41.598Z"}
+{"level":"warn","message":"Authentication failed for email: admin@example.com","service":"nexus-ecommerce","timestamp":"2025-11-12T14:45:41.681Z"}
+{"level":"error","message":"Authentication error for email: admin@example.com Invalid email or password","service":"nexus-ecommerce","stack":"Error: Invalid email or password\n    at H:\\My Learning\\Projects\\MERN\\Nexus-ecommerce\\server\\controllers\\userController.js:81:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-11-12T14:45:41.683Z"}
+{"level":"error","message":"Unhandled error: Invalid email or password","service":"nexus-ecommerce","stack":"Error: Invalid email or password\n    at H:\\My Learning\\Projects\\MERN\\Nexus-ecommerce\\server\\controllers\\userController.js:81:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-11-12T14:45:41.687Z"}
+{"level":"info","message":"Attempting to authenticate user with email: admin@example.com","service":"nexus-ecommerce","timestamp":"2025-11-12T14:47:08.151Z"}
+{"level":"warn","message":"Authentication failed for email: admin@example.com","service":"nexus-ecommerce","timestamp":"2025-11-12T14:47:08.246Z"}
+{"level":"error","message":"Authentication error for email: admin@example.com Invalid email or password","service":"nexus-ecommerce","stack":"Error: Invalid email or password\n    at H:\\My Learning\\Projects\\MERN\\Nexus-ecommerce\\server\\controllers\\userController.js:81:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-11-12T14:47:08.247Z"}
+{"level":"error","message":"Unhandled error: Invalid email or password","service":"nexus-ecommerce","stack":"Error: Invalid email or password\n    at H:\\My Learning\\Projects\\MERN\\Nexus-ecommerce\\server\\controllers\\userController.js:81:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-11-12T14:47:08.248Z"}
+{"level":"info","message":"Attempting to connect to MongoDB","service":"nexus-ecommerce","timestamp":"2025-11-12T14:47:38.531Z"}
+{"level":"info","message":"Environment:","service":"nexus-ecommerce","timestamp":"2025-11-12T14:47:38.544Z"}
+{"level":"info","message":"Checking for build directory at:","service":"nexus-ecommerce","timestamp":"2025-11-12T14:47:44.194Z"}
+{"level":"info","message":"Build directory found, serving static files","service":"nexus-ecommerce","timestamp":"2025-11-12T14:47:44.196Z"}
+{"level":"info","message":"Server running on port 5000","service":"nexus-ecommerce","timestamp":"2025-11-12T14:47:44.214Z"}
+{"level":"info","message":"MongoDB Connected: ac-lpuzls0-shard-00-01.vp5ywmd.mongodb.net","service":"nexus-ecommerce","timestamp":"2025-11-12T14:47:45.247Z"}
+{"level":"info","message":"Attempting to authenticate user with email: admin@example.com","service":"nexus-ecommerce","timestamp":"2025-11-12T14:49:16.757Z"}
+{"level":"warn","message":"Authentication failed for email: admin@example.com","service":"nexus-ecommerce","timestamp":"2025-11-12T14:49:16.863Z"}
+{"level":"error","message":"Authentication error for email: admin@example.com Invalid email or password","service":"nexus-ecommerce","stack":"Error: Invalid email or password\n    at H:\\My Learning\\Projects\\MERN\\Nexus-ecommerce\\server\\controllers\\userController.js:81:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-11-12T14:49:16.864Z"}
+{"level":"error","message":"Unhandled error: Invalid email or password","service":"nexus-ecommerce","stack":"Error: Invalid email or password\n    at H:\\My Learning\\Projects\\MERN\\Nexus-ecommerce\\server\\controllers\\userController.js:81:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-11-12T14:49:16.867Z"}
+{"level":"info","message":"Attempting to connect to MongoDB","service":"nexus-ecommerce","timestamp":"2025-11-12T14:50:04.107Z"}
+{"level":"info","message":"Environment:","service":"nexus-ecommerce","timestamp":"2025-11-12T14:50:04.113Z"}
+{"level":"info","message":"Checking for build directory at:","service":"nexus-ecommerce","timestamp":"2025-11-12T14:50:04.675Z"}
+{"level":"info","message":"Build directory found, serving static files","service":"nexus-ecommerce","timestamp":"2025-11-12T14:50:04.676Z"}
+{"level":"info","message":"Server running on port 5000","service":"nexus-ecommerce","timestamp":"2025-11-12T14:50:04.683Z"}
+{"level":"info","message":"MongoDB Connected: ac-lpuzls0-shard-00-02.vp5ywmd.mongodb.net","service":"nexus-ecommerce","timestamp":"2025-11-12T14:50:05.616Z"}
+{"level":"info","message":"Attempting to connect to MongoDB","service":"nexus-ecommerce","timestamp":"2025-11-12T14:50:51.506Z"}
+{"level":"info","message":"Environment:","service":"nexus-ecommerce","timestamp":"2025-11-12T14:50:51.512Z"}
+{"level":"info","message":"Checking for build directory at:","service":"nexus-ecommerce","timestamp":"2025-11-12T14:50:52.083Z"}
+{"level":"info","message":"Build directory found, serving static files","service":"nexus-ecommerce","timestamp":"2025-11-12T14:50:52.084Z"}
+{"level":"info","message":"Server running on port 5000","service":"nexus-ecommerce","timestamp":"2025-11-12T14:50:52.092Z"}
+{"level":"info","message":"MongoDB Connected: ac-lpuzls0-shard-00-01.vp5ywmd.mongodb.net","service":"nexus-ecommerce","timestamp":"2025-11-12T14:50:53.056Z"}
+{"level":"info","message":"Attempting to connect to MongoDB","service":"nexus-ecommerce","timestamp":"2025-11-12T14:51:44.300Z"}
+{"level":"info","message":"Environment:","service":"nexus-ecommerce","timestamp":"2025-11-12T14:51:44.307Z"}
+{"level":"info","message":"Checking for build directory at:","service":"nexus-ecommerce","timestamp":"2025-11-12T14:51:44.910Z"}
+{"level":"info","message":"Build directory found, serving static files","service":"nexus-ecommerce","timestamp":"2025-11-12T14:51:44.911Z"}
+{"level":"info","message":"Server running on port 5000","service":"nexus-ecommerce","timestamp":"2025-11-12T14:51:44.921Z"}
+{"level":"info","message":"MongoDB Connected: ac-lpuzls0-shard-00-01.vp5ywmd.mongodb.net","service":"nexus-ecommerce","timestamp":"2025-11-12T14:51:45.808Z"}
+{"level":"info","message":"Attempting to connect to MongoDB","service":"nexus-ecommerce","timestamp":"2025-11-12T14:52:15.339Z"}
+{"level":"info","message":"Environment:","service":"nexus-ecommerce","timestamp":"2025-11-12T14:52:15.345Z"}
+{"level":"info","message":"Checking for build directory at:","service":"nexus-ecommerce","timestamp":"2025-11-12T14:52:15.926Z"}
+{"level":"info","message":"Build directory found, serving static files","service":"nexus-ecommerce","timestamp":"2025-11-12T14:52:15.927Z"}
+{"level":"info","message":"Server running on port 5000","service":"nexus-ecommerce","timestamp":"2025-11-12T14:52:15.934Z"}
+{"level":"info","message":"MongoDB Connected: ac-lpuzls0-shard-00-01.vp5ywmd.mongodb.net","service":"nexus-ecommerce","timestamp":"2025-11-12T14:52:16.829Z"}
+{"level":"info","message":"Attempting to connect to MongoDB","service":"nexus-ecommerce","timestamp":"2025-11-12T14:53:47.969Z"}
+{"level":"info","message":"Environment:","service":"nexus-ecommerce","timestamp":"2025-11-12T14:53:47.976Z"}
+{"level":"info","message":"Checking for build directory at:","service":"nexus-ecommerce","timestamp":"2025-11-12T14:53:48.548Z"}
+{"level":"info","message":"Build directory found, serving static files","service":"nexus-ecommerce","timestamp":"2025-11-12T14:53:48.549Z"}
+{"level":"info","message":"Server running on port 5000","service":"nexus-ecommerce","timestamp":"2025-11-12T14:53:48.555Z"}
+{"level":"info","message":"MongoDB Connected: ac-lpuzls0-shard-00-02.vp5ywmd.mongodb.net","service":"nexus-ecommerce","timestamp":"2025-11-12T14:53:49.468Z"}
+{"level":"info","message":"Attempting to authenticate user with email: admin@example.com","service":"nexus-ecommerce","timestamp":"2025-11-12T14:53:59.524Z"}
+{"level":"warn","message":"Authentication failed for email: admin@example.com","service":"nexus-ecommerce","timestamp":"2025-11-12T14:53:59.635Z"}
+{"level":"error","message":"Authentication error for email: admin@example.com Invalid email or password","service":"nexus-ecommerce","stack":"Error: Invalid email or password\n    at H:\\My Learning\\Projects\\MERN\\Nexus-ecommerce\\server\\controllers\\userController.js:81:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-11-12T14:53:59.637Z"}
+{"level":"error","message":"Unhandled error: Invalid email or password","service":"nexus-ecommerce","stack":"Error: Invalid email or password\n    at H:\\My Learning\\Projects\\MERN\\Nexus-ecommerce\\server\\controllers\\userController.js:81:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-11-12T14:53:59.640Z"}
+{"level":"info","message":"Attempting to connect to MongoDB","service":"nexus-ecommerce","timestamp":"2025-11-12T14:54:07.328Z"}
+{"level":"info","message":"Environment:","service":"nexus-ecommerce","timestamp":"2025-11-12T14:54:07.347Z"}
+{"level":"info","message":"Checking for build directory at:","service":"nexus-ecommerce","timestamp":"2025-11-12T14:54:08.078Z"}
+{"level":"info","message":"Build directory found, serving static files","service":"nexus-ecommerce","timestamp":"2025-11-12T14:54:08.079Z"}
+{"level":"info","message":"Server running on port 5000","service":"nexus-ecommerce","timestamp":"2025-11-12T14:54:08.085Z"}
+{"level":"info","message":"MongoDB Connected: ac-lpuzls0-shard-00-01.vp5ywmd.mongodb.net","service":"nexus-ecommerce","timestamp":"2025-11-12T14:54:08.968Z"}
+{"level":"info","message":"Attempting to register user with email: admin@example.com","service":"nexus-ecommerce","timestamp":"2025-11-12T14:54:46.945Z"}
+{"level":"info","message":"Creating new user with email: admin@example.com","service":"nexus-ecommerce","timestamp":"2025-11-12T14:54:47.061Z"}
+{"level":"info","message":"Successfully registered user with email: admin@example.com","service":"nexus-ecommerce","timestamp":"2025-11-12T14:54:47.423Z"}
+{"level":"info","message":"Generating token for user ID:","service":"nexus-ecommerce","timestamp":"2025-11-12T14:54:47.426Z"}
+{"level":"info","message":"Token generated successfully","service":"nexus-ecommerce","timestamp":"2025-11-12T14:54:47.434Z"}
+{"level":"info","message":"Generated token for user admin@example.com","service":"nexus-ecommerce","timestamp":"2025-11-12T14:54:47.435Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T14:54:47.658Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T14:54:47.851Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T14:57:13.028Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T14:57:13.210Z"}
+{"level":"info","message":"Attempting to authenticate user with email: admin@example.com","service":"nexus-ecommerce","timestamp":"2025-11-12T15:03:08.769Z"}
+{"level":"warn","message":"Authentication failed for email: admin@example.com","service":"nexus-ecommerce","timestamp":"2025-11-12T15:03:08.872Z"}
+{"level":"error","message":"Authentication error for email: admin@example.com Invalid email or password","service":"nexus-ecommerce","stack":"Error: Invalid email or password\n    at H:\\My Learning\\Projects\\MERN\\Nexus-ecommerce\\server\\controllers\\userController.js:81:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-11-12T15:03:08.873Z"}
+{"level":"error","message":"Unhandled error: Invalid email or password","service":"nexus-ecommerce","stack":"Error: Invalid email or password\n    at H:\\My Learning\\Projects\\MERN\\Nexus-ecommerce\\server\\controllers\\userController.js:81:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)","timestamp":"2025-11-12T15:03:08.876Z"}
+{"level":"info","message":"Attempting to register user with email: soumyamajumder201817@gmail.com","service":"nexus-ecommerce","timestamp":"2025-11-12T15:03:43.543Z"}
+{"level":"info","message":"Creating new user with email: soumyamajumder201817@gmail.com","service":"nexus-ecommerce","timestamp":"2025-11-12T15:03:43.628Z"}
+{"level":"info","message":"Successfully registered user with email: soumyamajumder201817@gmail.com","service":"nexus-ecommerce","timestamp":"2025-11-12T15:03:43.971Z"}
+{"level":"info","message":"Generating token for user ID:","service":"nexus-ecommerce","timestamp":"2025-11-12T15:03:43.972Z"}
+{"level":"info","message":"Token generated successfully","service":"nexus-ecommerce","timestamp":"2025-11-12T15:03:43.975Z"}
+{"level":"info","message":"Generated token for user soumyamajumder201817@gmail.com","service":"nexus-ecommerce","timestamp":"2025-11-12T15:03:43.976Z"}
+{"level":"info","message":"Fetching products - page: 1, keyword: none","service":"nexus-ecommerce","timestamp":"2025-11-12T15:03:44.133Z"}
+{"level":"info","message":"Successfully fetched 0 products","service":"nexus-ecommerce","timestamp":"2025-11-12T15:03:44.310Z"}
