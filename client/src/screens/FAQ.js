@@ -46,8 +46,8 @@ const FAQ = () => {
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-brown-900 mb-4">Frequently Asked Questions</h1>
-          <p className="text-brown-700 max-w-2xl mx-auto">
+          <h1 className="text-4xl font-bold text-primary-900 mb-4">Frequently Asked Questions</h1>
+          <p className="text-primary-700 max-w-2xl mx-auto">
             Find answers to common questions about our products, services, and policies.
           </p>
         </div>
@@ -59,12 +59,12 @@ const FAQ = () => {
                 className="w-full flex justify-between items-center p-6 text-left"
                 onClick={() => toggleFAQ(index)}
               >
-                <h3 className="text-lg font-semibold text-brown-900">{faq.question}</h3>
+                <h3 className="text-lg font-semibold text-primary-900">{faq.question}</h3>
                 <i className={`fas fa-chevron-down transition-transform duration-300 ${openIndex === index ? 'rotate-180' : ''}`}></i>
               </button>
               
               {openIndex === index && (
-                <div className="px-6 pb-6 text-brown-700">
+                <div className="px-6 pb-6 text-primary-700">
                   <p>{faq.answer}</p>
                 </div>
               )}
@@ -73,8 +73,8 @@ const FAQ = () => {
         </div>
         
         <div className="mt-12 text-center">
-          <h2 className="text-2xl font-bold text-brown-900 mb-4">Still Have Questions?</h2>
-          <p className="text-brown-700 mb-6">
+          <h2 className="text-2xl font-bold text-primary-900 mb-4">Still Have Questions?</h2>
+          <p className="text-primary-700 mb-6">
             Can't find the answer you're looking for? Please contact our customer support team.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

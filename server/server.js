@@ -43,10 +43,10 @@ const corsOptions = {
       // For production, we might want to be more permissive with subdomains
       if (process.env.NODE_ENV === 'production') {
         // Allow any vercel.app subdomain
-        if (origin.endsWith('.vercel.app')) {
+        if (origin && origin.endsWith('.vercel.app')) {
           callback(null, true);
         } else {
-          callback(null, true); // Allow all origins in production for now
+          callback(new Error('Not allowed by CORS'));
         }
       } else {
         callback(new Error('Not allowed by CORS'));

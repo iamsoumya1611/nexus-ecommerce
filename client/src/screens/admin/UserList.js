@@ -29,60 +29,60 @@ const UserList = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-brown-900 mb-6">Users</h1>
+      <h1 className="text-3xl font-bold text-primary-900 mb-6">Users</h1>
 
       {loading ? (
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brown-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
         </div>
       ) : error ? (
-        <div className="alert alert-danger" role="alert">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
           {error}
         </div>
       ) : (
         <div className="card overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-brown-200">
-              <thead className="bg-brown-100">
+            <table className="min-w-full divide-y divide-primary-200">
+              <thead className="bg-primary-100">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-brown-700 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">
                     ID
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-brown-700 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">
                     NAME
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-brown-700 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">
                     EMAIL
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-brown-700 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">
                     ADMIN
                   </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-brown-700 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-primary-700 uppercase tracking-wider">
                     ACTIONS
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-brown-200">
+              <tbody className="bg-white divide-y divide-primary-200">
                 {users.map((user) => (
-                  <tr key={user._id} className="hover:bg-brown-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-brown-700">
+                  <tr key={user._id} className="hover:bg-primary-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-700">
                       {user._id}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-brown-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary-900">
                       {user.name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-brown-700">
-                      <a href={`mailto:${user.email}`} className="text-brown-700 hover:text-brown-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-700">
+                      <a href={`mailto:${user.email}`} className="text-primary-700 hover:text-primary-900">
                         {user.email}
                       </a>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-brown-700">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-700">
                       {user.isAdmin ? (
                         <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                           Admin
                         </span>
                       ) : (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-brown-100 text-brown-800">
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary-100 text-primary-800">
                           Customer
                         </span>
                       )}

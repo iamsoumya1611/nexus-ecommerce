@@ -158,12 +158,12 @@ const ProductEdit = () => {
         <h1 className="text-3xl font-bold text-primary-900 mb-6">Edit Product</h1>
         
         {loadingUpdate && (
-          <div className="alert alert-info mb-4">
+          <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
             Updating product...
           </div>
         )}
         {errorUpdate && (
-          <div className="alert alert-danger mb-4">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {errorUpdate}
           </div>
         )}
@@ -173,7 +173,7 @@ const ProductEdit = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
           </div>
         ) : error ? (
-          <div className="alert alert-danger" role="alert">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
             {error}
           </div>
         ) : (

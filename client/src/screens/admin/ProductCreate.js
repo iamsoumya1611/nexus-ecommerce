@@ -121,12 +121,12 @@ const ProductCreate = () => {
         <h1 className="text-3xl font-bold text-primary-900 mb-6">Create Product</h1>
         
         {loading && (
-          <div className="alert alert-info mb-4">
+          <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
             Creating product...
           </div>
         )}
         {error && (
-          <div className="alert alert-danger mb-4">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
           </div>
         )}

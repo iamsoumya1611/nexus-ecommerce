@@ -12,14 +12,15 @@ const Product = ({ product }) => {
   // Format price to Indian Rupees (INR)
   const formatPrice = (price) => {
     // Check if price is a valid number
-    if (typeof price !== 'number') return '₹0';
+    const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
+    if (typeof numericPrice !== 'number' || isNaN(numericPrice)) return '₹0';
     
     // Format the price as INR currency without decimal places
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
       maximumFractionDigits: 0
-    }).format(price);
+    }).format(numericPrice);
   };
 
   // Render star ratings for the product

@@ -49,112 +49,140 @@ const Profile = () => {
   };
 
   return (
-    <div>
-      <div className="row">
-        <div className="col-md-3">
-          <h2>User Profile</h2>
-          {message && <p>{message}</p>}
-          {error && <p>{error}</p>}
-          {success && <p>Profile Updated</p>}
-          {loading && <p>Loading...</p>}
-          <form onSubmit={submitHandler}>
-            <div className="form-group">
-              <label htmlFor="name">Name</label>
-              <input
-                type="text"
-                className="form-control"
-                id="name"
-                placeholder="Enter name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="email">Email Address</label>
-              <input
-                type="email"
-                className="form-control"
-                id="email"
-                placeholder="Enter email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="password">Password</label>
-              <input
-                type="password"
-                className="form-control"
-                id="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm Password</label>
-              <input
-                type="password"
-                className="form-control"
-                id="confirmPassword"
-                placeholder="Confirm password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
-            <button type="submit" className="btn btn-primary">
-              Update
-            </button>
-          </form>
+    <div className="container mx-auto px-4 py-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-1">
+          <div className="card p-6">
+            <h2 className="text-2xl font-bold text-primary-900 mb-6">User Profile</h2>
+            {message && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{message}</div>}
+            {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
+            {success && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">Profile Updated Successfully!</div>}
+            {loading && (
+              <div className="flex justify-center my-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500"></div>
+              </div>
+            )}
+            <form onSubmit={submitHandler}>
+              <div className="mb-4">
+                <label htmlFor="name" className="block text-sm font-medium text-primary-700 mb-2">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  className="form-input w-full"
+                  id="name"
+                  placeholder="Enter name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="email" className="block text-sm font-medium text-primary-700 mb-2">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  className="form-input w-full"
+                  id="email"
+                  placeholder="Enter email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="password" className="block text-sm font-medium text-primary-700 mb-2">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  className="form-input w-full"
+                  id="password"
+                  placeholder="Enter password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              <div className="mb-6">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-primary-700 mb-2">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  className="form-input w-full"
+                  id="confirmPassword"
+                  placeholder="Confirm password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </div>
+              <button type="submit" className="btn btn-primary w-full" disabled={loading}>
+                {loading ? 'Updating...' : 'Update Profile'}
+              </button>
+            </form>
+          </div>
         </div>
-        <div className="col-md-9">
-          <h2>My Orders</h2>
-          {loadingOrders ? (
-            <p>Loading...</p>
-          ) : errorOrders ? (
-            <p>{errorOrders}</p>
-          ) : (
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>DATE</th>
-                  <th>TOTAL</th>
-                  <th>PAID</th>
-                  <th>DELIVERED</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((order) => (
-                  <tr key={order._id}>
-                    <td>{order._id}</td>
-                    <td>{order.createdAt.substring(0, 10)}</td>
-                    <td>${order.totalPrice}</td>
-                    <td>
-                      {order.isPaid ? (
-                        order.paidAt.substring(0, 10)
-                      ) : (
-                        <i className="fas fa-times" style={{ color: 'red' }}></i>
-                      )}
-                    </td>
-                    <td>
-                      {order.isDelivered ? (
-                        order.deliveredAt.substring(0, 10)
-                      ) : (
-                        <i className="fas fa-times" style={{ color: 'red' }}></i>
-                      )}
-                    </td>
-                    <td>
-                      <Link to={`/order/${order._id}`} className="btn btn-light btn-sm">
-                        Details
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+        <div className="lg:col-span-2">
+          <div className="card p-6">
+            <h2 className="text-2xl font-bold text-primary-900 mb-6">My Orders</h2>
+            {loadingOrders ? (
+              <div className="flex justify-center my-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500"></div>
+              </div>
+            ) : errorOrders ? (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">{errorOrders}</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-primary-200">
+                  <thead className="bg-primary-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">DATE</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">TOTAL</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">PAID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">DELIVERED</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-primary-700 uppercase tracking-wider">ACTIONS</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-primary-200">
+                    {orders && orders.length > 0 ? (
+                      orders.map((order) => (
+                        <tr key={order._id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">{order._id}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">{order.createdAt.substring(0, 10)}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">${order.totalPrice}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
+                            {order.isPaid ? (
+                              <span className="text-success-700">{order.paidAt.substring(0, 10)}</span>
+                            ) : (
+                              <i className="fas fa-times text-error-700"></i>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
+                            {order.isDelivered ? (
+                              <span className="text-success-700">{order.deliveredAt.substring(0, 10)}</span>
+                            ) : (
+                              <i className="fas fa-times text-error-700"></i>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <Link to={`/order/${order._id}`} className="btn btn-light">
+                              Details
+                            </Link>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="px-6 py-4 text-center text-sm text-primary-700">
+                          No orders found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

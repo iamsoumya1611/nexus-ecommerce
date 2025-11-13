@@ -48,32 +48,32 @@ const UserEdit = () => {
       </Link>
       
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-brown-900 mb-6">Edit User</h1>
+        <h1 className="text-3xl font-bold text-primary-900 mb-6">Edit User</h1>
         
         {loadingUpdate && (
-          <div className="alert alert-info mb-4">
+          <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
             Updating user...
           </div>
         )}
         {errorUpdate && (
-          <div className="alert alert-danger mb-4">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {errorUpdate}
           </div>
         )}
         
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brown-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
           </div>
         ) : error ? (
-          <div className="alert alert-danger" role="alert">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
             {error}
           </div>
         ) : (
           <div className="card p-6">
             <form onSubmit={submitHandler}>
               <div className="mb-4">
-                <label htmlFor="name" className="block text-sm font-medium text-brown-700 mb-2">
+                <label htmlFor="name" className="block text-sm font-medium text-primary-700 mb-2">
                   Name
                 </label>
                 <input
@@ -88,7 +88,7 @@ const UserEdit = () => {
               </div>
               
               <div className="mb-4">
-                <label htmlFor="email" className="block text-sm font-medium text-brown-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-primary-700 mb-2">
                   Email Address
                 </label>
                 <input
@@ -106,11 +106,11 @@ const UserEdit = () => {
                 <label className="flex items-center">
                   <input
                     type="checkbox"
-                    className="rounded border-brown-300 text-brown-500 focus:ring-brown-500"
+                    className="rounded border-primary-300 text-primary-500 focus:ring-primary-500"
                     checked={isAdmin}
                     onChange={(e) => setIsAdmin(e.target.checked)}
                   />
-                  <span className="ml-2 text-sm text-brown-700">Is Admin</span>
+                  <span className="ml-2 text-sm text-primary-700">Is Admin</span>
                 </label>
               </div>
               

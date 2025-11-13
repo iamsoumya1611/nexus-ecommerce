@@ -142,29 +142,43 @@ const authUser = asyncHandler(async (req, res) => {
 // @route   GET /api/users/profile
 // @access  Private
 const getUserProfile = asyncHandler(async (req, res) => {
-  logger.info(`Fetching profile for user ID: ${req.user._id}`);
-  
-  // Check if we have a database connection
-  if (mongoose.connection.readyState !== 1) {
-    logger.error('Database not connected');
-    res.status(500);
-    throw new Error('Database connection error. Please try again later.');
-  }
+  try {
+    logger.info(`Fetching profile for user ID: ${req.user._id}`);
+    
+    // Check if we have a database connection
+    if (mongoose.connection.readyState !== 1) {
+      logger.error('Database not connected');
+      res.status(500);
+      throw new Error('Database connection error. Please try again later.');
+    }
 
-  const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id);
 
-  if (user) {
-    logger.info(`Successfully fetched profile for user ID: ${req.user._id}`);
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      isAdmin: user.isAdmin
+    if (user) {
+      logger.info(`Successfully fetched profile for user ID: ${req.user._id}`);
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        isAdmin: user.isAdmin
+      });
+    } else {
+      logger.warn(`User not found for ID: ${req.user._id}`);
+      res.status(404);
+      throw new Error('User not found');
+    }
+  } catch (error) {
+    logger.error(`Error fetching profile for user ID: ${req.user._id}`, {
+      message: error.message,
+      stack: error.stack
     });
-  } else {
-    logger.warn(`User not found for ID: ${req.user._id}`);
-    res.status(404);
-    throw new Error('User not found');
+    // If it's already an express async handler error, rethrow it
+    if (error instanceof Error && error.message) {
+      throw error;
+    }
+    // Otherwise, create a new error
+    res.status(500);
+    throw new Error('Internal server error while fetching profile');
   }
 });
 
@@ -172,38 +186,52 @@ const getUserProfile = asyncHandler(async (req, res) => {
 // @route   PUT /api/users/profile
 // @access  Private
 const updateUserProfile = asyncHandler(async (req, res) => {
-  logger.info(`Updating profile for user ID: ${req.user._id}`);
-  
-  // Check if we have a database connection
-  if (mongoose.connection.readyState !== 1) {
-    logger.error('Database not connected');
-    res.status(500);
-    throw new Error('Database connection error. Please try again later.');
-  }
-
-  const user = await User.findById(req.user._id);
-
-  if (user) {
-    user.name = req.body.name || user.name;
-    user.email = req.body.email || user.email;
-    if (req.body.password) {
-      user.password = req.body.password;
+  try {
+    logger.info(`Updating profile for user ID: ${req.user._id}`);
+    
+    // Check if we have a database connection
+    if (mongoose.connection.readyState !== 1) {
+      logger.error('Database not connected');
+      res.status(500);
+      throw new Error('Database connection error. Please try again later.');
     }
 
-    const updatedUser = await user.save();
+    const user = await User.findById(req.user._id);
 
-    logger.info(`Successfully updated profile for user ID: ${req.user._id}`);
-    res.json({
-      _id: updatedUser._id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      isAdmin: updatedUser.isAdmin,
-      token: generateToken(updatedUser._id)
+    if (user) {
+      user.name = req.body.name || user.name;
+      user.email = req.body.email || user.email;
+      if (req.body.password) {
+        user.password = req.body.password;
+      }
+
+      const updatedUser = await user.save();
+
+      logger.info(`Successfully updated profile for user ID: ${req.user._id}`);
+      res.json({
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        isAdmin: updatedUser.isAdmin,
+        token: generateToken(updatedUser._id)
+      });
+    } else {
+      logger.warn(`User not found for ID: ${req.user._id}`);
+      res.status(404);
+      throw new Error('User not found');
+    }
+  } catch (error) {
+    logger.error(`Error updating profile for user ID: ${req.user._id}`, {
+      message: error.message,
+      stack: error.stack
     });
-  } else {
-    logger.warn(`User not found for ID: ${req.user._id}`);
-    res.status(404);
-    throw new Error('User not found');
+    // If it's already an express async handler error, rethrow it
+    if (error instanceof Error && error.message) {
+      throw error;
+    }
+    // Otherwise, create a new error
+    res.status(500);
+    throw new Error('Internal server error while updating profile');
   }
 });
 

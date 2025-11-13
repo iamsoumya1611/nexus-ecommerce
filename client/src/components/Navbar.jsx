@@ -48,7 +48,7 @@ const Navbar = () => {
     e.preventDefault();
     // Redirect to search results page if search keyword is not empty
     if (searchKeyword.trim()) {
-      window.location.href = `/search/${searchKeyword}`;
+      window.location.href = `/products/search/${searchKeyword}`;
     }
   };
 

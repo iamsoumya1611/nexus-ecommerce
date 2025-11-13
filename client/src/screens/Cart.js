@@ -15,7 +15,7 @@ const Cart = () => {
 
   React.useEffect(() => {
     if (id) {
-      dispatch(addToCart(id, qty));
+      dispatch(addToCart(id, Number(qty)));
     }
   }, [dispatch, id, qty]);
 
@@ -29,11 +29,11 @@ const Cart = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-brown-900 mb-6">Shopping Cart</h1>
+      <h1 className="text-3xl font-bold text-primary-900 mb-6">Shopping Cart</h1>
       {cartItems.length === 0 ? (
         <div className="text-center py-12">
-          <i className="fas fa-shopping-cart text-5xl text-brown-300 mb-4"></i>
-          <h3 className="text-2xl font-semibold text-brown-900 mb-4">Your cart is empty</h3>
+          <i className="fas fa-shopping-cart text-5xl text-primary-300 mb-4"></i>
+          <h3 className="text-2xl font-semibold text-primary-900 mb-4">Your cart is empty</h3>
           <Link to="/" className="btn btn-primary inline-flex items-center">
             <i className="fas fa-shopping-bag mr-2"></i>
             Continue Shopping
@@ -53,7 +53,7 @@ const Cart = () => {
                     />
                   </div>
                   <div className="flex-grow">
-                    <Link to={`/product/${item.product}`} className="text-lg font-semibold text-brown-900 hover:text-brown-700">
+                    <Link to={`/product/${item.product}`} className="text-lg font-semibold text-primary-900 hover:text-primary-700">
                       {item.name}
                     </Link>
                     <div className="mt-2">
@@ -61,7 +61,7 @@ const Cart = () => {
                     </div>
                     <div className="mt-4 flex flex-col sm:flex-row sm:items-center">
                       <div className="mr-4 mb-2 sm:mb-0">
-                        <label htmlFor={`qty-${item.product}`} className="block text-sm font-medium text-brown-700 mb-1">
+                        <label htmlFor={`qty-${item.product}`} className="block text-sm font-medium text-primary-700 mb-1">
                           Qty
                         </label>
                         <select
@@ -93,7 +93,7 @@ const Cart = () => {
           </div>
           <div>
             <div className="card p-6 sticky top-24">
-              <h5 className="text-xl font-bold text-brown-900 mb-4">Order Summary</h5>
+              <h5 className="text-xl font-bold text-primary-900 mb-4">Order Summary</h5>
               <ul className="space-y-3 mb-4">
                 <li className="flex justify-between">
                   <span>Items ({cartItems.reduce((acc, item) => acc + item.qty, 0)})</span>
@@ -107,7 +107,7 @@ const Cart = () => {
                   <span>Tax</span>
                   <span>Calculated at checkout</span>
                 </li>
-                <li className="flex justify-between font-bold text-lg border-t border-brown-200 pt-2">
+                <li className="flex justify-between font-bold text-lg border-t border-primary-200 pt-2">
                   <span>Total</span>
                   <span>${cartItems.reduce((acc, item) => acc + item.qty * item.price, 0).toFixed(2)}</span>
                 </li>

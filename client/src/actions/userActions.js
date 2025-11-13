@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 
 // Set base URL for API requests
 // This allows us to easily switch between development and production environments
-const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
 
 // ACTION CREATORS
 // These functions create actions that will be dispatched to the Redux store

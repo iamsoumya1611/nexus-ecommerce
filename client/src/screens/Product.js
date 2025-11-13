@@ -64,11 +64,11 @@ const Product = () => {
         {loading ? (
           // Show loading spinner while product details are being fetched
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brown-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
           </div>
         ) : error ? (
           // Show error message if there was a problem fetching product details
-          <div className="alert alert-danger" role="alert">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
             {error}
           </div>
         ) : (
@@ -90,7 +90,7 @@ const Product = () => {
                 {/* Product name and rating */}
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-brown-900">{product.name}</h2>
+                    <h2 className="text-2xl font-bold text-primary-900">{product.name}</h2>
                     <div className="rating mb-2">
                       <span>
                         {/* Display 5-star rating based on product rating */}
@@ -101,7 +101,7 @@ const Product = () => {
                           ></i>
                         ))}
                       </span>
-                      <span className="text-brown-700 text-sm ml-2">({product.numReviews} reviews)</span>
+                      <span className="text-primary-700 text-sm ml-2">({product.numReviews} reviews)</span>
                     </div>
                   </div>
                   {/* Product price */}
@@ -109,21 +109,21 @@ const Product = () => {
                 </div>
                 
                 {/* Product description */}
-                <p className="text-brown-700 mb-4">{product.description}</p>
+                <p className="text-primary-700 mb-4">{product.description}</p>
                 
                 {/* Product brand and category */}
                 <div className="mb-4">
-                  <span className="inline-block bg-brown-100 text-brown-800 text-sm px-3 py-1 rounded-full mr-2">
+                  <span className="inline-block bg-primary-100 text-primary-800 text-sm px-3 py-1 rounded-full mr-2">
                     Brand: {product.brand}
                   </span>
-                  <span className="inline-block bg-brown-100 text-brown-800 text-sm px-3 py-1 rounded-full">
+                  <span className="inline-block bg-primary-100 text-primary-800 text-sm px-3 py-1 rounded-full">
                     Category: {product.category}
                   </span>
                 </div>
                 
                 {/* Stock status */}
                 <div className="mb-6">
-                  <h5 className="font-medium text-brown-900">
+                  <h5 className="font-medium text-primary-900">
                     Status: 
                     <span className={`ml-2 ${product.countInStock > 0 ? 'text-success-700' : 'text-error-700'}`}>
                       {product.countInStock > 0 ? 'In Stock' : 'Out of Stock'}
@@ -136,7 +136,7 @@ const Product = () => {
                   <div className="card p-6">
                     <h5 className="text-lg font-semibold mb-4">Add to Cart</h5>
                     <div className="mb-4">
-                      <label htmlFor="qty" className="block text-sm font-medium text-brown-700 mb-2">
+                      <label htmlFor="qty" className="block text-sm font-medium text-primary-700 mb-2">
                         Quantity
                       </label>
                       {/* Quantity selector - options based on available stock */}
@@ -168,11 +168,11 @@ const Product = () => {
             
             {/* Reviews section */}
             <div className="mt-12">
-              <h3 className="text-2xl font-bold text-brown-900 mb-6">Reviews</h3>
+              <h3 className="text-2xl font-bold text-primary-900 mb-6">Reviews</h3>
               
               {/* Message if no reviews exist */}
               {product.reviews && product.reviews.length === 0 && (
-                <div className="alert alert-info">No reviews yet</div>
+                <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">No reviews yet</div>
               )}
               
               {/* Display existing reviews */}
@@ -180,8 +180,8 @@ const Product = () => {
                 {product.reviews && product.reviews.map((review) => (
                   <div key={review._id} className="card p-4">
                     <div className="flex justify-between">
-                      <h6 className="font-semibold text-brown-900">{review.name}</h6>
-                      <span className="text-sm text-brown-700">
+                      <h6 className="font-semibold text-primary-900">{review.name}</h6>
+                      <span className="text-sm text-primary-700">
                         {review.createdAt.substring(0, 10)}
                       </span>
                     </div>
@@ -196,25 +196,25 @@ const Product = () => {
                         ))}
                       </span>
                     </div>
-                    <p className="text-brown-700">{review.comment}</p>
+                    <p className="text-primary-700">{review.comment}</p>
                   </div>
                 ))}
               </div>
               
               {/* Review submission form */}
               <div className="mt-8">
-                <h4 className="text-xl font-bold text-brown-900 mb-4">Write a Customer Review</h4>
+                <h4 className="text-xl font-bold text-primary-900 mb-4">Write a Customer Review</h4>
                 
                 {/* Error message if review submission failed */}
                 {errorProductReview && (
-                  <div className="alert alert-danger" role="alert">
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
                     {errorProductReview}
                   </div>
                 )}
                 
                 {/* Success message if review was submitted successfully */}
                 {successProductReview && (
-                  <div className="alert alert-success" role="alert">
+                  <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded" role="alert">
                     Review submitted successfully
                   </div>
                 )}
@@ -223,7 +223,7 @@ const Product = () => {
                 {userInfo ? (
                   <form onSubmit={submitHandler} className="card p-6">
                     <div className="mb-4">
-                      <label htmlFor="rating" className="block text-sm font-medium text-brown-700 mb-2">
+                      <label htmlFor="rating" className="block text-sm font-medium text-primary-700 mb-2">
                         Rating
                       </label>
                       {/* Rating selector */}
@@ -243,7 +243,7 @@ const Product = () => {
                       </select>
                     </div>
                     <div className="mb-4">
-                      <label htmlFor="comment" className="block text-sm font-medium text-brown-700 mb-2">
+                      <label htmlFor="comment" className="block text-sm font-medium text-primary-700 mb-2">
                         Comment
                       </label>
                       {/* Comment text area */}
@@ -263,8 +263,8 @@ const Product = () => {
                   </form>
                 ) : (
                   // Message for non-logged in users
-                  <div className="alert alert-info">
-                    Please <Link to="/login" className="text-brown-700 font-medium">sign in</Link> to write a review
+                  <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded">
+                    Please <Link to="/login" className="text-primary-700 font-medium">sign in</Link> to write a review
                   </div>
                 )}
               </div>

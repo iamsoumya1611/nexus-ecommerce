@@ -106,102 +106,103 @@ const PlaceOrder = () => {
   };
 
   return (
-    <div>
-      <div className="row">
-        <div className="col-md-8">
-          <ul className="list-group list-group-flush">
-            <li className="list-group-item">
-              <h2>Shipping</h2>
-              <p>
-                <strong>Address: </strong>
-                {shippingAddress.address}, {shippingAddress.city} {shippingAddress.postalCode},{' '}
-                {shippingAddress.country}
-              </p>
-            </li>
-            <li className="list-group-item">
-              <h2>Payment Method</h2>
-              <p>
-                <strong>Method: </strong>
-                {paymentMethod}
-              </p>
-            </li>
-            <li className="list-group-item">
-              <h2>Order Items</h2>
-              {cartItems.length === 0 ? (
-                <p>Your cart is empty</p>
-              ) : (
-                <ul className="list-group list-group-flush">
-                  {cartItems.map((item, index) => (
-                    <li key={index} className="list-group-item">
-                      <div className="row">
-                        <div className="col-md-2">
-                          <img src={item.image} alt={item.name} className="img-fluid" />
-                        </div>
-                        <div className="col-md-4">
-                          <Link to={`/product/${item.product}`}>{item.name}</Link>
-                        </div>
-                        <div className="col-md-6">
-                          {item.qty} x ${item.price} = ${(item.qty * item.price).toFixed(2)}
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </li>
-          </ul>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold text-primary-900 mb-6">Place Order</h1>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          <div className="card p-6 mb-6">
+            <h2 className="text-2xl font-bold text-primary-900 mb-4">Shipping Information</h2>
+            <p className="text-primary-700">
+              <strong className="font-semibold">Address: </strong>
+              {shippingAddress.address}, {shippingAddress.city} {shippingAddress.postalCode},{' '}
+              {shippingAddress.country}
+            </p>
+          </div>
+          
+          <div className="card p-6 mb-6">
+            <h2 className="text-2xl font-bold text-primary-900 mb-4">Payment Method</h2>
+            <p className="text-primary-700">
+              <strong className="font-semibold">Method: </strong>
+              {paymentMethod}
+            </p>
+          </div>
+          
+          <div className="card p-6">
+            <h2 className="text-2xl font-bold text-primary-900 mb-4">Order Items</h2>
+            {cartItems.length === 0 ? (
+              <p className="text-primary-700">Your cart is empty</p>
+            ) : (
+              <div className="space-y-4">
+                {cartItems.map((item, index) => (
+                  <div key={index} className="flex items-center border-b border-primary-200 pb-4 last:border-0 last:pb-0">
+                    <div className="flex-shrink-0 w-24 h-24 mr-4">
+                      <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
+                    </div>
+                    <div className="flex-grow">
+                      <Link to={`/product/${item.product}`} className="text-lg font-semibold text-primary-900 hover:text-primary-700">
+                        {item.name}
+                      </Link>
+                      <p className="text-primary-700 mt-2">
+                        {item.qty} x ${item.price} = <strong className="font-semibold">${(item.qty * item.price).toFixed(2)}</strong>
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-        <div className="col-md-4">
-          <div className="card">
-            <div className="card-body">
-              <h5 className="card-title">Order Summary</h5>
-              <ul className="list-group list-group-flush">
-                <li className="list-group-item">
-                  <div className="row">
-                    <div className="col">Items</div>
-                    <div className="col">${itemsPrice.toFixed(2)}</div>
+        <div className="lg:col-span-1">
+          <div className="card p-6 sticky top-24">
+            <h5 className="text-xl font-bold text-primary-900 mb-4">Order Summary</h5>
+            <ul className="space-y-3 mb-6">
+              <li className="flex justify-between">
+                <span className="text-primary-700">Items</span>
+                <span className="font-semibold">${itemsPrice.toFixed(2)}</span>
+              </li>
+              <li className="flex justify-between">
+                <span className="text-primary-700">Shipping</span>
+                <span className="font-semibold">${shippingPrice.toFixed(2)}</span>
+              </li>
+              <li className="flex justify-between">
+                <span className="text-primary-700">Tax</span>
+                <span className="font-semibold">${taxPrice.toFixed(2)}</span>
+              </li>
+              <li className="flex justify-between border-t border-primary-200 pt-3">
+                <span className="text-lg font-bold text-primary-900">Total</span>
+                <span className="text-lg font-bold text-primary-900">${totalPrice}</span>
+              </li>
+            </ul>
+            {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
+            {paymentMethod === 'Razorpay' ? (
+              <button
+                type="button"
+                className="btn btn-primary w-full"
+                disabled={cartItems.length === 0 || loading || paymentLoading}
+                onClick={razorpayPaymentHandler}
+              >
+                {(loading || paymentLoading) ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                    Processing...
                   </div>
-                </li>
-                <li className="list-group-item">
-                  <div className="row">
-                    <div className="col">Shipping</div>
-                    <div className="col">${shippingPrice.toFixed(2)}</div>
+                ) : 'Pay with Razorpay'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-primary w-full"
+                disabled={cartItems.length === 0 || loading}
+                onClick={placeOrderHandler}
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                    Processing...
                   </div>
-                </li>
-                <li className="list-group-item">
-                  <div className="row">
-                    <div className="col">Tax</div>
-                    <div className="col">${taxPrice.toFixed(2)}</div>
-                  </div>
-                </li>
-                <li className="list-group-item">
-                  <div className="row">
-                    <div className="col">Total</div>
-                    <div className="col">${totalPrice}</div>
-                  </div>
-                </li>
-              </ul>
-              {error && <p className="text-danger">{error}</p>}
-              {paymentMethod === 'Razorpay' ? (
-                <button
-                  type="button"
-                  className="btn btn-primary btn-block"
-                  disabled={cartItems.length === 0 || loading || paymentLoading}
-                  onClick={razorpayPaymentHandler}
-                >
-                  {(loading || paymentLoading) ? 'Processing...' : 'Pay with Razorpay'}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="btn btn-primary btn-block"
-                  disabled={cartItems.length === 0 || loading}
-                  onClick={placeOrderHandler}
-                >
-                  {loading ? 'Processing...' : 'Place Order'}
-                </button>
-              )}
-            </div>
+                ) : 'Place Order'}
+              </button>
+            )}
           </div>
         </div>
       </div>

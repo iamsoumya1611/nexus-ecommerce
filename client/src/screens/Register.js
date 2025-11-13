@@ -41,7 +41,7 @@ const Register = () => {
           <img src="/Nexus_logo.png" alt="Logo" className="mx-auto h-12 mb-4" />
           <h2 className="text-2xl font-bold text-center text-primary-900 mb-6">Create Account</h2>
           {message && (
-            <div className="alert alert-danger" role="alert">
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
               {message}
             </div>
           )}
