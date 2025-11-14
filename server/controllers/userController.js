@@ -13,26 +13,23 @@ const registerUser = asyncHandler(async (req, res) => {
 
     logger.info(`Attempting to register user with email: ${email}`);
     
-    // Check if we have a database connection
-    if (mongoose.connection.readyState !== 1) {
-      logger.error('Database not connected');
-      res.status(500);
-      throw new Error('Database connection error. Please try again later.');
-    }
-
     // Validate input
     if (!name || !email || !password) {
       logger.warn('Registration attempt with missing fields');
-      res.status(400);
-      throw new Error('Name, email, and password are required');
+      return res.status(400).json({ message: 'Name, email, and password are required' });
+    }
+
+    // Check if we have a database connection
+    if (mongoose.connection.readyState !== 1) {
+      logger.error('Database not connected');
+      return res.status(500).json({ message: 'Database connection error. Please try again later.' });
     }
 
     const userExists = await User.findOne({ email });
 
     if (userExists) {
       logger.warn(`Registration failed - User already exists with email: ${email}`);
-      res.status(409); // Conflict status code
-      throw new Error('User already exists');
+      return res.status(400).json({ message: 'User already exists' });
     }
 
     logger.info(`Creating new user with email: ${email}`);
@@ -62,22 +59,26 @@ const registerUser = asyncHandler(async (req, res) => {
       });
     } else {
       logger.error(`Invalid user data for email: ${email}`);
-      res.status(400);
-      throw new Error('Invalid user data');
+      return res.status(400).json({ message: 'Invalid user data' });
     }
   } catch (error) {
-    logger.error(`Registration error for email: ${req.body.email}`, {
+    logger.error(`Registration error for email: ${req.body.email || 'unknown'}`, {
       message: error.message,
       stack: error.stack,
       email: req.body.email
     });
-    // If it's already an express async handler error, rethrow it
-    if (error instanceof Error && error.message) {
-      throw error;
+    
+    // Return a more detailed error response in development
+    if (process.env.NODE_ENV !== 'production') {
+      return res.status(500).json({ 
+        message: 'Internal server error during registration',
+        error: error.message,
+        stack: error.stack
+      });
     }
-    // Otherwise, create a new error
-    res.status(500);
-    throw new Error('Internal server error during registration');
+    
+    // Return a generic error in production
+    return res.status(500).json({ message: 'Internal server error during registration' });
   }
 });
 
@@ -91,18 +92,16 @@ const authUser = asyncHandler(async (req, res) => {
     logger.info(`Attempting to authenticate user with email: ${email}`);
     logger.info(`Request body: ${JSON.stringify(req.body)}`);
     
-    // Check if we have a database connection
-    if (mongoose.connection.readyState !== 1) {
-      logger.error('Database not connected');
-      res.status(500);
-      throw new Error('Database connection error. Please try again later.');
-    }
-
     // Validate input
     if (!email || !password) {
       logger.warn('Login attempt with missing email or password');
-      res.status(400);
-      throw new Error('Email and password are required');
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    // Check if we have a database connection
+    if (mongoose.connection.readyState !== 1) {
+      logger.error('Database not connected');
+      return res.status(500).json({ message: 'Database connection error. Please try again later.' });
     }
 
     logger.info(`Finding user with email: ${email}`);
@@ -133,22 +132,26 @@ const authUser = asyncHandler(async (req, res) => {
       res.json(responseData);
     } else {
       logger.warn(`Authentication failed for email: ${email}`);
-      res.status(401); // Unauthorized status code
-      throw new Error('Invalid email or password');
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
   } catch (error) {
-    logger.error(`Authentication error for email: ${req.body.email}`, {
+    logger.error(`Authentication error for email: ${req.body.email || 'unknown'}`, {
       message: error.message,
       stack: error.stack,
       email: req.body.email
     });
-    // If it's already an express async handler error, rethrow it
-    if (error instanceof Error && error.message) {
-      throw error;
+    
+    // Return a more detailed error response in development
+    if (process.env.NODE_ENV !== 'production') {
+      return res.status(500).json({ 
+        message: 'Internal server error during authentication',
+        error: error.message,
+        stack: error.stack
+      });
     }
-    // Otherwise, create a new error
-    res.status(500);
-    throw new Error('Internal server error during authentication');
+    
+    // Return a generic error in production
+    return res.status(500).json({ message: 'Internal server error during authentication' });
   }
 });
 
@@ -162,8 +165,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
     // Check if we have a database connection
     if (mongoose.connection.readyState !== 1) {
       logger.error('Database not connected');
-      res.status(500);
-      throw new Error('Database connection error. Please try again later.');
+      return res.status(500).json({ message: 'Database connection error. Please try again later.' });
     }
 
     const user = await User.findById(req.user._id);
@@ -185,21 +187,25 @@ const getUserProfile = asyncHandler(async (req, res) => {
       });
     } else {
       logger.warn(`User not found for ID: ${req.user._id}`);
-      res.status(404);
-      throw new Error('User not found');
+      return res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
-    logger.error(`Error fetching profile for user ID: ${req.user._id}`, {
+    logger.error(`Error fetching profile for user ID: ${req.user._id || 'unknown'}`, {
       message: error.message,
       stack: error.stack
     });
-    // If it's already an express async handler error, rethrow it
-    if (error instanceof Error && error.message) {
-      throw error;
+    
+    // Return a more detailed error response in development
+    if (process.env.NODE_ENV !== 'production') {
+      return res.status(500).json({ 
+        message: 'Internal server error while fetching profile',
+        error: error.message,
+        stack: error.stack
+      });
     }
-    // Otherwise, create a new error
-    res.status(500);
-    throw new Error('Internal server error while fetching profile');
+    
+    // Return a generic error in production
+    return res.status(500).json({ message: 'Internal server error while fetching profile' });
   }
 });
 
@@ -213,8 +219,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     // Check if we have a database connection
     if (mongoose.connection.readyState !== 1) {
       logger.error('Database not connected');
-      res.status(500);
-      throw new Error('Database connection error. Please try again later.');
+      return res.status(500).json({ message: 'Database connection error. Please try again later.' });
     }
 
     const user = await User.findById(req.user._id);
@@ -245,21 +250,25 @@ const updateUserProfile = asyncHandler(async (req, res) => {
       });
     } else {
       logger.warn(`User not found for ID: ${req.user._id}`);
-      res.status(404);
-      throw new Error('User not found');
+      return res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
-    logger.error(`Error updating profile for user ID: ${req.user._id}`, {
+    logger.error(`Error updating profile for user ID: ${req.user._id || 'unknown'}`, {
       message: error.message,
       stack: error.stack
     });
-    // If it's already an express async handler error, rethrow it
-    if (error instanceof Error && error.message) {
-      throw error;
+    
+    // Return a more detailed error response in development
+    if (process.env.NODE_ENV !== 'production') {
+      return res.status(500).json({ 
+        message: 'Internal server error while updating profile',
+        error: error.message,
+        stack: error.stack
+      });
     }
-    // Otherwise, create a new error
-    res.status(500);
-    throw new Error('Internal server error while updating profile');
+    
+    // Return a generic error in production
+    return res.status(500).json({ message: 'Internal server error while updating profile' });
   }
 });
 

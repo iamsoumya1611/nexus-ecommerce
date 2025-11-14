@@ -112,23 +112,35 @@ app.use('/payment', require('./routes/paymentRoutes'));
 app.use('/recommendations', require('./routes/recommendationRoutes'));
 
 // Health check endpoint for Render
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
   const { checkDBHealth } = require('./config/db');
   
-  const healthData = {
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    memory: process.memoryUsage(),
-    mongoose: checkDBHealth(),
-    environment: {
-      NODE_ENV: process.env.NODE_ENV,
-      PORT: process.env.PORT
-    }
-  };
-  
-  logger.info('Health check accessed:', healthData);
-  res.status(200).json(healthData);
+  try {
+    const healthData = {
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      mongoose: checkDBHealth(),
+      environment: {
+        NODE_ENV: process.env.NODE_ENV,
+        PORT: process.env.PORT
+      }
+    };
+    
+    logger.info('Health check accessed:', healthData);
+    res.status(200).json(healthData);
+  } catch (error) {
+    logger.error('Health check error:', {
+      message: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({
+      status: 'ERROR',
+      message: 'Health check failed',
+      error: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message
+    });
+  }
 });
 
 // Serve static files from the React app build directory
@@ -179,25 +191,69 @@ app.use((err, req, res, next) => {
       url: req.originalUrl,
       method: req.method
     });
-    res.status(403).json({
+    return res.status(403).json({
       message: 'CORS error: ' + err.message,
       origin: req.headers.origin
     });
-  } else {
-    logger.error('Unhandled error:', {
+  }
+  
+  // Handle mongoose validation errors
+  if (err.name === 'ValidationError') {
+    logger.error('Validation error:', {
       message: err.message,
       stack: err.stack,
       url: req.originalUrl,
       method: req.method,
       body: req.body
     });
-    const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-    res.status(statusCode);
-    res.json({
-      message: err.message,
-      stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+    return res.status(400).json({
+      message: 'Validation Error',
+      error: Object.values(err.errors).map(e => e.message)
     });
   }
+  
+  // Handle mongoose duplicate key errors
+  if (err.code && err.code === 11000) {
+    logger.error('Duplicate key error:', {
+      message: err.message,
+      stack: err.stack,
+      url: req.originalUrl,
+      method: req.method,
+      body: req.body
+    });
+    return res.status(400).json({
+      message: 'Duplicate field value entered'
+    });
+  }
+  
+  // Handle mongoose cast errors
+  if (err.name === 'CastError') {
+    logger.error('Cast error:', {
+      message: err.message,
+      stack: err.stack,
+      url: req.originalUrl,
+      method: req.method,
+      body: req.body
+    });
+    return res.status(400).json({
+      message: 'Resource not found'
+    });
+  }
+  
+  // Handle general errors
+  logger.error('Unhandled error:', {
+    message: err.message,
+    stack: err.stack,
+    url: req.originalUrl,
+    method: req.method,
+    body: req.body
+  });
+  
+  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  res.status(statusCode).json({
+    message: err.message,
+    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+  });
 });
 
 const server = app.listen(PORT, () => {
