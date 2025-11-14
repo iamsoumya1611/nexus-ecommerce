@@ -61,4 +61,15 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
+// Add a health check function
+const checkDBHealth = () => {
+  return {
+    readyState: mongoose.connection.readyState,
+    host: mongoose.connection.host,
+    name: mongoose.connection.name,
+    isConnected: mongoose.connection.readyState === 1
+  };
+};
+
 module.exports = connectDB;
+module.exports.checkDBHealth = checkDBHealth;

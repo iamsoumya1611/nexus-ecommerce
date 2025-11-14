@@ -57,7 +57,7 @@ const corsOptions = {
         logger.warn('Allowing blocked origin in development mode:', origin);
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        callback(null, true); // Temporarily allow all in production for debugging
       }
     }
   },
@@ -74,6 +74,11 @@ app.options('*', cors(corsOptions));
 // Middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Simple test route to check if server is working
+app.get('/test', (req, res) => {
+  res.json({ message: 'Server is working', timestamp: new Date().toISOString() });
+});
 
 // Database connection
 const connectDB = require('./config/db');
@@ -108,16 +113,14 @@ app.use('/recommendations', require('./routes/recommendationRoutes'));
 
 // Health check endpoint for Render
 app.get('/health', (req, res) => {
+  const { checkDBHealth } = require('./config/db');
+  
   const healthData = {
     status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     memory: process.memoryUsage(),
-    mongoose: {
-      readyState: mongoose.connection.readyState,
-      host: mongoose.connection.host,
-      name: mongoose.connection.name
-    },
+    mongoose: checkDBHealth(),
     environment: {
       NODE_ENV: process.env.NODE_ENV,
       PORT: process.env.PORT
