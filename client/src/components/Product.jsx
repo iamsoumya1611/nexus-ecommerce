@@ -135,14 +135,14 @@ const Product = ({ product }) => {
         </div>
         
         {/* Product Specifications */}
-        <div className="mb-3 max-h-24 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-primary-200 scrollbar-track-primary-50 rounded">
+        {/* <div className="mb-3 max-h-24 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-primary-200 scrollbar-track-primary-50 rounded">
           {getSpecifications().map((spec, index) => (
             <div key={index} className="flex text-xs text-primary-700 mb-1">
               <span className="font-medium w-20 truncate">{spec.label}:</span>
               <span className="ml-2 truncate">{spec.value}</span>
             </div>
           ))}
-        </div>
+        </div> */}
         
         {/* Product Description */}
         <p className="text-primary-700 text-sm mb-4 flex-grow line-clamp-2">

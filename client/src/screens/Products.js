@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { listProducts } from '../actions/productActions';
 import Product from '../components/Product';
+import CategoryRecommendations from '../components/CategoryRecommendations';
 
 const Products = () => {
   const dispatch = useDispatch();
@@ -616,6 +617,11 @@ const Products = () => {
         </div>
       ) : (
         <>
+          {/* Category Recommendations - only shown when a category is selected */}
+          {selectedCategory && (
+            <CategoryRecommendations category={selectedCategory} />
+          )}
+          
           {currentProducts.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-2xl shadow-lg">
               <i className="fas fa-box-open text-6xl text-primary-300 mb-6"></i>

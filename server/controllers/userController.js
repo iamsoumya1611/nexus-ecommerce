@@ -46,6 +46,13 @@ const registerUser = asyncHandler(async (req, res) => {
       logger.info(`Successfully registered user with email: ${email}`);
       const token = generateToken(user._id);
       logger.info(`Generated token for user ${email}`);
+      
+      // Ensure proper headers for CORS (normalize origin)
+      const origin = req.headers.origin;
+      const normalizedOrigin = origin ? origin.replace(/\/$/, '') : '*';
+      res.header('Access-Control-Allow-Origin', normalizedOrigin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+      
       res.status(201).json({
         _id: user._id,
         name: user.name,
@@ -116,6 +123,13 @@ const authUser = asyncHandler(async (req, res) => {
       };
       
       logger.info(`Sending response: ${JSON.stringify(responseData)}`);
+      
+      // Ensure proper headers for CORS (normalize origin)
+      const origin = req.headers.origin;
+      const normalizedOrigin = origin ? origin.replace(/\/$/, '') : '*';
+      res.header('Access-Control-Allow-Origin', normalizedOrigin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+      
       res.json(responseData);
     } else {
       logger.warn(`Authentication failed for email: ${email}`);
@@ -156,6 +170,13 @@ const getUserProfile = asyncHandler(async (req, res) => {
 
     if (user) {
       logger.info(`Successfully fetched profile for user ID: ${req.user._id}`);
+      
+      // Ensure proper headers for CORS (normalize origin)
+      const origin = req.headers.origin;
+      const normalizedOrigin = origin ? origin.replace(/\/$/, '') : '*';
+      res.header('Access-Control-Allow-Origin', normalizedOrigin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+      
       res.json({
         _id: user._id,
         name: user.name,
@@ -208,6 +229,13 @@ const updateUserProfile = asyncHandler(async (req, res) => {
       const updatedUser = await user.save();
 
       logger.info(`Successfully updated profile for user ID: ${req.user._id}`);
+      
+      // Ensure proper headers for CORS (normalize origin)
+      const origin = req.headers.origin;
+      const normalizedOrigin = origin ? origin.replace(/\/$/, '') : '*';
+      res.header('Access-Control-Allow-Origin', normalizedOrigin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+      
       res.json({
         _id: updatedUser._id,
         name: updatedUser.name,

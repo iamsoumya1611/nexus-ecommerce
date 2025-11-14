@@ -2,10 +2,17 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 
 // Set base URL for axios
-const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 export const addToCart = (id, qty) => async (dispatch, getState) => {
-  const { data } = await axios.get(`${API_BASE_URL}/products/${id}`);
+  // Construct the URL correctly based on environment
+  let baseUrl = API_BASE_URL;
+  // In development, we don't need the full URL because of proxy
+  if (process.env.NODE_ENV === 'development') {
+    baseUrl = '';
+  }
+
+  const { data } = await axios.get(`${baseUrl}/products/${id}`);
 
   dispatch({
     type: 'CART_ADD_ITEM',

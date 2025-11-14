@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 
 // Set base URL for API requests
 // This allows us to easily switch between development and production environments
-const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 // ACTION TYPES
 // These are defined in constants/productConstants.js
@@ -19,9 +19,16 @@ export const listProducts = (keyword = '', pageNumber = '') => async (dispatch) 
     // Dispatch request action to show loading state
     dispatch({ type: 'PRODUCT_LIST_REQUEST' });
 
+    // Construct the URL correctly based on environment
+    let baseUrl = API_BASE_URL;
+    // In development, we don't need the full URL because of proxy
+    if (process.env.NODE_ENV === 'development') {
+      baseUrl = '';
+    }
+
     // Make API call to get products
     const { data } = await axios.get(
-      `${API_BASE_URL}/products?keyword=${keyword}&pageNumber=${pageNumber}`
+      `${baseUrl}/products?keyword=${keyword}&pageNumber=${pageNumber}`
     );
 
     // Dispatch success action with the received data
@@ -60,8 +67,15 @@ export const listProductDetails = (id) => async (dispatch) => {
       throw new Error('Product ID is required');
     }
 
+    // Construct the URL correctly based on environment
+    let baseUrl = API_BASE_URL;
+    // In development, we don't need the full URL because of proxy
+    if (process.env.NODE_ENV === 'development') {
+      baseUrl = '';
+    }
+
     // Make API call to get product details
-    const { data } = await axios.get(`${API_BASE_URL}/products/${id}`);
+    const { data } = await axios.get(`${baseUrl}/products/${id}`);
 
     // Dispatch success action with the received data
     dispatch({
@@ -110,8 +124,15 @@ export const createProductReview = (productId, review) => async (dispatch, getSt
       }
     };
 
+    // Construct the URL correctly based on environment
+    let baseUrl = API_BASE_URL;
+    // In development, we don't need the full URL because of proxy
+    if (process.env.NODE_ENV === 'development') {
+      baseUrl = '';
+    }
+
     // Make API call to create review
-    await axios.post(`${API_BASE_URL}/products/${productId}/reviews`, review, config);
+    await axios.post(`${baseUrl}/products/${productId}/reviews`, review, config);
 
     // Dispatch success action
     dispatch({ type: 'PRODUCT_CREATE_REVIEW_SUCCESS' });
@@ -165,9 +186,16 @@ export const updateProduct = (product) => async (dispatch, getState) => {
       throw new Error('Invalid product data');
     }
 
+    // Construct the URL correctly based on environment
+    let baseUrl = API_BASE_URL;
+    // In development, we don't need the full URL because of proxy
+    if (process.env.NODE_ENV === 'development') {
+      baseUrl = '';
+    }
+
     // Make API call to update product
     const { data } = await axios.put(
-      `${API_BASE_URL}/products/${product._id}`,
+      `${baseUrl}/products/${product._id}`,
       product,
       config
     );
@@ -199,8 +227,64 @@ export const updateProduct = (product) => async (dispatch, getState) => {
   }
 };
 
+// Delete a product
+// This function allows admins to delete products
+export const deleteProduct = (id) => async (dispatch, getState) => {
+  try {
+    // Dispatch request action to show loading state
+    dispatch({ type: 'PRODUCT_DELETE_REQUEST' });
+
+    // Get user info from Redux store
+    const { userLogin: { userInfo } } = getState();
+
+    // Check if user is logged in
+    if (!userInfo) {
+      throw new Error('You must be logged in to delete a product');
+    }
+
+    // Set up request headers with authentication token
+    const config = {
+      headers: {
+        Authorization: `Bearer ${userInfo.token}`
+      }
+    };
+
+    // Construct the URL correctly based on environment
+    let baseUrl = API_BASE_URL;
+    // In development, we don't need the full URL because of proxy
+    if (process.env.NODE_ENV === 'development') {
+      baseUrl = '';
+    }
+
+    // Make API call to delete product
+    await axios.delete(`${baseUrl}/products/${id}`, config);
+
+    // Dispatch success action
+    dispatch({ type: 'PRODUCT_DELETE_SUCCESS' });
+    
+    // Show success toast notification
+    toast.success('Product deleted successfully!');
+  } catch (error) {
+    // Dispatch fail action with error message
+    dispatch({
+      type: 'PRODUCT_DELETE_FAIL',
+      payload:
+        error.response && error.response.data && error.response.data.message
+          ? error.response.data.message
+          : error.message || 'Failed to delete product'
+    });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to delete product. Please try again.'
+    );
+  }
+};
+
 // Create a new product
-// This function allows admins to add new products
+// This function allows admins to create new products
 export const createProduct = (product) => async (dispatch, getState) => {
   try {
     // Dispatch request action to show loading state
@@ -222,8 +306,19 @@ export const createProduct = (product) => async (dispatch, getState) => {
       }
     };
 
+    // Construct the URL correctly based on environment
+    let baseUrl = API_BASE_URL;
+    // In development, we don't need the full URL because of proxy
+    if (process.env.NODE_ENV === 'development') {
+      baseUrl = '';
+    }
+
     // Make API call to create product
-    const { data } = await axios.post(`${API_BASE_URL}/products`, product, config);
+    const { data } = await axios.post(
+      `${baseUrl}/products`,
+      product,
+      config
+    );
 
     // Dispatch success action with new product data
     dispatch({
@@ -248,60 +343,6 @@ export const createProduct = (product) => async (dispatch, getState) => {
       error.response && error.response.data && error.response.data.message
         ? error.response.data.message
         : 'Failed to create product. Please try again.'
-    );
-  }
-};
-
-// Delete a product
-// This function allows admins to remove products
-export const deleteProduct = (id) => async (dispatch, getState) => {
-  try {
-    // Dispatch request action to show loading state
-    dispatch({ type: 'PRODUCT_DELETE_REQUEST' });
-
-    // Get user info from Redux store
-    const { userLogin: { userInfo } } = getState();
-
-    // Check if user is logged in
-    if (!userInfo) {
-      throw new Error('You must be logged in to delete a product');
-    }
-
-    // Set up request headers with authentication token
-    const config = {
-      headers: {
-        Authorization: `Bearer ${userInfo.token}`
-      }
-    };
-
-    // Validate product ID
-    if (!id) {
-      throw new Error('Product ID is required');
-    }
-
-    // Make API call to delete product
-    await axios.delete(`${API_BASE_URL}/products/${id}`, config);
-
-    // Dispatch success action
-    dispatch({ type: 'PRODUCT_DELETE_SUCCESS' });
-    
-    // Show success toast notification
-    toast.success('Product deleted successfully!');
-  } catch (error) {
-    // Dispatch fail action with error message
-    dispatch({
-      type: 'PRODUCT_DELETE_FAIL',
-      payload:
-        error.response && error.response.data && error.response.data.message
-          ? error.response.data.message
-          : error.message || 'Failed to delete product'
-    });
-    
-    // Show error toast notification
-    toast.error(
-      error.response && error.response.data && error.response.data.message
-        ? error.response.data.message
-        : 'Failed to delete product. Please try again.'
     );
   }
 };

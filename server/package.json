@@ -4,7 +4,7 @@
   "description": "A simple e-commerce platform built with MERN stack",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "nodemon server.js",
     "dev": "nodemon server.js",
     "dev-frontend": "cd ../client && npm start",
     "dev-all": "concurrently \"npm run dev\" \"npm run dev-frontend\"",
@@ -15,6 +15,7 @@
     "destroy-products": "node seeder.js -d"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "axios": "^1.13.1",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^1.40.0",

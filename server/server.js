@@ -14,40 +14,48 @@ logger.info('NODE_ENV:', process.env.NODE_ENV);
 logger.info('PORT:', process.env.PORT);
 logger.info('MONGO_URI present:', !!process.env.MONGO_URI);
 logger.info('JWT_SECRET present:', !!process.env.JWT_SECRET);
+logger.info('FRONTEND_URL:', process.env.FRONTEND_URL);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS configuration
+// Enhanced CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    // List of allowed origins
+    // Normalize the origin by removing trailing slashes
+    const normalizedOrigin = origin.replace(/\/$/, '');
+    
+    // List of allowed origins (without trailing slashes)
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:5000',
-      'https://nexus-ecommerce-chi.vercel.app'
+      'https://nexus-ecommerce-chi.vercel.app',
+      'https://nexus-ecommerce-api.onrender.com'
     ];
     
     // In production, also allow the FRONTEND_URL from environment variables
     if (process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL) {
-      allowedOrigins.push(process.env.FRONTEND_URL);
+      allowedOrigins.push(process.env.FRONTEND_URL.replace(/\/$/, ''));
     }
     
-    // Check if the origin is in our allowed list
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    // Check if the normalized origin is in our allowed list, is a Vercel subdomain, or is a localhost origin
+    if (allowedOrigins.includes(normalizedOrigin) || 
+        (normalizedOrigin && normalizedOrigin.endsWith('.vercel.app')) ||
+        (normalizedOrigin && normalizedOrigin.startsWith('http://localhost:'))) {
       callback(null, true);
     } else {
-      // For production, we might want to be more permissive with subdomains
-      if (process.env.NODE_ENV === 'production') {
-        // Allow any vercel.app subdomain
-        if (origin && origin.endsWith('.vercel.app')) {
-          callback(null, true);
-        } else {
-          callback(new Error('Not allowed by CORS'));
-        }
+      // Log the origin that was blocked for debugging
+      logger.warn('CORS blocked origin:', origin);
+      logger.warn('Normalized origin:', normalizedOrigin);
+      logger.warn('Allowed origins:', allowedOrigins);
+      
+      // In development, be more permissive to avoid CORS issues during local testing
+      if (process.env.NODE_ENV !== 'production') {
+        logger.warn('Allowing blocked origin in development mode:', origin);
+        callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
       }
@@ -62,15 +70,6 @@ app.use(cors(corsOptions));
 
 // Handle preflight requests explicitly for all routes
 app.options('*', cors(corsOptions));
-
-// This is an alternative approach if the above doesn't work
-// app.options('*', (req, res) => {
-//   res.header('Access-Control-Allow-Origin', req.header('origin'));
-//   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-//   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-//   res.header('Access-Control-Allow-Credentials', 'true');
-//   res.sendStatus(200);
-// });
 
 // Middleware
 app.use(express.json({ limit: '50mb' }));
@@ -169,24 +168,38 @@ app.use('*', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  logger.error('Unhandled error:', {
-    message: err.message,
-    stack: err.stack,
-    url: req.originalUrl,
-    method: req.method,
-    body: req.body
-  });
-  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-  res.status(statusCode);
-  res.json({
-    message: err.message,
-    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
-  });
+  // Specifically handle CORS errors
+  if (err.message && err.message.includes('CORS')) {
+    logger.error('CORS error:', {
+      message: err.message,
+      origin: req.headers.origin,
+      url: req.originalUrl,
+      method: req.method
+    });
+    res.status(403).json({
+      message: 'CORS error: ' + err.message,
+      origin: req.headers.origin
+    });
+  } else {
+    logger.error('Unhandled error:', {
+      message: err.message,
+      stack: err.stack,
+      url: req.originalUrl,
+      method: req.method,
+      body: req.body
+    });
+    const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+    res.status(statusCode);
+    res.json({
+      message: err.message,
+      stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+    });
+  }
 });
 
 const server = app.listen(PORT, () => {
   logger.info(`Server running on port ${PORT}`);
-  // Added this comment to trigger a new deployment
+  logger.info(`CORS configuration allows origins: http://localhost:3000, http://localhost:5000, https://nexus-ecommerce-chi.vercel.app, and Vercel subdomains`);
 });
 
 // Handle unhandled promise rejections

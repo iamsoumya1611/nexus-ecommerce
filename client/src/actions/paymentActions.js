@@ -2,7 +2,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 
 // Set base URL for axios
-const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 export const processPayment = (amount, currency, receipt) => async (dispatch, getState) => {
   try {
@@ -19,8 +19,15 @@ export const processPayment = (amount, currency, receipt) => async (dispatch, ge
       }
     };
 
+    // Construct the URL correctly based on environment
+    let baseUrl = API_BASE_URL;
+    // In development, we don't need the full URL because of proxy
+    if (process.env.NODE_ENV === 'development') {
+      baseUrl = '';
+    }
+
     const { data } = await axios.post(
-      `${API_BASE_URL}/payment/process`,
+      `${baseUrl}/payment/process`,
       { amount, currency, receipt },
       config
     );
@@ -65,8 +72,15 @@ export const verifyPayment = (paymentData) => async (dispatch, getState) => {
       }
     };
 
+    // Construct the URL correctly based on environment
+    let baseUrl = API_BASE_URL;
+    // In development, we don't need the full URL because of proxy
+    if (process.env.NODE_ENV === 'development') {
+      baseUrl = '';
+    }
+
     const { data } = await axios.post(
-      `${API_BASE_URL}/payment/verify`,
+      `${baseUrl}/payment/verify`,
       paymentData,
       config
     );

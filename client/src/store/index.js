@@ -34,6 +34,10 @@ import {
   paymentProcessReducer,
   paymentVerifyReducer
 } from '../reducers/paymentReducers';
+import {
+  recommendationListReducer,
+  categoryRecommendationReducer
+} from '../reducers/recommendationReducers';
 
 const reducer = combineReducers({
   productList: productListReducer,
@@ -59,7 +63,10 @@ const reducer = combineReducers({
   userDelete: userDeleteReducer,
   userUpdateAdmin: userUpdateAdminReducer,
   adminOrderList: adminOrderListReducer,
-  orderDeliver: orderDeliverReducer
+  orderDeliver: orderDeliverReducer,
+  // Recommendation reducers
+  recommendationList: recommendationListReducer,
+  categoryRecommendations: categoryRecommendationReducer
 });
 
 // Get cart items from localStorage

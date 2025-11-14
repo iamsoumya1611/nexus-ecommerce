@@ -2,7 +2,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 
 // Set base URL for axios
-const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 // Product Actions
 export const listAdminProducts = () => async (dispatch, getState) => {
@@ -19,7 +19,14 @@ export const listAdminProducts = () => async (dispatch, getState) => {
       }
     };
 
-    const { data } = await axios.get(`${API_BASE_URL}/admin/products`, config);
+    // Construct the URL correctly based on environment
+    let baseUrl = API_BASE_URL;
+    // In development, we don't need the full URL because of proxy
+    if (process.env.NODE_ENV === 'development') {
+      baseUrl = '';
+    }
+
+    const { data } = await axios.get(`${baseUrl}/admin/products`, config);
 
     dispatch({
       type: 'ADMIN_PRODUCT_LIST_SUCCESS',
@@ -57,7 +64,14 @@ export const deleteProduct = (id) => async (dispatch, getState) => {
       }
     };
 
-    await axios.delete(`${API_BASE_URL}/products/${id}`, config);
+    // Construct the URL correctly based on environment
+    let baseUrl = API_BASE_URL;
+    // In development, we don't need the full URL because of proxy
+    if (process.env.NODE_ENV === 'development') {
+      baseUrl = '';
+    }
+
+    await axios.delete(`${baseUrl}/products/${id}`, config);
 
     dispatch({
       type: 'PRODUCT_DELETE_SUCCESS'
@@ -97,7 +111,14 @@ export const createProduct = () => async (dispatch, getState) => {
       }
     };
 
-    const { data } = await axios.post(`${API_BASE_URL}/products`, {}, config);
+    // Construct the URL correctly based on environment
+    let baseUrl = API_BASE_URL;
+    // In development, we don't need the full URL because of proxy
+    if (process.env.NODE_ENV === 'development') {
+      baseUrl = '';
+    }
+
+    const { data } = await axios.post(`${baseUrl}/products`, {}, config);
 
     dispatch({
       type: 'PRODUCT_CREATE_SUCCESS',
@@ -139,7 +160,14 @@ export const listAdminUsers = () => async (dispatch, getState) => {
       }
     };
 
-    const { data } = await axios.get(`${API_BASE_URL}/admin/users`, config);
+    // Construct the URL correctly based on environment
+    let baseUrl = API_BASE_URL;
+    // In development, we don't need the full URL because of proxy
+    if (process.env.NODE_ENV === 'development') {
+      baseUrl = '';
+    }
+
+    const { data } = await axios.get(`${baseUrl}/admin/users`, config);
 
     dispatch({
       type: 'ADMIN_USER_LIST_SUCCESS',
@@ -179,7 +207,14 @@ export const listUsers = () => async (dispatch, getState) => {
       },
     };
 
-    const { data } = await axios.get(`${API_BASE_URL}/users`, config);
+    // Construct the URL correctly based on environment
+    let baseUrl = API_BASE_URL;
+    // In development, we don't need the full URL because of proxy
+    if (process.env.NODE_ENV === 'development') {
+      baseUrl = '';
+    }
+
+    const { data } = await axios.get(`${baseUrl}/users`, config);
 
     dispatch({
       type: 'USER_LIST_SUCCESS',
@@ -219,7 +254,14 @@ export const deleteUser = (id) => async (dispatch, getState) => {
       },
     };
 
-    await axios.delete(`${API_BASE_URL}/users/${id}`, config);
+    // Construct the URL correctly based on environment
+    let baseUrl = API_BASE_URL;
+    // In development, we don't need the full URL because of proxy
+    if (process.env.NODE_ENV === 'development') {
+      baseUrl = '';
+    }
+
+    await axios.delete(`${baseUrl}/users/${id}`, config);
 
     dispatch({
       type: 'USER_DELETE_SUCCESS',
@@ -262,10 +304,21 @@ export const updateUser = (user) => async (dispatch, getState) => {
       },
     };
 
-    const { data } = await axios.put(`${API_BASE_URL}/users/${user._id}`, user, config);
+    // Construct the URL correctly based on environment
+    let baseUrl = API_BASE_URL;
+    // In development, we don't need the full URL because of proxy
+    if (process.env.NODE_ENV === 'development') {
+      baseUrl = '';
+    }
+
+    const { data } = await axios.put(`${baseUrl}/users/${user._id}`, user, config);
 
     dispatch({
       type: 'USER_UPDATE_SUCCESS',
+    });
+
+    dispatch({
+      type: 'USER_DETAILS_SUCCESS',
       payload: data,
     });
     
@@ -306,7 +359,14 @@ export const listAdminOrders = () => async (dispatch, getState) => {
       },
     };
 
-    const { data } = await axios.get(`${API_BASE_URL}/admin/orders`, config);
+    // Construct the URL correctly based on environment
+    let baseUrl = API_BASE_URL;
+    // In development, we don't need the full URL because of proxy
+    if (process.env.NODE_ENV === 'development') {
+      baseUrl = '';
+    }
+
+    const { data } = await axios.get(`${baseUrl}/orders`, config);
 
     dispatch({
       type: 'ADMIN_ORDER_LIST_SUCCESS',
@@ -330,7 +390,54 @@ export const listAdminOrders = () => async (dispatch, getState) => {
   }
 };
 
-export const deliverOrder = (orderId) => async (dispatch, getState) => {
+export const listOrders = () => async (dispatch, getState) => {
+  try {
+    dispatch({
+      type: 'ORDER_LIST_REQUEST',
+    });
+
+    const {
+      userLogin: { userInfo },
+    } = getState();
+
+    const config = {
+      headers: {
+        Authorization: `Bearer ${userInfo.token}`,
+      },
+    };
+
+    // Construct the URL correctly based on environment
+    let baseUrl = API_BASE_URL;
+    // In development, we don't need the full URL because of proxy
+    if (process.env.NODE_ENV === 'development') {
+      baseUrl = '';
+    }
+
+    const { data } = await axios.get(`${baseUrl}/orders`, config);
+
+    dispatch({
+      type: 'ORDER_LIST_SUCCESS',
+      payload: data,
+    });
+  } catch (error) {
+    dispatch({
+      type: 'ORDER_LIST_FAIL',
+      payload:
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message,
+    });
+    
+    // Show error toast notification
+    toast.error(
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : 'Failed to fetch orders. Please try again.'
+    );
+  }
+};
+
+export const deliverOrder = (order) => async (dispatch, getState) => {
   try {
     dispatch({
       type: 'ORDER_DELIVER_REQUEST',
@@ -346,7 +453,14 @@ export const deliverOrder = (orderId) => async (dispatch, getState) => {
       },
     };
 
-    const { data } = await axios.put(`${API_BASE_URL}/orders/${orderId}/deliver`, {}, config);
+    // Construct the URL correctly based on environment
+    let baseUrl = API_BASE_URL;
+    // In development, we don't need the full URL because of proxy
+    if (process.env.NODE_ENV === 'development') {
+      baseUrl = '';
+    }
+
+    const { data } = await axios.put(`${baseUrl}/orders/${order._id}/deliver`, {}, config);
 
     dispatch({
       type: 'ORDER_DELIVER_SUCCESS',
@@ -368,7 +482,7 @@ export const deliverOrder = (orderId) => async (dispatch, getState) => {
     toast.error(
       error.response && error.response.data.message
         ? error.response.data.message
-        : 'Failed to update order status. Please try again.'
+        : 'Failed to mark order as delivered. Please try again.'
     );
   }
 };

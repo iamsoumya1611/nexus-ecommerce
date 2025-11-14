@@ -56,7 +56,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
 
   if (product) {
-    await product.deleteOne();
+    await product.remove();
     logger.info(`Successfully deleted product with ID: ${req.params.id}`);
     res.json({ message: 'Product removed' });
   } else {
@@ -117,7 +117,7 @@ const createProduct = asyncHandler(async (req, res) => {
     pages: pages || 0,
     weight: weight || '',
     dimensions: dimensions || '',
-    specifications: specifications || {},
+    specifications: specifications || new Map(),
     user: req.user._id
   });
 
@@ -181,7 +181,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     product.pages = pages || 0;
     product.weight = weight || '';
     product.dimensions = dimensions || '';
-    product.specifications = specifications || {};
+    product.specifications = specifications || new Map();
 
     const updatedProduct = await product.save();
     logger.info(`Successfully updated product with ID: ${req.params.id}`);

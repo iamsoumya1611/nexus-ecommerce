@@ -8,13 +8,6 @@ const {
 } = require('../controllers/userController');
 const { protect } = require('../middleware/authMiddleware');
 
-// Add logging middleware for user routes
-router.use((req, res, next) => {
-  console.log(`User route accessed: ${req.method} ${req.originalUrl}`);
-  console.log(`Request body: ${JSON.stringify(req.body)}`);
-  next();
-});
-
 // User registration route
 router.post('/register', registerUser);
 

@@ -7,6 +7,7 @@ import CategoryShowcase from '../components/CategoryShowcase';
 import Testimonials from '../components/Testimonials';
 import Newsletter from '../components/Newsletter';
 import Slide from '../components/Slide';
+import AIRecommendations from '../components/AIRecommendations';
 
 // Home Screen Component
 // This is the main landing page of the e-commerce application
@@ -33,27 +34,8 @@ const Home = () => {
       {/* Hero section - displays promotional content */}
       <Hero />
 
-      <div className="flex items-center flex-wrap lg:flex-nowrap">
-        <div className="w-full lg:w-[80%]">
-          <Slide title='Deal Of The Day' />
-        </div>
-
-        <div className="w-full lg:w-[20%] h-[370px] flex flex-col justify-evenly items-center bg-white rounded-md p-4 mt-4 lg:mt-0 lg:ml-4">
-          <h4 className='text-primary-700 font-semibold text-center'>Festive latest launches</h4>
-
-          <img className='w-full h-60 object-contain' src="https://res.cloudinary.com/dm4hy8ivc/image/upload/v1762881242/winter_season_offer_gscyrr.png" alt="Festive Offer" />
-
-          <button className='text-primary-700 hover:text-primary-900 font-medium bg-transparent border-none cursor-pointer'>See More</button>
-        </div>
-      </div>
-
-      <div className="my-8">
-        <Slide title="Today's Deal" />
-      </div>
-
-      <div className="my-8">
-        <img className='block w-full lg:w-[80%] h-[300px] mx-auto' src="https://res.cloudinary.com/dm4hy8ivc/image/upload/v1762882112/desktop_banner_kikeem.png" alt="Banner" />
-      </div>
+      {/* AI Recommendations Section - only shown when user is logged in */}
+      <AIRecommendations />
 
       <div className="my-8">
         <Slide title="Best Seller" />
@@ -61,6 +43,10 @@ const Home = () => {
 
       <div className="my-8">
         <Slide title="Upto 80% Off" />
+      </div>
+
+      <div className="my-8">
+        <img className='block w-full lg:w-[80%] h-[300px] mx-auto' src="https://res.cloudinary.com/dm4hy8ivc/image/upload/v1762882112/desktop_banner_kikeem.png" alt="Banner" />
       </div>
 
       {/* Category showcase - displays product categories */}
@@ -84,23 +70,17 @@ const Home = () => {
           </div>
         ) : error ? (
           // Show error message if there was a problem fetching products
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
-            {error}
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6" role="alert">
+            <strong className="font-bold">Error: </strong>
+            <span className="block sm:inline">{error}</span>
           </div>
         ) : (
-          // Display products in a grid layout
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts && featuredProducts.length > 0 ? (
-              // Map through featured products and render Product components
-              featuredProducts.map((product) => (
-                <Product product={product} key={product._id} />
-              ))
-            ) : (
-              // Show message if no products are available
-              <div className="col-span-full text-center py-8">
-                <p className="text-primary-700">No products found</p>
-              </div>
-            )}
+          // Display featured products in a responsive grid
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            {/* Map through featured products and render Product component for each */}
+            {featuredProducts.map((product) => (
+              <Product key={product._id} product={product} />
+            ))}
           </div>
         )}
       </div>
@@ -108,7 +88,7 @@ const Home = () => {
       {/* Testimonials section - displays customer reviews */}
       <Testimonials />
 
-      {/* Newsletter section - allows users to subscribe */}
+      {/* Newsletter section - allows users to subscribe to updates */}
       <Newsletter />
     </div>
   );
