@@ -82,9 +82,15 @@ app.get('/test', (req, res) => {
 
 // Database connection
 const connectDB = require('./config/db');
-// Connect to database
+// Connect to database with error handling
 logger.info('Initializing database connection...');
-connectDB();
+connectDB().catch(err => {
+  logger.error('Failed to connect to database:', err);
+  // In production, we might want to exit or handle this differently
+  if (process.env.NODE_ENV === 'production') {
+    logger.error('Production environment: Server may not function properly without database connection');
+  }
+});
 
 // API Routes - These should be before static file serving
 // User routes

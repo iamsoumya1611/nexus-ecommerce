@@ -24,7 +24,10 @@ const connectDB = async () => {
       // Remove unsupported options and use only valid ones
       serverSelectionTimeoutMS: 30000, // Increase server selection timeout
       socketTimeoutMS: 45000, // Increase socket timeout
-      retryWrites: true
+      retryWrites: true,
+      maxPoolSize: 10, // Limit connection pool size
+      serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
     });
 
     logger.info(`MongoDB Connected: ${conn.connection.host}`);
@@ -33,9 +36,16 @@ const connectDB = async () => {
   } catch (error) {
     logger.error(`Error connecting to MongoDB: ${error.message}`);
     logger.error('Stack trace:', error.stack);
-    // Instead of exiting, we'll retry the connection
-    logger.info('Retrying MongoDB connection in 5 seconds...');
-    setTimeout(connectDB, 5000);
+    
+    // In production, we should not retry indefinitely as it may cause issues
+    if (process.env.NODE_ENV === 'production') {
+      logger.error('Production environment: Not retrying MongoDB connection');
+      throw error;
+    } else {
+      // In development, retry the connection
+      logger.info('Retrying MongoDB connection in 5 seconds...');
+      setTimeout(connectDB, 5000);
+    }
   }
 };
 
@@ -50,8 +60,11 @@ mongoose.connection.on('error', (err) => {
 
 mongoose.connection.on('disconnected', () => {
   logger.warn('Mongoose disconnected');
-  // Try to reconnect
-  setTimeout(connectDB, 5000);
+  
+  // In production, don't automatically reconnect
+  if (process.env.NODE_ENV !== 'production') {
+    setTimeout(connectDB, 5000);
+  }
 });
 
 // Handle application shutdown
