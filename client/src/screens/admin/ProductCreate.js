@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
-import { createProduct } from '../../actions/productActions';
-import { PRODUCT_CREATE_RESET } from '../../constants/productConstants';
+import { useProduct, productActions } from '../../contexts/ProductContext';
 
 const ProductCreate = () => {
   const [name, setName] = useState('');
@@ -27,18 +25,18 @@ const ProductCreate = () => {
   const [dimensions, setDimensions] = useState('');
   const [uploading, setUploading] = useState(false);
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-
-  const productCreate = useSelector((state) => state.productCreate);
+  const { state: productState, dispatch: productDispatch } = useProduct();
+  const { create: productCreate } = productState;
   const { loading, error, success } = productCreate;
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (success) {
-      dispatch({ type: PRODUCT_CREATE_RESET });
+      productActions.resetCreateProduct()(productDispatch);
       navigate('/admin/productlist');
     }
-  }, [dispatch, navigate, success]);
+  }, [productDispatch, navigate, success]);
 
   const uploadFileHandler = async (e) => {
     const file = e.target.files[0];
@@ -75,29 +73,27 @@ const ProductCreate = () => {
 
   const submitHandler = (e) => {
     e.preventDefault();
-    dispatch(
-      createProduct({
-        name,
-        price,
-        image,
-        brand,
-        category,
-        description,
-        countInStock,
-        model,
-        storage,
-        color,
-        screenSize,
-        size,
-        material,
-        gender,
-        author,
-        publisher,
-        pages,
-        weight,
-        dimensions
-      })
-    );
+    productActions.createProduct({
+      name,
+      price,
+      image,
+      brand,
+      category,
+      description,
+      countInStock,
+      model,
+      storage,
+      color,
+      screenSize,
+      size,
+      material,
+      gender,
+      author,
+      publisher,
+      pages,
+      weight,
+      dimensions
+    })(productDispatch);
   };
 
   // Categories for the dropdown

@@ -1,29 +1,31 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { listAdminProducts, deleteProduct } from '../../actions/adminActions';
+import { useAdmin, adminActions } from '../../contexts/AdminContext';
+import { useProduct, productActions } from '../../contexts/ProductContext';
+import { useUser } from '../../contexts/UserContext';
 
 const ProductList = () => {
-  const dispatch = useDispatch();
-
-  const adminProductList = useSelector((state) => state.adminProductList);
+  const { state: adminState, dispatch: adminDispatch } = useAdmin();
+  const { productList: adminProductList } = adminState;
   const { loading, error, products } = adminProductList;
 
-  const productDelete = useSelector((state) => state.productDelete);
+  const { state: productState, dispatch: productDispatch } = useProduct();
+  const { delete: productDelete } = productState;
   const { success: successDelete } = productDelete;
 
-  const userLogin = useSelector((state) => state.userLogin);
+  const { state: userState } = useUser();
+  const { login: userLogin } = userState;
   const { userInfo } = userLogin;
 
   useEffect(() => {
     if (userInfo && userInfo.isAdmin) {
-      dispatch(listAdminProducts());
+      adminActions.listProducts()(adminDispatch);
     }
-  }, [dispatch, userInfo, successDelete]);
+  }, [adminDispatch, userInfo, successDelete]);
 
   const deleteHandler = (id) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
-      dispatch(deleteProduct(id));
+      productActions.deleteProduct(id)(productDispatch);
     }
   };
 

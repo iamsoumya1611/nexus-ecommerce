@@ -1,10 +1,17 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import store from './store';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './components/ToastStyles.css';
+
+// Import Context Providers
+import { CartProvider } from './contexts/CartContext';
+import { UserProvider } from './contexts/UserContext';
+import { OrderProvider } from './contexts/OrderContext';
+import { PaymentProvider } from './contexts/PaymentContext';
+import { ProductProvider } from './contexts/ProductContext';
+import { AdminProvider } from './contexts/AdminContext';
+import { RecommendationProvider } from './contexts/RecommendationContext';
 
 // Screens
 import Home from './screens/Home';
@@ -34,46 +41,58 @@ import './App.css';
 
 function App() {
   return (
-    <Provider store={store}>
-      <Router>
-        <Navbar />
-        <Newnav />
-        <main>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/product/:id" element={<Product />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/shipping" element={<Shipping />} />
-            <Route path="/payment" element={<Payment />} />
-            <Route path="/placeorder" element={<PlaceOrder />} />
-            <Route path="/order/:id" element={<Order />} />
-            
-            {/* Admin Routes */}
-            <Route path="/admin/userlist" element={<UserList />} />
-            <Route path="/admin/user/:id/edit" element={<UserEdit />} />
-            <Route path="/admin/productlist" element={<ProductList />} />
-            <Route path="/admin/product/create" element={<ProductCreate />} />
-            <Route path="/admin/product/:id/edit" element={<ProductEdit />} />
-            <Route path="/admin/orderlist" element={<OrderList />} />
-          </Routes>
-        </main>
-        <Footer />
-        <ToastContainer 
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-        />
-      </Router>
-    </Provider>
+    <UserProvider>
+      <CartProvider>
+        <OrderProvider>
+          <PaymentProvider>
+            <ProductProvider>
+              <AdminProvider>
+                <RecommendationProvider>
+                  <Router>
+                    <Navbar />
+                    <Newnav />
+                    <main>
+                      <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/product/:id" element={<Product />} />
+                        <Route path="/cart" element={<Cart />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/shipping" element={<Shipping />} />
+                        <Route path="/payment" element={<Payment />} />
+                        <Route path="/placeorder" element={<PlaceOrder />} />
+                        <Route path="/order/:id" element={<Order />} />
+                        
+                        {/* Admin Routes */}
+                        <Route path="/admin/userlist" element={<UserList />} />
+                        <Route path="/admin/user/:id/edit" element={<UserEdit />} />
+                        <Route path="/admin/productlist" element={<ProductList />} />
+                        <Route path="/admin/product/create" element={<ProductCreate />} />
+                        <Route path="/admin/product/:id/edit" element={<ProductEdit />} />
+                        <Route path="/admin/orderlist" element={<OrderList />} />
+                      </Routes>
+                    </main>
+                    <Footer />
+                    <ToastContainer 
+                      position="top-right"
+                      autoClose={3000}
+                      hideProgressBar={false}
+                      newestOnTop={false}
+                      closeOnClick
+                      rtl={false}
+                      pauseOnFocusLoss
+                      draggable
+                      pauseOnHover
+                    />
+                  </Router>
+                </RecommendationProvider>
+              </AdminProvider>
+            </ProductProvider>
+          </PaymentProvider>
+        </OrderProvider>
+      </CartProvider>
+    </UserProvider>
   );
 }
 

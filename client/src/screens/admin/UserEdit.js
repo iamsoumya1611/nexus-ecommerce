@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { getUserDetails, updateUserProfile } from '../../actions/userActions';
-import { USER_UPDATE_PROFILE_RESET } from '../../constants/userConstants';
+import { useUser, userActions } from '../../contexts/UserContext';
 
 const UserEdit = () => {
   const { id } = useParams();
@@ -11,33 +9,31 @@ const UserEdit = () => {
   const [email, setEmail] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-
-  const userDetails = useSelector((state) => state.userDetails);
+  const { state: userState, dispatch: userDispatch } = useUser();
+  const { details: userDetails, updateAdmin: userUpdateProfile } = userState;
   const { loading, error, user } = userDetails;
-
-  const userUpdateProfile = useSelector((state) => state.userUpdateProfile);
   const { loading: loadingUpdate, error: errorUpdate, success: successUpdate } = userUpdateProfile;
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (successUpdate) {
-      dispatch({ type: USER_UPDATE_PROFILE_RESET });
+      userActions.resetUserUpdate()(userDispatch);
       navigate('/admin/userlist');
     } else {
       if (!user.name || user._id !== id) {
-        dispatch(getUserDetails(id));
+        userActions.getUserDetails(id)(userDispatch);
       } else {
         setName(user.name);
         setEmail(user.email);
         setIsAdmin(user.isAdmin);
       }
     }
-  }, [dispatch, navigate, user, id, successUpdate]);
+  }, [userDispatch, navigate, user, id, successUpdate]);
 
   const submitHandler = (e) => {
     e.preventDefault();
-    dispatch(updateUserProfile({ id: user._id, name, email, isAdmin }));
+    userActions.updateUser({ _id: user._id, name, email, isAdmin })(userDispatch);
   };
 
   return (

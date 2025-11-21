@@ -1,29 +1,30 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { listAdminUsers, deleteUser } from '../../actions/adminActions';
+import { useAdmin, adminActions } from '../../contexts/AdminContext';
+import { useUser } from '../../contexts/UserContext';
 
 const UserList = () => {
-  const dispatch = useDispatch();
-
-  const adminUserList = useSelector((state) => state.adminUserList);
+  const { state: adminState, dispatch: adminDispatch } = useAdmin();
+  const { userList: adminUserList } = adminState;
   const { loading, error, users } = adminUserList;
 
-  const userDelete = useSelector((state) => state.userDelete);
+  const { state: userDeleteState, dispatch: userDeleteDispatch } = useAdmin();
+  const { userDelete } = userDeleteState;
   const { success: successDelete } = userDelete;
 
-  const userLogin = useSelector((state) => state.userLogin);
+  const { state: userState } = useUser();
+  const { login: userLogin } = userState;
   const { userInfo } = userLogin;
 
   useEffect(() => {
     if (userInfo && userInfo.isAdmin) {
-      dispatch(listAdminUsers());
+      adminActions.listUsers()(adminDispatch);
     }
-  }, [dispatch, userInfo, successDelete]);
+  }, [adminDispatch, userInfo, successDelete]);
 
   const deleteHandler = (id) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
-      dispatch(deleteUser(id));
+      adminActions.deleteUser(id)(adminDispatch);
     }
   };
 

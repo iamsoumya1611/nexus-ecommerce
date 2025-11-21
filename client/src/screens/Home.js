@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { listProducts } from '../actions/productActions';
+import { useProduct, productActions } from '../contexts/ProductContext';
 import Product from '../components/Product';
 import Hero from '../components/Hero';
 import CategoryShowcase from '../components/CategoryShowcase';
@@ -12,18 +11,16 @@ import AIRecommendations from '../components/AIRecommendations';
 // Home Screen Component
 // This is the main landing page of the e-commerce application
 const Home = () => {
-  // Redux dispatch function to send actions to the store
-  const dispatch = useDispatch();
-
-  // Get product list state from Redux store
-  const productList = useSelector((state) => state.productList);
+  // Get product list state from Context
+  const { state: productState, dispatch: productDispatch } = useProduct();
+  const { list: productList } = productState;
   const { loading, error, products } = productList;
 
   // useEffect hook to fetch products when component mounts
   useEffect(() => {
     // Dispatch action to fetch product list
-    dispatch(listProducts());
-  }, [dispatch]); // Dependency array - runs when dispatch function changes
+    productActions.listProducts()(productDispatch);
+  }, [productDispatch]); // Dependency array - runs when dispatch function changes
 
   // Get first 4 products to display as featured products
   const featuredProducts = Array.isArray(products) ? products.slice(0, 4) : [];
@@ -52,7 +49,8 @@ const Home = () => {
       {/* Category showcase - displays product categories */}
       <CategoryShowcase />
 
-      {/* Featured Products Section */}
+      {/* Featured Products Section */
+}
       <div className="mb-16">
         {/* Section header with title and description */}
         <div className="text-center mb-12">

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { getUserDetails, updateUserProfile } from '../actions/userActions';
-import { listMyOrders } from '../actions/orderActions';
+import { useUser, userActions } from '../contexts/UserContext';
+import { useOrder, orderActions } from '../contexts/OrderContext';
 
 const Profile = () => {
   const [name, setName] = useState('');
@@ -11,18 +10,13 @@ const Profile = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
 
-  const dispatch = useDispatch();
-
-  const userDetails = useSelector((state) => state.userDetails);
+  const { state: userState, dispatch: userDispatch } = useUser();
+  const { details: userDetails, login: userLogin, updateProfile: userUpdateProfile } = userState;
   const { loading, error, user } = userDetails;
-
-  const userLogin = useSelector((state) => state.userLogin);
   const { userInfo } = userLogin;
 
-  const userUpdateProfile = useSelector((state) => state.userUpdateProfile);
-  const { success } = userUpdateProfile;
-
-  const orderListMy = useSelector((state) => state.orderListMy);
+  const { state: orderState, dispatch: orderDispatch } = useOrder();
+  const { listMy: orderListMy } = orderState;
   const { loading: loadingOrders, error: errorOrders, orders } = orderListMy;
 
   useEffect(() => {
@@ -30,21 +24,21 @@ const Profile = () => {
       // Redirect to login if not logged in
     } else {
       if (!user || !user.name) {
-        dispatch(getUserDetails('profile'));
-        dispatch(listMyOrders());
+        userActions.getUserDetails('profile')(userDispatch);
+        orderActions.listMyOrders()(orderDispatch);
       } else {
         setName(user.name);
         setEmail(user.email);
       }
     }
-  }, [dispatch, userInfo, user]);
+  }, [userDispatch, orderDispatch, userInfo, user]);
 
   const submitHandler = (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
       setMessage('Passwords do not match');
     } else {
-      dispatch(updateUserProfile({ id: user._id, name, email, password }));
+      userActions.updateUserProfile({ id: user._id, name, email, password })(userDispatch);
     }
   };
 
@@ -56,7 +50,7 @@ const Profile = () => {
             <h2 className="text-2xl font-bold text-primary-900 mb-6">User Profile</h2>
             {message && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{message}</div>}
             {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
-            {success && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">Profile Updated Successfully!</div>}
+            {userUpdateProfile.success && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">Profile Updated Successfully!</div>}
             {loading && (
               <div className="flex justify-center my-4">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500"></div>

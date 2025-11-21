@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../actions/userActions';
+import { useUser, userActions } from '../contexts/UserContext';
+import { useCart } from '../contexts/CartContext';
 import SearchIcon from '@mui/icons-material/Search';
 import Badge from '@mui/material/Badge';
 import { styled } from '@mui/material/styles';
@@ -17,29 +17,27 @@ const StyledBadge = styled(Badge)(() => ({
 // Navbar Component
 // This component displays the navigation bar at the top of the page
 const Navbar = () => {
-  // Redux dispatch function
-  const dispatch = useDispatch();
-  
   // State variables for controlling menu visibility
   const [isMenuOpen, setIsMenuOpen] = useState(false);        // Mobile menu
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false); // User dropdown menu
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false); // Admin dropdown menu
-  const [searchKeyword, setSearchKeyword] = useState('');     // Search input value
+  const [searchKeyword, setSearchKeyword] = useState('');
 
-  // Get user login state from Redux store
-  const userLogin = useSelector((state) => state.userLogin);
+  // Get user login state from Context
+  const { state: userState, dispatch: userDispatch } = useUser();
+  const { login: userLogin } = userState;
   const { userInfo } = userLogin;
 
-  // Get cart items from Redux store
-  const cart = useSelector((state) => state.cart);
-  const { cartItems } = cart;
+  // Get cart items from Context
+  const { state: cartState } = useCart();
+  const { cartItems } = cartState;
 
   // Calculate total number of items in cart
   const cartItemCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
 
   // Handle user logout
   const logoutHandler = () => {
-    dispatch(logout());
+    userActions.logout()(userDispatch);
     setIsUserMenuOpen(false); // Close user menu after logout
   };
 

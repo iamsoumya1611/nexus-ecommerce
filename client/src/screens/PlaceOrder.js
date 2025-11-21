@@ -1,27 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { createOrder } from '../actions/orderActions';
-import { processPayment } from '../actions/paymentActions';
+import { useOrder, orderActions } from '../contexts/OrderContext';
+import { usePayment, paymentActions } from '../contexts/PaymentContext';
+import { useCart } from '../contexts/CartContext';
 
 const PlaceOrder = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const { state: orderState, dispatch: orderDispatch } = useOrder();
+  const { create: orderCreate } = orderState;
+  const { order, success, error } = orderCreate;
 
-  const cart = useSelector((state) => state.cart);
-  const { cartItems, shippingAddress, paymentMethod } = cart;
+  const { state: paymentState, dispatch: paymentDispatch } = usePayment();
+  const { process: paymentProcess } = paymentState;
+  const { loading: paymentLoading } = paymentProcess;
+
+  const { state: cartState } = useCart();
+  const { cartItems, shippingAddress, paymentMethod } = cartState;
+
+  const navigate = useNavigate();
 
   // Calculate prices
   const itemsPrice = cartItems.reduce((acc, item) => acc + item.price * item.qty, 0);
   const shippingPrice = itemsPrice > 100 ? 0 : 10;
   const taxPrice = Number((0.15 * itemsPrice).toFixed(2));
   const totalPrice = (itemsPrice + shippingPrice + taxPrice).toFixed(2);
-
-  const orderCreate = useSelector((state) => state.orderCreate);
-  const { order, success, error } = orderCreate;
-
-  const paymentProcess = useSelector((state) => state.paymentProcess);
-  const { loading: paymentLoading } = paymentProcess;
 
   const [loading, setLoading] = useState(false);
 
@@ -46,7 +47,7 @@ const PlaceOrder = () => {
         totalPrice
       };
       
-      dispatch(createOrder(orderData));
+      orderActions.createOrder(orderData)(orderDispatch);
     } catch (error) {
       console.error('Error placing order:', error);
     } finally {
@@ -59,11 +60,13 @@ const PlaceOrder = () => {
       setLoading(true);
       
       // Process payment through Razorpay
-      const paymentData = await dispatch(processPayment(
-        Math.round(parseFloat(totalPrice) * 100) / 100, // Convert to proper format
-        'INR',
-        `order_${Date.now()}`
-      ));
+      const paymentData = await paymentActions.processPayment(
+        {
+          amount: Math.round(parseFloat(totalPrice) * 100) / 100, // Convert to proper format
+          currency: 'INR',
+          receipt: `order_${Date.now()}`
+        }
+      )(paymentDispatch);
       
       if (paymentData && paymentData.success) {
         // Load Razorpay SDK

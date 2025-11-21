@@ -1,22 +1,22 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { listAdminOrders } from '../../actions/adminActions';
+import { useAdmin, adminActions } from '../../contexts/AdminContext';
+import { useUser } from '../../contexts/UserContext';
 
 const OrderList = () => {
-  const dispatch = useDispatch();
-
-  const adminOrderList = useSelector((state) => state.adminOrderList);
+  const { state: adminState, dispatch: adminDispatch } = useAdmin();
+  const { orderList: adminOrderList } = adminState;
   const { loading, error, orders } = adminOrderList;
 
-  const userLogin = useSelector((state) => state.userLogin);
+  const { state: userState } = useUser();
+  const { login: userLogin } = userState;
   const { userInfo } = userLogin;
 
   useEffect(() => {
     if (userInfo && userInfo.isAdmin) {
-      dispatch(listAdminOrders());
+      adminActions.listOrders()(adminDispatch);
     }
-  }, [dispatch, userInfo]);
+  }, [adminDispatch, userInfo]);
 
   return (
     <div className="container mx-auto px-4 py-8">

@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { savePaymentMethod } from '../actions/cartActions';
+import { useCart, cartActions } from '../contexts/CartContext';
 
 const Payment = () => {
-  const cart = useSelector((state) => state.cart);
-  const { shippingAddress } = cart;
+  const { state: cartState, dispatch: cartDispatch } = useCart();
+  const { shippingAddress } = cartState;
 
   const [paymentMethod, setPaymentMethod] = useState('Razorpay');
 
-  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   if (!shippingAddress.address) {
@@ -18,7 +16,7 @@ const Payment = () => {
 
   const submitHandler = (e) => {
     e.preventDefault();
-    dispatch(savePaymentMethod(paymentMethod));
+    cartActions.savePaymentMethod(paymentMethod)(cartDispatch);
     navigate('/placeorder');
   };
 

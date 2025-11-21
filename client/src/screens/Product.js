@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { listProductDetails, createProductReview } from '../actions/productActions';
-import { addToCart } from '../actions/cartActions';
+import { useProduct, productActions } from '../contexts/ProductContext';
+import { useCart, cartActions } from '../contexts/CartContext';
+import { useUser } from '../contexts/UserContext';
 
 // Product Screen Component
 // This component displays detailed information about a single product
@@ -12,42 +12,43 @@ const Product = () => {
   const [rating, setRating] = useState(0);        // Review rating
   const [comment, setComment] = useState('');     // Review comment
 
-  // Redux dispatch function to send actions to the store
-  const dispatch = useDispatch();
-  
   // Navigation function to redirect users
   const navigate = useNavigate();
 
   // Get product ID from URL parameters
   const { id } = useParams();
 
-  // Get product details state from Redux store
-  const productDetails = useSelector((state) => state.productDetails);
+  // Get product details state from Context
+  const { state: productState, dispatch: productDispatch } = useProduct();
+  const { details: productDetails, createReview: productCreateReview } = productState;
   const { loading, error, product } = productDetails;
 
-  // Get user login state from Redux store
-  const userLogin = useSelector((state) => state.userLogin);
+  // Get user login state from Context
+  const { state: userState } = useUser();
+  const { login: userLogin } = userState;
   const { userInfo } = userLogin;
 
-  // Get product review creation state from Redux store
-  const productCreateReview = useSelector((state) => state.productCreateReview);
+  // Get cart state from Context
+  const { dispatch: cartDispatch } = useCart();
+
+  // Get product review creation state from Context
   const { success: successProductReview, error: errorProductReview } = productCreateReview;
 
   // useEffect hook to fetch product details when component mounts or when ID/Review changes
   useEffect(() => {
-    dispatch(listProductDetails(id));
-  }, [dispatch, id, successProductReview]);
+    productActions.listProductDetails(id)(productDispatch);
+  }, [productDispatch, id, successProductReview]);
 
   // Handle adding product to cart
   const addToCartHandler = () => {
-    dispatch(addToCart(id, qty));
+    cartActions.addToCart(id, qty)(cartDispatch);
     navigate('/cart'); // Redirect to cart page
   };
 
   // Handle form submission for product review
   const submitHandler = (e) => {
     e.preventDefault(); // Prevent default form submission
-    dispatch(createProductReview(id, { rating, comment }));
+    productActions.createProductReview(id, { rating, comment })(productDispatch);
   };
 
   return (

@@ -1,20 +1,18 @@
 import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { listCategoryRecommendations } from '../actions/recommendationActions';
+import { useRecommendation, recommendationActions } from '../contexts/RecommendationContext';
 import Product from './Product';
 import { ClipLoader } from 'react-spinners';
 
 const CategoryRecommendations = ({ category }) => {
-  const dispatch = useDispatch();
-
-  const categoryRecommendations = useSelector((state) => state.categoryRecommendations);
+  const { state: recommendationState, dispatch: recommendationDispatch } = useRecommendation();
+  const { category: categoryRecommendations } = recommendationState;
   const { loading, error, recommendations } = categoryRecommendations;
 
   useEffect(() => {
     if (category) {
-      dispatch(listCategoryRecommendations(category));
+      recommendationActions.getCategoryRecommendations(category)(recommendationDispatch);
     }
-  }, [dispatch, category]);
+  }, [recommendationDispatch, category]);
 
   if (!category) {
     return null;

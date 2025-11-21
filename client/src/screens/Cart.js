@@ -1,26 +1,23 @@
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { addToCart, removeFromCart } from '../actions/cartActions';
+import { useCart, cartActions } from '../contexts/CartContext';
 
 const Cart = () => {
   const { id } = useParams();
   const qty = useParams().qty || 1;
 
-  const dispatch = useDispatch();
+  const { state, dispatch } = useCart();
+  const { cartItems } = state;
   const navigate = useNavigate();
-
-  const cart = useSelector((state) => state.cart);
-  const { cartItems } = cart;
 
   React.useEffect(() => {
     if (id) {
-      dispatch(addToCart(id, Number(qty)));
+      cartActions.addToCart(id, Number(qty))(dispatch);
     }
   }, [dispatch, id, qty]);
 
   const removeFromCartHandler = (id) => {
-    dispatch(removeFromCart(id));
+    cartActions.removeFromCart(id)(dispatch);
   };
 
   const checkoutHandler = () => {
@@ -68,7 +65,7 @@ const Cart = () => {
                           id={`qty-${item.product}`}
                           className="form-input"
                           value={item.qty}
-                          onChange={(e) => dispatch(addToCart(item.product, Number(e.target.value)))}
+                          onChange={(e) => cartActions.addToCart(item.product, Number(e.target.value))(dispatch)}
                         >
                           {[...Array(item.countInStock).keys()].map((x) => (
                             <option key={x + 1} value={x + 1}>

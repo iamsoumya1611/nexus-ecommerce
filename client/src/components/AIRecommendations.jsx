@@ -1,22 +1,22 @@
 import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { listRecommendations } from '../actions/recommendationActions';
+import { useRecommendation, recommendationActions } from '../contexts/RecommendationContext';
+import { useUser } from '../contexts/UserContext';
 import Product from './Product';
 import { ClipLoader } from 'react-spinners';
 
 const AIRecommendations = () => {
-  const dispatch = useDispatch();
-
-  const recommendationList = useSelector((state) => state.recommendationList);
+  const { state: recommendationState, dispatch: recommendationDispatch } = useRecommendation();
+  const { list: recommendationList } = recommendationState;
   const { loading, error, recommendations } = recommendationList;
 
-  const userLogin = useSelector((state) => state.userLogin);
+  const { state: userState } = useUser();
+  const { login: userLogin } = userState;
   const { userInfo } = userLogin;
 
   useEffect(() => {
     // Always fetch recommendations, even for non-logged-in users
-    dispatch(listRecommendations());
-  }, [dispatch]);
+    recommendationActions.listRecommendations()(recommendationDispatch);
+  }, [recommendationDispatch]);
 
   return (
     <div className="my-8">

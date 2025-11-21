@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { login } from '../actions/userActions';
+import { useUser, userActions } from '../contexts/UserContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const dispatch = useDispatch();
+  const { state, dispatch } = useUser();
+  const { login } = state;
+  const { loading, userInfo } = login;
+  
   const navigate = useNavigate();
   const location = useLocation();
-
-  const userLogin = useSelector((state) => state.userLogin);
-  const { loading, userInfo } = userLogin;
 
   const redirect = location.search ? location.search.split('=')[1] : '/';
 
@@ -24,7 +23,7 @@ const Login = () => {
 
   const submitHandler = (e) => {
     e.preventDefault();
-    dispatch(login(email, password));
+    userActions.login(email, password)(dispatch);
   };
 
   return (

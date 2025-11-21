@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { listProducts } from '../actions/productActions';
+import { useProduct, productActions } from '../contexts/ProductContext';
 import Product from '../components/Product';
 import CategoryRecommendations from '../components/CategoryRecommendations';
 
 const Products = () => {
-  const dispatch = useDispatch();
+  const { state: productState, dispatch: productDispatch } = useProduct();
+  const { list: productList } = productState;
+  const { loading, error, products } = productList;
+  
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const productsPerPage = 8;
-
-  const productList = useSelector((state) => state.productList);
-  const { loading, error, products } = productList;
+  const [productsPerPage, setProductsPerPage] = useState(8);
 
   const [filters, setFilters] = useState({
     category: '',
@@ -30,8 +29,8 @@ const Products = () => {
   });
 
   useEffect(() => {
-    dispatch(listProducts());
-  }, [dispatch]);
+    productActions.listProducts()(productDispatch);
+  }, [productDispatch]);
 
   useEffect(() => {
     // Apply filters and sorting
@@ -594,7 +593,7 @@ const Products = () => {
             className="ml-2 bg-white border border-primary-300 rounded-lg py-1 px-2 text-primary-800"
             value={productsPerPage}
             onChange={(e) => {
-              productsPerPage = parseInt(e.target.value);
+              setProductsPerPage(parseInt(e.target.value));
               setCurrentPage(1);
             }}
           >
@@ -618,8 +617,8 @@ const Products = () => {
       ) : (
         <>
           {/* Category Recommendations - only shown when a category is selected */}
-          {selectedCategory && (
-            <CategoryRecommendations category={selectedCategory} />
+          {filters.category && (
+            <CategoryRecommendations category={filters.category} />
           )}
           
           {currentProducts.length === 0 ? (

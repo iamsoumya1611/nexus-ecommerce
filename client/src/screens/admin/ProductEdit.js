@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { listProductDetails, updateProduct } from '../../actions/productActions';
-import { PRODUCT_UPDATE_RESET } from '../../constants/productConstants';
+import { useProduct, productActions } from '../../contexts/ProductContext';
 import axios from 'axios';
 
 const ProductEdit = () => {
@@ -31,22 +29,20 @@ const ProductEdit = () => {
   const [specifications, setSpecifications] = useState({});
   const [uploading, setUploading] = useState(false);
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-
-  const productDetails = useSelector((state) => state.productDetails);
+  const { state: productState, dispatch: productDispatch } = useProduct();
+  const { details: productDetails, update: productUpdate } = productState;
   const { loading, error, product } = productDetails;
-
-  const productUpdate = useSelector((state) => state.productUpdate);
   const { loading: loadingUpdate, error: errorUpdate, success: successUpdate } = productUpdate;
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (successUpdate) {
-      dispatch({ type: PRODUCT_UPDATE_RESET });
+      productActions.resetUpdateProduct()(productDispatch);
       navigate('/admin/productlist');
     } else {
       if (!product.name || product._id !== id) {
-        dispatch(listProductDetails(id));
+        productActions.listProductDetails(id)(productDispatch);
       } else {
         setName(product.name);
         setPrice(product.price);
@@ -71,7 +67,7 @@ const ProductEdit = () => {
         setSpecifications(product.specifications || {});
       }
     }
-  }, [dispatch, navigate, product, id, successUpdate]);
+  }, [productDispatch, navigate, product, id, successUpdate]);
 
   const uploadFileHandler = async (e) => {
     const file = e.target.files[0];
@@ -109,32 +105,30 @@ const ProductEdit = () => {
 
   const submitHandler = (e) => {
     e.preventDefault();
-    dispatch(
-      updateProduct({
-        _id: id,
-        name,
-        price,
-        image,
-        cloudinaryId,
-        brand,
-        category,
-        description,
-        countInStock,
-        model,
-        storage,
-        color,
-        screenSize,
-        size,
-        material,
-        gender,
-        author,
-        publisher,
-        pages,
-        weight,
-        dimensions,
-        specifications
-      })
-    );
+    productActions.updateProduct({
+      _id: id,
+      name,
+      price,
+      image,
+      cloudinaryId,
+      brand,
+      category,
+      description,
+      countInStock,
+      model,
+      storage,
+      color,
+      screenSize,
+      size,
+      material,
+      gender,
+      author,
+      publisher,
+      pages,
+      weight,
+      dimensions,
+      specifications
+    })(productDispatch);
   };
 
   // Categories for the dropdown

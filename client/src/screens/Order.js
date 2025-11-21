@@ -1,29 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { getOrderDetails, payOrder } from '../actions/orderActions';
+import { useOrder, orderActions } from '../contexts/OrderContext';
 
 const Order = () => {
   const { id } = useParams();
 
   const [sdkReady] = useState(false);
 
-  const dispatch = useDispatch();
-
-  const orderDetails = useSelector((state) => state.orderDetails);
+  const { state: orderState, dispatch: orderDispatch } = useOrder();
+  const { details: orderDetails, pay: orderPay } = orderState;
   const { order, loading, error } = orderDetails;
-
-  const orderPay = useSelector((state) => state.orderPay);
   const { loading: loadingPay, success: successPay } = orderPay;
 
   useEffect(() => {
     if (!order || successPay || order._id !== id) {
-      dispatch(getOrderDetails(id));
+      orderActions.getOrderDetails(id)(orderDispatch);
     }
-  }, [dispatch, order, id, successPay]);
+  }, [orderDispatch, order, id, successPay]);
 
   const successPaymentHandler = (paymentResult) => {
-    dispatch(payOrder(id, paymentResult));
+    orderActions.payOrder(id, paymentResult)(orderDispatch);
   };
 
   return loading ? (

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { register } from '../actions/userActions';
+import { useUser, userActions } from '../contexts/UserContext';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -10,12 +9,12 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState(null);
 
-  const dispatch = useDispatch();
+  const { state, dispatch } = useUser();
+  const { register } = state;
+  const { loading, userInfo } = register;
+  
   const navigate = useNavigate();
   const location = useLocation();
-
-  const userRegister = useSelector((state) => state.userRegister);
-  const { loading, userInfo } = userRegister;
 
   const redirect = location.search ? location.search.split('=')[1] : '/';
 
@@ -30,7 +29,7 @@ const Register = () => {
     if (password !== confirmPassword) {
       setMessage('Passwords do not match');
     } else {
-      dispatch(register(name, email, password));
+      userActions.register(name, email, password)(dispatch);
     }
   };
 
