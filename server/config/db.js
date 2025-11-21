@@ -19,15 +19,11 @@ const connectDB = async () => {
 
     // Add connection options to handle connection issues
     const conn = await mongoose.connect(mongoURI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       // Remove unsupported options and use only valid ones
-      serverSelectionTimeoutMS: 30000, // Increase server selection timeout
-      socketTimeoutMS: 45000, // Increase socket timeout
-      retryWrites: true,
-      maxPoolSize: 10, // Limit connection pool size
       serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      retryWrites: true,
+      maxPoolSize: 10, // Limit connection pool size
     });
 
     logger.info(`MongoDB Connected: ${conn.connection.host}`);

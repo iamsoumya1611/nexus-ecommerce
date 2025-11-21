@@ -63,6 +63,17 @@ userSchema.pre('save', async function(next) {
 // Match user entered password to hashed password in database
 userSchema.methods.matchPassword = async function(enteredPassword) {
   try {
+    // Validate inputs
+    if (!enteredPassword) {
+      logger.warn('No password provided for comparison');
+      return false;
+    }
+    
+    if (!this.password) {
+      logger.error('No stored password found for user:', this.email);
+      return false;
+    }
+    
     logger.info('Matching password for user:', this.email);
     logger.info(`Entered password length: ${enteredPassword ? enteredPassword.length : 0}`);
     logger.info(`Stored password length: ${this.password ? this.password.length : 0}`);

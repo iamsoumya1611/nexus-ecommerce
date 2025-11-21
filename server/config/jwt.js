@@ -20,6 +20,12 @@ const generateToken = (id) => {
       throw new Error('User ID is required to generate token');
     }
     
+    // Validate that id is a valid ObjectId string
+    if (typeof id !== 'string' || id.length === 0) {
+      logger.error('User ID must be a non-empty string');
+      throw new Error('User ID must be a non-empty string');
+    }
+    
     logger.info('Generating JWT token with secret and user ID');
     const token = jwt.sign({ id }, secret, {
       expiresIn: '30d',

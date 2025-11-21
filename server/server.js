@@ -33,7 +33,8 @@ const corsOptions = {
       'http://localhost:3000',
       'http://localhost:5000',
       'https://nexus-ecommerce-chi.vercel.app',
-      'https://nexus-ecommerce-api.onrender.com'
+      'https://nexus-ecommerce-api.onrender.com',
+      'https://nexus-ecommerce.onrender.com'
     ];
     
     // In production, also allow the FRONTEND_URL from environment variables
@@ -57,7 +58,8 @@ const corsOptions = {
         logger.warn('Allowing blocked origin in development mode:', origin);
         callback(null, true);
       } else {
-        callback(null, true); // Temporarily allow all in production for debugging
+        // In production, reject unauthorized origins
+        callback(new Error('Not allowed by CORS'));
       }
     }
   },
@@ -78,6 +80,36 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Simple test route to check if server is working
 app.get('/test', (req, res) => {
   res.json({ message: 'Server is working', timestamp: new Date().toISOString() });
+});
+
+// Database connection test route
+app.get('/db-test', async (req, res) => {
+  try {
+    const { checkDBHealth } = require('./config/db');
+    const dbHealth = checkDBHealth();
+    
+    if (dbHealth.isConnected) {
+      res.json({ 
+        message: 'Database connection successful', 
+        host: dbHealth.host,
+        name: dbHealth.name,
+        timestamp: new Date().toISOString() 
+      });
+    } else {
+      res.status(503).json({ 
+        message: 'Database not connected',
+        readyState: dbHealth.readyState,
+        timestamp: new Date().toISOString() 
+      });
+    }
+  } catch (error) {
+    logger.error('Database test error:', error);
+    res.status(500).json({ 
+      message: 'Database test failed',
+      error: error.message,
+      timestamp: new Date().toISOString() 
+    });
+  }
 });
 
 // Database connection
@@ -122,12 +154,28 @@ app.get('/health', async (req, res) => {
   const { checkDBHealth } = require('./config/db');
   
   try {
+    const dbHealth = checkDBHealth();
+    
+    // Check if database is connected
+    if (!dbHealth.isConnected) {
+      logger.error('Health check failed: Database not connected');
+      return res.status(503).json({
+        status: 'ERROR',
+        message: 'Database not connected',
+        mongoose: dbHealth,
+        environment: {
+          NODE_ENV: process.env.NODE_ENV,
+          PORT: process.env.PORT
+        }
+      });
+    }
+    
     const healthData = {
       status: 'OK',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       memory: process.memoryUsage(),
-      mongoose: checkDBHealth(),
+      mongoose: dbHealth,
       environment: {
         NODE_ENV: process.env.NODE_ENV,
         PORT: process.env.PORT

@@ -113,11 +113,24 @@ const authUser = asyncHandler(async (req, res) => {
     if (user) {
       logger.info(`User found, attempting password comparison`);
       try {
+        // Check if the user object has the matchPassword method
+        if (typeof user.matchPassword !== 'function') {
+          logger.error(`User object missing matchPassword method for email: ${email}`);
+          return res.status(500).json({ message: 'Authentication system error' });
+        }
+        
         const isPasswordMatch = await user.matchPassword(password);
         logger.info(`Password match result: ${isPasswordMatch}`);
         
         if (isPasswordMatch) {
           logger.info(`Successfully authenticated user with email: ${email}`);
+          
+          // Check if we have a valid user ID before generating token
+          if (!user._id) {
+            logger.error(`User object missing _id for email: ${email}`);
+            return res.status(500).json({ message: 'Authentication system error' });
+          }
+          
           const token = generateToken(user._id);
           logger.info(`Token generated for user: ${user.email}`);
           

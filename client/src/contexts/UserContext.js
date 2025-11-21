@@ -237,8 +237,11 @@ export const userActions = {
         baseUrl = '';
       }
 
+      // Ensure we don't have double slashes in the URL
+      const loginUrl = baseUrl ? `${baseUrl}/users/login` : '/users/login';
+      
       const { data } = await axios.post(
-        `${baseUrl}/users/login`,
+        loginUrl,
         { email, password },
         config
       );
@@ -300,8 +303,11 @@ export const userActions = {
         baseUrl = '';
       }
 
+      // Ensure we don't have double slashes in the URL
+      const registerUrl = baseUrl ? `${baseUrl}/users/register` : '/users/register';
+      
       const { data } = await axios.post(
-        `${baseUrl}/users/register`,
+        registerUrl,
         { name, email, password },
         config
       );
@@ -361,7 +367,10 @@ export const userActions = {
         baseUrl = '';
       }
 
-      const { data } = await axios.get(`${baseUrl}/users/profile`, config);
+      // Ensure we don't have double slashes in the URL
+      const profileUrl = baseUrl ? `${baseUrl}/users/profile` : '/users/profile';
+      
+      const { data } = await axios.get(profileUrl, config);
 
       dispatch({
         type: 'USER_DETAILS_SUCCESS',
@@ -410,7 +419,10 @@ export const userActions = {
         baseUrl = '';
       }
 
-      const { data } = await axios.put(`${baseUrl}/users/profile`, user, config);
+      // Ensure we don't have double slashes in the URL
+      const profileUrl = baseUrl ? `${baseUrl}/users/profile` : '/users/profile';
+      
+      const { data } = await axios.put(profileUrl, user, config);
 
       dispatch({
         type: 'USER_UPDATE_PROFILE_SUCCESS',
