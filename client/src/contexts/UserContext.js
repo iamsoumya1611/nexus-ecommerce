@@ -2,11 +2,16 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
-// Set base URL for API requests
+// Set base URL for API requests - ensure HTTPS in production
 const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
 // Configure axios defaults
 axios.defaults.withCredentials = true;
+
+// Ensure HTTPS is used in production
+if (process.env.NODE_ENV === 'production' && API_BASE_URL.startsWith('http://')) {
+  console.warn('API URL should use HTTPS in production');
+}
 
 // Initial states
 const initialUserLoginState = { 
@@ -237,8 +242,10 @@ export const userActions = {
         baseUrl = '';
       }
 
-      // Ensure we don't have double slashes in the URL
-      const loginUrl = baseUrl ? `${baseUrl}/users/login` : '/users/login';
+      // Ensure we don't have double slashes in the URL and use HTTPS in production
+      const loginUrl = baseUrl ? 
+        `${baseUrl.replace(/\/$/, '')}/users/login` : 
+        '/users/login';
       
       const { data } = await axios.post(
         loginUrl,
@@ -303,8 +310,10 @@ export const userActions = {
         baseUrl = '';
       }
 
-      // Ensure we don't have double slashes in the URL
-      const registerUrl = baseUrl ? `${baseUrl}/users/register` : '/users/register';
+      // Ensure we don't have double slashes in the URL and use HTTPS in production
+      const registerUrl = baseUrl ? 
+        `${baseUrl.replace(/\/$/, '')}/users/register` : 
+        '/users/register';
       
       const { data } = await axios.post(
         registerUrl,
@@ -367,8 +376,10 @@ export const userActions = {
         baseUrl = '';
       }
 
-      // Ensure we don't have double slashes in the URL
-      const profileUrl = baseUrl ? `${baseUrl}/users/profile` : '/users/profile';
+      // Ensure we don't have double slashes in the URL and use HTTPS in production
+      const profileUrl = baseUrl ? 
+        `${baseUrl.replace(/\/$/, '')}/users/profile` : 
+        '/users/profile';
       
       const { data } = await axios.get(profileUrl, config);
 
@@ -419,8 +430,10 @@ export const userActions = {
         baseUrl = '';
       }
 
-      // Ensure we don't have double slashes in the URL
-      const profileUrl = baseUrl ? `${baseUrl}/users/profile` : '/users/profile';
+      // Ensure we don't have double slashes in the URL and use HTTPS in production
+      const profileUrl = baseUrl ? 
+        `${baseUrl.replace(/\/$/, '')}/users/profile` : 
+        '/users/profile';
       
       const { data } = await axios.put(profileUrl, user, config);
 

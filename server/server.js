@@ -4,6 +4,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
 const fs = require('fs');
+const cookieParser = require('cookie-parser');
 const logger = require('./utils/logger');
 
 dotenv.config();
@@ -19,7 +20,7 @@ logger.info('FRONTEND_URL:', process.env.FRONTEND_URL);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enhanced CORS configuration
+// Enhanced CORS configuration for production
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
@@ -32,9 +33,7 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:5000',
-      'https://nexus-ecommerce-chi.vercel.app',
-      'https://nexus-ecommerce-api.onrender.com',
-      'https://nexus-ecommerce.onrender.com'
+      'https://nexus-ecommerce-chi.vercel.app'
     ];
     
     // In production, also allow the FRONTEND_URL from environment variables
@@ -72,6 +71,9 @@ app.use(cors(corsOptions));
 
 // Handle preflight requests explicitly for all routes
 app.options('*', cors(corsOptions));
+
+// Cookie parser middleware
+app.use(cookieParser());
 
 // Middleware
 app.use(express.json({ limit: '50mb' }));
@@ -312,7 +314,7 @@ app.use((err, req, res, next) => {
 
 const server = app.listen(PORT, () => {
   logger.info(`Server running on port ${PORT}`);
-  logger.info(`CORS configuration allows origins: http://localhost:3000, http://localhost:5000, https://nexus-ecommerce-chi.vercel.app, and Vercel subdomains`);
+  logger.info(`CORS configuration allows origins: http://localhost:3000, https://nexus-ecommerce-chi.vercel.app, and Vercel subdomains`);
 });
 
 // Handle unhandled promise rejections

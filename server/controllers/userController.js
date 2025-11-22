@@ -46,11 +46,16 @@ const registerUser = asyncHandler(async (req, res) => {
       const token = generateToken(user._id);
       logger.info(`Generated token for user ${email}`);
       
-      // Ensure proper headers for CORS (normalize origin)
-      const origin = req.headers.origin;
-      const normalizedOrigin = origin ? origin.replace(/\/$/, '') : '*';
-      res.header('Access-Control-Allow-Origin', normalizedOrigin);
-      res.header('Access-Control-Allow-Credentials', 'true');
+      // Set secure cookie for production
+      const isProduction = process.env.NODE_ENV === 'production';
+      const cookieOptions = {
+        httpOnly: true,
+        secure: isProduction, // Secure only in production (HTTPS)
+        sameSite: isProduction ? 'none' : 'lax', // 'none' for cross-site in production, 'lax' for development
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+      };
+      
+      res.cookie('token', token, cookieOptions);
       
       res.status(201).json({
         _id: user._id,
@@ -134,6 +139,17 @@ const authUser = asyncHandler(async (req, res) => {
           const token = generateToken(user._id);
           logger.info(`Token generated for user: ${user.email}`);
           
+          // Set secure cookie for production
+          const isProduction = process.env.NODE_ENV === 'production';
+          const cookieOptions = {
+            httpOnly: true,
+            secure: isProduction, // Secure only in production (HTTPS)
+            sameSite: isProduction ? 'none' : 'lax', // 'none' for cross-site in production, 'lax' for development
+            maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+          };
+          
+          res.cookie('token', token, cookieOptions);
+          
           const responseData = {
             _id: user._id,
             name: user.name,
@@ -143,12 +159,6 @@ const authUser = asyncHandler(async (req, res) => {
           };
           
           logger.info(`Sending response: ${JSON.stringify(responseData)}`);
-          
-          // Ensure proper headers for CORS (normalize origin)
-          const origin = req.headers.origin;
-          const normalizedOrigin = origin ? origin.replace(/\/$/, '') : '*';
-          res.header('Access-Control-Allow-Origin', normalizedOrigin);
-          res.header('Access-Control-Allow-Credentials', 'true');
           
           return res.json(responseData);
         } else {
@@ -204,12 +214,6 @@ const getUserProfile = asyncHandler(async (req, res) => {
 
     if (user) {
       logger.info(`Successfully fetched profile for user ID: ${req.user._id}`);
-      
-      // Ensure proper headers for CORS (normalize origin)
-      const origin = req.headers.origin;
-      const normalizedOrigin = origin ? origin.replace(/\/$/, '') : '*';
-      res.header('Access-Control-Allow-Origin', normalizedOrigin);
-      res.header('Access-Control-Allow-Credentials', 'true');
       
       res.json({
         _id: user._id,
@@ -267,18 +271,26 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 
       logger.info(`Successfully updated profile for user ID: ${req.user._id}`);
       
-      // Ensure proper headers for CORS (normalize origin)
-      const origin = req.headers.origin;
-      const normalizedOrigin = origin ? origin.replace(/\/$/, '') : '*';
-      res.header('Access-Control-Allow-Origin', normalizedOrigin);
-      res.header('Access-Control-Allow-Credentials', 'true');
+      // Generate new token after profile update
+      const token = generateToken(updatedUser._id);
+      
+      // Set secure cookie for production
+      const isProduction = process.env.NODE_ENV === 'production';
+      const cookieOptions = {
+        httpOnly: true,
+        secure: isProduction, // Secure only in production (HTTPS)
+        sameSite: isProduction ? 'none' : 'lax', // 'none' for cross-site in production, 'lax' for development
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+      };
+      
+      res.cookie('token', token, cookieOptions);
       
       res.json({
         _id: updatedUser._id,
         name: updatedUser.name,
         email: updatedUser.email,
         isAdmin: updatedUser.isAdmin,
-        token: generateToken(updatedUser._id)
+        token: token
       });
     } else {
       logger.warn(`User not found for ID: ${req.user._id}`);

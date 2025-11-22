@@ -6,15 +6,22 @@ const logger = require('../utils/logger');
 const protect = asyncHandler(async (req, res, next) => {
   let token;
 
-  if (
+  // Check for token in cookies first
+  if (req.cookies.token) {
+    token = req.cookies.token;
+    logger.info('Token extracted from cookies');
+  }
+  // Check for token in Authorization header (Bearer token)
+  else if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
-    try {
-      token = req.headers.authorization.split(' ')[1];
-      
-      logger.info('Token extracted from request header');
+    token = req.headers.authorization.split(' ')[1];
+    logger.info('Token extracted from request header');
+  }
 
+  if (token) {
+    try {
       // Ensure we have a proper secret key
       const secret = process.env.JWT_SECRET;
       if (!secret) {
@@ -49,7 +56,7 @@ const protect = asyncHandler(async (req, res, next) => {
   }
 
   if (!token) {
-    logger.warn('No token provided in authorization header');
+    logger.warn('No token provided in authorization header or cookies');
     res.status(401);
     throw new Error('Not authorized, no token');
   }
