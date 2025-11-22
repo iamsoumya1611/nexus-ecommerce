@@ -14,6 +14,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
 
     logger.info(`Attempting to register user with email: ${email}`);
+    logger.info('Request body:', req.body);
     
     // Validate input
     if (!name || !email || !password) {
@@ -47,15 +48,26 @@ const registerUser = asyncHandler(async (req, res) => {
       logger.info(`Generated token for user ${email}`);
       
       // Set secure cookie for production
-      const isProduction = process.env.NODE_ENV === 'production';
-      const cookieOptions = {
-        httpOnly: true,
-        secure: isProduction, // Secure only in production (HTTPS)
-        sameSite: isProduction ? 'none' : 'lax', // 'none' for cross-site in production, 'lax' for development
-        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
-      };
-      
-      res.cookie('token', token, cookieOptions);
+      try {
+        const isProduction = process.env.NODE_ENV === 'production';
+        const cookieOptions = {
+          httpOnly: true,
+          secure: isProduction, // Secure only in production (HTTPS)
+          sameSite: isProduction ? 'none' : 'lax', // 'none' for cross-site in production, 'lax' for development
+          maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+        };
+        
+        // Only set sameSite: 'none' if we're in production and have a valid origin
+        if (isProduction && (!req.headers.origin || !req.headers.origin.includes('vercel.app'))) {
+          cookieOptions.sameSite = 'lax';
+          logger.info('Setting sameSite to lax for non-Vercel origin in production');
+        }
+        
+        res.cookie('token', token, cookieOptions);
+        logger.info('Cookie set successfully for user:', email);
+      } catch (cookieError) {
+        logger.error('Error setting cookie:', cookieError);
+      }
       
       res.status(201).json({
         _id: user._id,
@@ -97,7 +109,8 @@ const authUser = asyncHandler(async (req, res) => {
 
   try {
     logger.info(`Attempting to authenticate user with email: ${email}`);
-    logger.info(`Request body: ${JSON.stringify(req.body)}`);
+    logger.info('Request headers:', req.headers);
+    logger.info('Request body:', req.body);
     
     // Validate input
     if (!email || !password) {
@@ -140,15 +153,26 @@ const authUser = asyncHandler(async (req, res) => {
           logger.info(`Token generated for user: ${user.email}`);
           
           // Set secure cookie for production
-          const isProduction = process.env.NODE_ENV === 'production';
-          const cookieOptions = {
-            httpOnly: true,
-            secure: isProduction, // Secure only in production (HTTPS)
-            sameSite: isProduction ? 'none' : 'lax', // 'none' for cross-site in production, 'lax' for development
-            maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
-          };
-          
-          res.cookie('token', token, cookieOptions);
+          try {
+            const isProduction = process.env.NODE_ENV === 'production';
+            const cookieOptions = {
+              httpOnly: true,
+              secure: isProduction, // Secure only in production (HTTPS)
+              sameSite: isProduction ? 'none' : 'lax', // 'none' for cross-site in production, 'lax' for development
+              maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+            };
+            
+            // Only set sameSite: 'none' if we're in production and have a valid origin
+            if (isProduction && (!req.headers.origin || !req.headers.origin.includes('vercel.app'))) {
+              cookieOptions.sameSite = 'lax';
+              logger.info('Setting sameSite to lax for non-Vercel origin in production');
+            }
+            
+            res.cookie('token', token, cookieOptions);
+            logger.info('Cookie set successfully for user:', email);
+          } catch (cookieError) {
+            logger.error('Error setting cookie:', cookieError);
+          }
           
           const responseData = {
             _id: user._id,
@@ -275,15 +299,26 @@ const updateUserProfile = asyncHandler(async (req, res) => {
       const token = generateToken(updatedUser._id);
       
       // Set secure cookie for production
-      const isProduction = process.env.NODE_ENV === 'production';
-      const cookieOptions = {
-        httpOnly: true,
-        secure: isProduction, // Secure only in production (HTTPS)
-        sameSite: isProduction ? 'none' : 'lax', // 'none' for cross-site in production, 'lax' for development
-        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
-      };
-      
-      res.cookie('token', token, cookieOptions);
+      try {
+        const isProduction = process.env.NODE_ENV === 'production';
+        const cookieOptions = {
+          httpOnly: true,
+          secure: isProduction, // Secure only in production (HTTPS)
+          sameSite: isProduction ? 'none' : 'lax', // 'none' for cross-site in production, 'lax' for development
+          maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+        };
+        
+        // Only set sameSite: 'none' if we're in production and have a valid origin
+        if (isProduction && (!req.headers.origin || !req.headers.origin.includes('vercel.app'))) {
+          cookieOptions.sameSite = 'lax';
+          logger.info('Setting sameSite to lax for non-Vercel origin in production');
+        }
+        
+        res.cookie('token', token, cookieOptions);
+        logger.info('Cookie set successfully for user:', updatedUser.email);
+      } catch (cookieError) {
+        logger.error('Error setting cookie:', cookieError);
+      }
       
       res.json({
         _id: updatedUser._id,

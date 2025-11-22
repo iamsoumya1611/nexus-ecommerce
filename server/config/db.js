@@ -80,5 +80,8 @@ const checkDBHealth = () => {
   };
 };
 
+// Add additional logging for debugging
+mongoose.set('debug', process.env.NODE_ENV !== 'production');
+
 module.exports = connectDB;
 module.exports.checkDBHealth = checkDBHealth;

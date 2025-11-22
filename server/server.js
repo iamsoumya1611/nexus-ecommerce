@@ -72,6 +72,20 @@ app.use(cors(corsOptions));
 // Handle preflight requests explicitly for all routes
 app.options('*', cors(corsOptions));
 
+// Cookie parser middleware with logging
+app.use((req, res, next) => {
+  logger.info('Request received:', {
+    method: req.method,
+    url: req.url,
+    headers: {
+      origin: req.headers.origin,
+      'content-type': req.headers['content-type'],
+      'user-agent': req.headers['user-agent']
+    }
+  });
+  next();
+});
+
 // Cookie parser middleware
 app.use(cookieParser());
 
@@ -315,6 +329,7 @@ app.use((err, req, res, next) => {
 const server = app.listen(PORT, () => {
   logger.info(`Server running on port ${PORT}`);
   logger.info(`CORS configuration allows origins: http://localhost:3000, https://nexus-ecommerce-chi.vercel.app, and Vercel subdomains`);
+  logger.info(`Server startup completed successfully`);
 });
 
 // Handle unhandled promise rejections

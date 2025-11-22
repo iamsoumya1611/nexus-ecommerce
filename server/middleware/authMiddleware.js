@@ -6,22 +6,31 @@ const logger = require('../utils/logger');
 const protect = asyncHandler(async (req, res, next) => {
   let token;
 
-  // Check for token in cookies first
-  if (req.cookies.token) {
-    token = req.cookies.token;
-    logger.info('Token extracted from cookies');
-  }
-  // Check for token in Authorization header (Bearer token)
-  else if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
-    token = req.headers.authorization.split(' ')[1];
-    logger.info('Token extracted from request header');
-  }
+  try {
+    logger.info('Auth middleware called');
+    logger.info('Request headers:', req.headers);
+    logger.info('Request cookies:', req.cookies);
+    
+    // Check for token in cookies first
+    if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
+      logger.info('Token extracted from cookies');
+    }
+    // Check for token in Authorization header (Bearer token)
+    else if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith('Bearer')
+    ) {
+      token = req.headers.authorization.split(' ')[1];
+      logger.info('Token extracted from request header');
+    }
+    // Check for token in request body (fallback for some clients)
+    else if (req.body && req.body.token) {
+      token = req.body.token;
+      logger.info('Token extracted from request body');
+    }
 
-  if (token) {
-    try {
+    if (token) {
       // Ensure we have a proper secret key
       const secret = process.env.JWT_SECRET;
       if (!secret) {
@@ -44,21 +53,19 @@ const protect = asyncHandler(async (req, res, next) => {
       
       logger.info('User authenticated:', req.user.email);
       next();
-    } catch (error) {
-      logger.error('Token verification error:', {
-        message: error.message,
-        stack: error.stack,
-        token: token ? 'present' : 'missing'
-      });
+    } else {
+      logger.warn('No token provided in authorization header, cookies, or request body');
       res.status(401);
-      throw new Error('Not authorized, token failed');
+      throw new Error('Not authorized, no token');
     }
-  }
-
-  if (!token) {
-    logger.warn('No token provided in authorization header or cookies');
+  } catch (error) {
+    logger.error('Authentication error:', {
+      message: error.message,
+      stack: error.stack,
+      token: token ? 'present' : 'missing'
+    });
     res.status(401);
-    throw new Error('Not authorized, no token');
+    throw new Error('Not authorized, token failed');
   }
 });
 

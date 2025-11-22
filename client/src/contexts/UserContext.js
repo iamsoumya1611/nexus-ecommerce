@@ -247,8 +247,14 @@ export const userActions = {
         `${baseUrl.replace(/\/$/, '')}/users/login` : 
         '/users/login';
       
+      // Ensure we're using HTTPS in production
+      let finalUrl = loginUrl;
+      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
+        finalUrl = finalUrl.replace('http://', 'https://');
+      }
+      
       const { data } = await axios.post(
-        loginUrl,
+        finalUrl,
         { email, password },
         config
       );
@@ -315,8 +321,14 @@ export const userActions = {
         `${baseUrl.replace(/\/$/, '')}/users/register` : 
         '/users/register';
       
+      // Ensure we're using HTTPS in production
+      let finalUrl = registerUrl;
+      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
+        finalUrl = finalUrl.replace('http://', 'https://');
+      }
+      
       const { data } = await axios.post(
-        registerUrl,
+        finalUrl,
         { name, email, password },
         config
       );
@@ -381,7 +393,13 @@ export const userActions = {
         `${baseUrl.replace(/\/$/, '')}/users/profile` : 
         '/users/profile';
       
-      const { data } = await axios.get(profileUrl, config);
+      // Ensure we're using HTTPS in production
+      let finalUrl = profileUrl;
+      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
+        finalUrl = finalUrl.replace('http://', 'https://');
+      }
+      
+      const { data } = await axios.get(finalUrl, config);
 
       dispatch({
         type: 'USER_DETAILS_SUCCESS',
@@ -435,7 +453,13 @@ export const userActions = {
         `${baseUrl.replace(/\/$/, '')}/users/profile` : 
         '/users/profile';
       
-      const { data } = await axios.put(profileUrl, user, config);
+      // Ensure we're using HTTPS in production
+      let finalUrl = profileUrl;
+      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
+        finalUrl = finalUrl.replace('http://', 'https://');
+      }
+      
+      const { data } = await axios.put(finalUrl, user, config);
 
       dispatch({
         type: 'USER_UPDATE_PROFILE_SUCCESS',
