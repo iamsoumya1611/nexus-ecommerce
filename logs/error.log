@@ -1,0 +1,1 @@
+{"level":"error","message":"Error connecting to MongoDB: querySrv ECONNREFUSED _mongodb._tcp.nexusecommerceapi.vp5ywmd.mongodb.net","service":"nexus-ecommerce","timestamp":"2025-11-23T10:05:13.750Z"}

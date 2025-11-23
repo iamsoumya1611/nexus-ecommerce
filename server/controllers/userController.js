@@ -10,16 +10,23 @@ const mongoose = require('mongoose');
 // @route   POST /api/users/register
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
+  const { name, email, password } = req.body;
 
-    logger.info(`Attempting to register user with email: ${email}`);
+  try {
+    logger.info('Registration attempt:', { name, email });
+    logger.info('Request headers:', req.headers);
     logger.info('Request body:', req.body);
     
     // Validate input
     if (!name || !email || !password) {
       logger.warn('Registration attempt with missing fields');
       return res.status(400).json({ message: 'Name, email, and password are required' });
+    }
+    
+    // Check password strength
+    if (password.length < 6) {
+      logger.warn('Registration attempt with weak password');
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
     }
 
     // Check if we have a database connection
@@ -32,20 +39,26 @@ const registerUser = asyncHandler(async (req, res) => {
       });
     }
 
+    // Check if user already exists
+    logger.info(`Checking if user already exists with email: ${email}`);
     const userExists = await User.findOne({ email });
+    logger.info(`User exists check result: ${userExists ? 'User found' : 'User not found'}`);
 
     if (userExists) {
-      logger.warn(`Registration failed - User already exists with email: ${email}`);
-      return res.status(400).json({ message: 'User already exists' });
+      logger.warn(`Registration failed - user already exists with email: ${email}`);
+      return res.status(400).json({ message: 'User already exists with this email address' });
     }
 
+    // Create user
     logger.info(`Creating new user with email: ${email}`);
     const user = await User.create({
       name,
       email,
-      password
+      password,
     });
-
+    
+    logger.info(`User creation result: ${user ? 'Success' : 'Failed'}`);
+    
     if (user) {
       logger.info(`Successfully registered user with email: ${email}`);
       const token = generateToken(user._id);
@@ -105,6 +118,28 @@ const registerUser = asyncHandler(async (req, res) => {
       return res.status(400).json({ 
         message: 'Validation Error',
         errors
+      });
+    }
+    
+    // Handle duplicate key errors
+    if (error.code === 11000) {
+      logger.error('Duplicate key error during registration:', {
+        message: error.message,
+        keyValue: error.keyValue
+      });
+      return res.status(400).json({ 
+        message: 'User already exists with this email address' 
+      });
+    }
+    
+    // Handle specific MongoDB errors
+    if (error.name === 'MongoError') {
+      logger.error('MongoDB error during registration:', {
+        message: error.message,
+        code: error.code
+      });
+      return res.status(500).json({ 
+        message: 'Database error during registration. Please try again later.' 
       });
     }
     
@@ -223,7 +258,10 @@ const authUser = asyncHandler(async (req, res) => {
       }
     } else {
       logger.warn(`Authentication failed - user not found with email: ${email}`);
-      return res.status(401).json({ message: 'Invalid email or password' });
+      // This is the key change - provide a more specific error message
+      return res.status(401).json({ 
+        message: 'No account found with this email address. Please register first.' 
+      });
     }
   } catch (error) {
     logger.error(`Authentication error for email: ${req.body.email || 'unknown'}`, {
