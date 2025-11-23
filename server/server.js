@@ -362,5 +362,21 @@ connectDB()
   .catch(err => {
     logger.error('Failed to connect to database:', err);
     logger.error('Server will not start due to database connection failure');
+    
+    // Provide specific guidance for MongoDB Atlas IP whitelist issues
+    if (err.message && (err.message.includes('IP that isn\'t whitelisted') || 
+        err.message.includes('Could not connect to any servers'))) {
+      logger.error('=====================================================');
+      logger.error('MONGODB ATLAS IP WHITELIST ISSUE DETECTED');
+      logger.error('=====================================================');
+      logger.error('SOLUTION REQUIRED:');
+      logger.error('1. Go to MongoDB Atlas Dashboard (https://cloud.mongodb.com)');
+      logger.error('2. Navigate to Network Access section in your cluster');
+      logger.error('3. Add your Render server IP address to the whitelist');
+      logger.error('   OR temporarily add 0.0.0.0/0 (ALLOW ALL) for testing');
+      logger.error('4. Wait 1-2 minutes for changes to propagate');
+      logger.error('=====================================================');
+    }
+    
     process.exit(1);
   });

@@ -51,10 +51,24 @@ const connectDB = async () => {
     logger.error(`Error connecting to MongoDB: ${error.message}`);
     logger.error('Stack trace:', error.stack);
     
+    // Handle specific MongoDB Atlas connection errors
+    if (error.message.includes('IP that isn\'t whitelisted') || 
+        error.message.includes('Could not connect to any servers')) {
+      logger.error('MongoDB Atlas IP Whitelist Issue Detected!');
+      logger.error('Solution: Add your Render server IP to MongoDB Atlas whitelist');
+      logger.error('Steps:');
+      logger.error('1. Go to MongoDB Atlas Dashboard');
+      logger.error('2. Navigate to Network Access section');
+      logger.error('3. Add your Render server IP address or use 0.0.0.0/0 (less secure)');
+      logger.error('4. Wait for changes to propagate (can take a few minutes)');
+      logger.error('Alternative: Use MongoDB connection string with +srv disabled');
+    }
+    
     // In production, we should not retry indefinitely as it may cause issues
     if (process.env.NODE_ENV === 'production') {
       logger.error('Production environment: Not retrying MongoDB connection');
-      throw error;
+      // Exit with error code so Render can restart the service
+      process.exit(1);
     } else {
       // In development, retry the connection
       logger.info('Retrying MongoDB connection in 5 seconds...');
