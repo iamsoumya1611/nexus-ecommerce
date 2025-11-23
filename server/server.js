@@ -104,11 +104,25 @@ app.get('/db-test', async (req, res) => {
     const { checkDBHealth } = require('./config/db');
     const dbHealth = checkDBHealth();
     
+    // Try to count users
+    const User = require('./models/User');
+    let userCount = 0;
+    let sampleUsers = [];
+    
+    try {
+      userCount = await User.countDocuments();
+      sampleUsers = await User.find({}, 'email name').limit(5);
+    } catch (userError) {
+      logger.error('Error querying users:', userError.message);
+    }
+    
     if (dbHealth.isConnected) {
       res.json({ 
         message: 'Database connection successful', 
         host: dbHealth.host,
         name: dbHealth.name,
+        userCount: userCount,
+        sampleUsers: sampleUsers,
         timestamp: new Date().toISOString() 
       });
     } else {

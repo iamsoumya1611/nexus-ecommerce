@@ -39,6 +39,13 @@ const registerUser = asyncHandler(async (req, res) => {
       });
     }
 
+    // Log database connection info
+    logger.info('Database connection info:', {
+      readyState: mongoose.connection.readyState,
+      host: mongoose.connection.host,
+      name: mongoose.connection.name
+    });
+
     // Check if user already exists
     logger.info(`Checking if user already exists with email: ${email}`);
     const userExists = await User.findOne({ email });
@@ -184,9 +191,42 @@ const authUser = asyncHandler(async (req, res) => {
       });
     }
 
-    logger.info(`Finding user with email: ${email}`);
-    const user = await User.findOne({ email });
+    // Log database connection info
+    logger.info('Database connection info:', {
+      readyState: mongoose.connection.readyState,
+      host: mongoose.connection.host,
+      name: mongoose.connection.name
+    });
+
+    // Find user with case-insensitive email search
+    logger.info(`Finding user with email (case-insensitive): ${email}`);
+    const user = await User.findOne({ 
+      email: { $regex: new RegExp(`^${email}$`, 'i') }
+    });
     logger.info(`User lookup result: ${user ? 'User found' : 'User not found'}`);
+    
+    // Log the actual query result for debugging
+    if (user) {
+      logger.info('Found user details:', {
+        _id: user._id,
+        email: user.email,
+        name: user.name
+      });
+    } else {
+      // Let's also try a more general query to see if there are any users
+      try {
+        const userCount = await User.countDocuments();
+        logger.info(`Total users in database: ${userCount}`);
+        
+        if (userCount > 0) {
+          // Try to find any user to see what's in the database
+          const sampleUser = await User.findOne({}, 'email name');
+          logger.info('Sample user from database:', sampleUser);
+        }
+      } catch (countError) {
+        logger.error('Error counting users:', countError.message);
+      }
+    }
 
     if (user) {
       logger.info(`User found, attempting password comparison`);
