@@ -130,223 +130,237 @@ app.get('/db-test', async (req, res) => {
 
 // Database connection
 const connectDB = require('./config/db');
-// Connect to database with error handling
+
+// Connect to database with error handling and start server only after successful connection
 logger.info('Initializing database connection...');
-connectDB().catch(err => {
-  logger.error('Failed to connect to database:', err);
-  // In production, we might want to exit or handle this differently
-  if (process.env.NODE_ENV === 'production') {
-    logger.error('Production environment: Server may not function properly without database connection');
-  }
-});
+let server;
 
-// API Routes - These should be before static file serving
-// User routes
-app.use('/users', require('./routes/userRoutes'));
-
-// Product routes
-app.use('/products', require('./routes/productRoutes'));
-
-// Cart routes
-app.use('/cart', require('./routes/cartRoutes'));
-
-// Order routes
-app.use('/orders', require('./routes/orderRoutes'));
-
-// Admin routes
-app.use('/admin', require('./routes/adminRoutes'));
-
-// Upload routes
-app.use('/upload', require('./routes/uploadRoutes'));
-
-// Payment routes
-app.use('/payment', require('./routes/paymentRoutes'));
-
-// Recommendation routes
-app.use('/recommendations', require('./routes/recommendationRoutes'));
-
-// Health check endpoint for Render
-app.get('/health', async (req, res) => {
-  const { checkDBHealth } = require('./config/db');
-  
-  try {
-    const dbHealth = checkDBHealth();
+connectDB()
+  .then(() => {
+    logger.info('Database connected successfully, starting server...');
     
-    // Check if database is connected
-    if (!dbHealth.isConnected) {
-      logger.error('Health check failed: Database not connected');
-      return res.status(503).json({
-        status: 'ERROR',
-        message: 'Database not connected',
-        mongoose: dbHealth,
-        environment: {
-          NODE_ENV: process.env.NODE_ENV,
-          PORT: process.env.PORT
+    // API Routes - These should be before static file serving
+    // User routes
+    app.use('/users', require('./routes/userRoutes'));
+
+    // Product routes
+    app.use('/products', require('./routes/productRoutes'));
+
+    // Cart routes
+    app.use('/cart', require('./routes/cartRoutes'));
+
+    // Order routes
+    app.use('/orders', require('./routes/orderRoutes'));
+
+    // Admin routes
+    app.use('/admin', require('./routes/adminRoutes'));
+
+    // Upload routes
+    app.use('/upload', require('./routes/uploadRoutes'));
+
+    // Payment routes
+    app.use('/payment', require('./routes/paymentRoutes'));
+
+    // Recommendation routes
+    app.use('/recommendations', require('./routes/recommendationRoutes'));
+
+    // Health check endpoint for Render
+    app.get('/health', async (req, res) => {
+      const { checkDBHealth } = require('./config/db');
+      
+      try {
+        const dbHealth = checkDBHealth();
+        
+        // Check if database is connected
+        if (!dbHealth.isConnected) {
+          logger.error('Health check failed: Database not connected');
+          return res.status(503).json({
+            status: 'ERROR',
+            message: 'Database not connected',
+            mongoose: dbHealth,
+            environment: {
+              NODE_ENV: process.env.NODE_ENV,
+              PORT: process.env.PORT
+            }
+          });
         }
-      });
-    }
-    
-    const healthData = {
-      status: 'OK',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      memory: process.memoryUsage(),
-      mongoose: dbHealth,
-      environment: {
-        NODE_ENV: process.env.NODE_ENV,
-        PORT: process.env.PORT
+        
+        const healthData = {
+          status: 'OK',
+          timestamp: new Date().toISOString(),
+          uptime: process.uptime(),
+          memory: process.memoryUsage(),
+          mongoose: dbHealth,
+          environment: {
+            NODE_ENV: process.env.NODE_ENV,
+            PORT: process.env.PORT
+          }
+        };
+        
+        logger.info('Health check accessed:', healthData);
+        res.status(200).json(healthData);
+      } catch (error) {
+        logger.error('Health check error:', {
+          message: error.message,
+          stack: error.stack
+        });
+        res.status(500).json({
+          status: 'ERROR',
+          message: 'Health check failed',
+          error: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message
+        });
       }
-    };
-    
-    logger.info('Health check accessed:', healthData);
-    res.status(200).json(healthData);
-  } catch (error) {
-    logger.error('Health check error:', {
-      message: error.message,
-      stack: error.stack
     });
-    res.status(500).json({
-      status: 'ERROR',
-      message: 'Health check failed',
-      error: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message
-    });
-  }
-});
 
-// Serve static files from the React app build directory
-if (process.env.NODE_ENV === 'production') {
-  const buildPath = path.join(__dirname, '../client/build');
-  
-  logger.info('Checking for build directory at:', buildPath);
-  
-  // Check if build directory exists
-  if (fs.existsSync(buildPath)) {
-    logger.info('Build directory found, serving static files');
-    app.use(express.static(buildPath));
-    
-    // Handle React routing, return all requests to React app
-    // This should be AFTER all API routes
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(buildPath, 'index.html'));
-    });
-  } else {
-    logger.warn('Build directory not found at:', buildPath);
+    // Serve static files from the React app build directory
+    if (process.env.NODE_ENV === 'production') {
+      const buildPath = path.join(__dirname, '../client/build');
+      
+      logger.info('Checking for build directory at:', buildPath);
+      
+      // Check if build directory exists
+      if (fs.existsSync(buildPath)) {
+        logger.info('Build directory found, serving static files');
+        app.use(express.static(buildPath));
+        
+        // Handle React routing, return all requests to React app
+        // This should be AFTER all API routes
+        app.get('*', (req, res) => {
+          res.sendFile(path.join(buildPath, 'index.html'));
+        });
+      } else {
+        logger.warn('Build directory not found at:', buildPath);
+        app.get('/', (req, res) => {
+          res.send('E-Commerce API is running... (Frontend build not found)');
+        });
+      }
+    }
+
+    // Root route - This should be after static file serving
     app.get('/', (req, res) => {
-      res.send('E-Commerce API is running... (Frontend build not found)');
+      res.send('E-Commerce API is running...');
     });
-  }
-}
 
-// Root route - This should be after static file serving
-app.get('/', (req, res) => {
-  res.send('E-Commerce API is running...');
-});
+    // Handle 404 errors - This should be after all routes
+    app.use('*', (req, res) => {
+      logger.warn(`Route not found: ${req.originalUrl}`);
+      res.status(404);
+      res.json({
+        message: 'Route not found'
+      });
+    });
 
-// Handle 404 errors - This should be after all routes
-app.use('*', (req, res) => {
-  logger.warn(`Route not found: ${req.originalUrl}`);
-  res.status(404);
-  res.json({
-    message: 'Route not found'
-  });
-});
+    // Error handling middleware
+    app.use((err, req, res, next) => {
+      // Specifically handle CORS errors
+      if (err.message && err.message.includes('CORS')) {
+        logger.error('CORS error:', {
+          message: err.message,
+          origin: req.headers.origin,
+          url: req.originalUrl,
+          method: req.method
+        });
+        return res.status(403).json({
+          message: 'CORS error: ' + err.message,
+          origin: req.headers.origin
+        });
+      }
+      
+      // Handle mongoose validation errors
+      if (err.name === 'ValidationError') {
+        logger.error('Validation error:', {
+          message: err.message,
+          stack: err.stack,
+          url: req.originalUrl,
+          method: req.method,
+          body: req.body
+        });
+        return res.status(400).json({
+          message: 'Validation Error',
+          error: Object.values(err.errors).map(e => e.message)
+        });
+      }
+      
+      // Handle mongoose duplicate key errors
+      if (err.code && err.code === 11000) {
+        logger.error('Duplicate key error:', {
+          message: err.message,
+          stack: err.stack,
+          url: req.originalUrl,
+          method: req.method,
+          body: req.body
+        });
+        return res.status(400).json({
+          message: 'Duplicate field value entered'
+        });
+      }
+      
+      // Handle mongoose cast errors
+      if (err.name === 'CastError') {
+        logger.error('Cast error:', {
+          message: err.message,
+          stack: err.stack,
+          url: req.originalUrl,
+          method: req.method,
+          body: req.body
+        });
+        return res.status(400).json({
+          message: 'Invalid data format'
+        });
+      }
+      
+      // Handle general errors
+      logger.error('Unhandled error:', {
+        message: err.message,
+        stack: err.stack,
+        url: req.originalUrl,
+        method: req.method,
+        body: req.body
+      });
+      
+      const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+      res.status(statusCode).json({
+        message: err.message,
+        stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+      });
+    });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  // Specifically handle CORS errors
-  if (err.message && err.message.includes('CORS')) {
-    logger.error('CORS error:', {
-      message: err.message,
-      origin: req.headers.origin,
-      url: req.originalUrl,
-      method: req.method
+    // Start server only after database connection is established
+    server = app.listen(PORT, () => {
+      logger.info(`Server running on port ${PORT}`);
+      logger.info(`CORS configuration allows origins: http://localhost:3000, https://nexus-ecommerce-chi.vercel.app, and Vercel subdomains`);
+      logger.info(`Server startup completed successfully`);
     });
-    return res.status(403).json({
-      message: 'CORS error: ' + err.message,
-      origin: req.headers.origin
-    });
-  }
-  
-  // Handle mongoose validation errors
-  if (err.name === 'ValidationError') {
-    logger.error('Validation error:', {
-      message: err.message,
-      stack: err.stack,
-      url: req.originalUrl,
-      method: req.method,
-      body: req.body
-    });
-    return res.status(400).json({
-      message: 'Validation Error',
-      error: Object.values(err.errors).map(e => e.message)
-    });
-  }
-  
-  // Handle mongoose duplicate key errors
-  if (err.code && err.code === 11000) {
-    logger.error('Duplicate key error:', {
-      message: err.message,
-      stack: err.stack,
-      url: req.originalUrl,
-      method: req.method,
-      body: req.body
-    });
-    return res.status(400).json({
-      message: 'Duplicate field value entered'
-    });
-  }
-  
-  // Handle mongoose cast errors
-  if (err.name === 'CastError') {
-    logger.error('Cast error:', {
-      message: err.message,
-      stack: err.stack,
-      url: req.originalUrl,
-      method: req.method,
-      body: req.body
-    });
-    return res.status(400).json({
-      message: 'Invalid data format'
-    });
-  }
-  
-  // Handle general errors
-  logger.error('Unhandled error:', {
-    message: err.message,
-    stack: err.stack,
-    url: req.originalUrl,
-    method: req.method,
-    body: req.body
-  });
-  
-  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-  res.status(statusCode).json({
-    message: err.message,
-    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
-  });
-});
 
-const server = app.listen(PORT, () => {
-  logger.info(`Server running on port ${PORT}`);
-  logger.info(`CORS configuration allows origins: http://localhost:3000, https://nexus-ecommerce-chi.vercel.app, and Vercel subdomains`);
-  logger.info(`Server startup completed successfully`);
-});
+    // Handle unhandled promise rejections
+    process.on('unhandledRejection', (err, promise) => {
+      logger.error(`Unhandled Promise Rejection: ${err.message}`);
+      logger.error('Stack trace:', err.stack);
+      // Close server & exit process
+      if (server) {
+        server.close(() => {
+          process.exit(1);
+        });
+      } else {
+        process.exit(1);
+      }
+    });
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err, promise) => {
-  logger.error(`Unhandled Promise Rejection: ${err.message}`);
-  logger.error('Stack trace:', err.stack);
-  // Close server & exit process
-  server.close(() => {
+    // Handle uncaught exceptions
+    process.on('uncaughtException', (err) => {
+      logger.error(`Uncaught Exception: ${err.message}`);
+      logger.error('Stack trace:', err.stack);
+      if (server) {
+        server.close(() => {
+          process.exit(1);
+        });
+      } else {
+        process.exit(1);
+      }
+    });
+  })
+  .catch(err => {
+    logger.error('Failed to connect to database:', err);
+    logger.error('Server will not start due to database connection failure');
     process.exit(1);
   });
-});
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  logger.error(`Uncaught Exception: ${err.message}`);
-  logger.error('Stack trace:', err.stack);
-  server.close(() => {
-    process.exit(1);
-  });
-});

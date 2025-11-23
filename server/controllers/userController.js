@@ -24,8 +24,12 @@ const registerUser = asyncHandler(async (req, res) => {
 
     // Check if we have a database connection
     if (mongoose.connection.readyState !== 1) {
-      logger.error('Database not connected');
-      return res.status(500).json({ message: 'Database connection error. Please try again later.' });
+      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        readyState: mongoose.connection.readyState,
+        timestamp: new Date().toISOString()
+      });
     }
 
     const userExists = await User.findOne({ email });
@@ -87,6 +91,23 @@ const registerUser = asyncHandler(async (req, res) => {
       email: req.body.email
     });
     
+    // Handle database connection errors specifically
+    if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        error: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(e => e.message);
+      return res.status(400).json({ 
+        message: 'Validation Error',
+        errors
+      });
+    }
+    
     // Return a more detailed error response in development
     if (process.env.NODE_ENV !== 'production') {
       return res.status(500).json({ 
@@ -120,8 +141,12 @@ const authUser = asyncHandler(async (req, res) => {
 
     // Check if we have a database connection
     if (mongoose.connection.readyState !== 1) {
-      logger.error('Database not connected');
-      return res.status(500).json({ message: 'Database connection error. Please try again later.' });
+      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        readyState: mongoose.connection.readyState,
+        timestamp: new Date().toISOString()
+      });
     }
 
     logger.info(`Finding user with email: ${email}`);
@@ -207,6 +232,14 @@ const authUser = asyncHandler(async (req, res) => {
       email: req.body.email
     });
     
+    // Handle database connection errors specifically
+    if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        error: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
+    
     // Return a more detailed error response in development
     if (process.env.NODE_ENV !== 'production') {
       return res.status(500).json({ 
@@ -230,8 +263,12 @@ const getUserProfile = asyncHandler(async (req, res) => {
     
     // Check if we have a database connection
     if (mongoose.connection.readyState !== 1) {
-      logger.error('Database not connected');
-      return res.status(500).json({ message: 'Database connection error. Please try again later.' });
+      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        readyState: mongoose.connection.readyState,
+        timestamp: new Date().toISOString()
+      });
     }
 
     const user = await User.findById(req.user._id);
@@ -254,6 +291,14 @@ const getUserProfile = asyncHandler(async (req, res) => {
       message: error.message,
       stack: error.stack
     });
+    
+    // Handle database connection errors specifically
+    if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        error: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
     
     // Return a more detailed error response in development
     if (process.env.NODE_ENV !== 'production') {
@@ -278,8 +323,12 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     
     // Check if we have a database connection
     if (mongoose.connection.readyState !== 1) {
-      logger.error('Database not connected');
-      return res.status(500).json({ message: 'Database connection error. Please try again later.' });
+      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        readyState: mongoose.connection.readyState,
+        timestamp: new Date().toISOString()
+      });
     }
 
     const user = await User.findById(req.user._id);
@@ -336,6 +385,23 @@ const updateUserProfile = asyncHandler(async (req, res) => {
       message: error.message,
       stack: error.stack
     });
+    
+    // Handle database connection errors specifically
+    if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        error: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(e => e.message);
+      return res.status(400).json({ 
+        message: 'Validation Error',
+        errors
+      });
+    }
     
     // Return a more detailed error response in development
     if (process.env.NODE_ENV !== 'production') {

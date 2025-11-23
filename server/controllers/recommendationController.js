@@ -4,6 +4,7 @@ const Order = require('../models/Order');
 const asyncHandler = require('express-async-handler');
 const geminiModel = require('../config/gemini');
 const logger = require('../utils/logger');
+const mongoose = require('mongoose');
 
 // @desc    Get AI-powered product recommendations based on user's purchase history
 // @route   GET /api/recommendations
@@ -11,6 +12,16 @@ const logger = require('../utils/logger');
 const getRecommendations = asyncHandler(async (req, res) => {
   try {
     logger.info(`Fetching recommendations for user ID: ${req.user._id}`);
+    
+    // Check if we have a database connection
+    if (mongoose.connection.readyState !== 1) {
+      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        readyState: mongoose.connection.readyState,
+        timestamp: new Date().toISOString()
+      });
+    }
     
     // Get user's purchase history
     const userOrders = await Order.find({ user: req.user._id }).populate({
@@ -123,6 +134,14 @@ const getRecommendations = asyncHandler(async (req, res) => {
       userId: req.user._id
     });
     
+    // Handle database connection errors specifically
+    if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        error: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
+    
     // Return a more detailed error response in development
     if (process.env.NODE_ENV !== 'production') {
       return res.status(500).json({ 
@@ -144,6 +163,16 @@ const getPopularProducts = asyncHandler(async (req, res) => {
   try {
     logger.info('Fetching popular products for public access');
     
+    // Check if we have a database connection
+    if (mongoose.connection.readyState !== 1) {
+      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        readyState: mongoose.connection.readyState,
+        timestamp: new Date().toISOString()
+      });
+    }
+    
     // Get popular products based on ratings and number of reviews
     const popularProducts = await Product.find({})
       .sort({ rating: -1, numReviews: -1 })
@@ -156,6 +185,14 @@ const getPopularProducts = asyncHandler(async (req, res) => {
       message: error.message,
       stack: error.stack
     });
+    
+    // Handle database connection errors specifically
+    if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        error: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
     
     // Return a more detailed error response in development
     if (process.env.NODE_ENV !== 'production') {
@@ -178,6 +215,16 @@ const getRecommendationsByCategory = asyncHandler(async (req, res) => {
   try {
     const category = req.params.category;
     logger.info(`Fetching recommendations for category: ${category}`);
+    
+    // Check if we have a database connection
+    if (mongoose.connection.readyState !== 1) {
+      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        readyState: mongoose.connection.readyState,
+        timestamp: new Date().toISOString()
+      });
+    }
     
     // Get products in the specified category
     const categoryProducts = await Product.find({ category })
@@ -237,6 +284,14 @@ const getRecommendationsByCategory = asyncHandler(async (req, res) => {
       stack: error.stack,
       category: req.params.category
     });
+    
+    // Handle database connection errors specifically
+    if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        error: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
     
     // Return a more detailed error response in development
     if (process.env.NODE_ENV !== 'production') {

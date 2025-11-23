@@ -20,14 +20,32 @@ const connectDB = async () => {
     // Add connection options to handle connection issues
     const conn = await mongoose.connect(mongoURI, {
       // Remove unsupported options and use only valid ones
-      serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
+      serverSelectionTimeoutMS: 10000, // Timeout after 10 seconds
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
       retryWrites: true,
       maxPoolSize: 10, // Limit connection pool size
+      useNewUrlParser: true,
+      useUnifiedTopology: true
     });
 
     logger.info(`MongoDB Connected: ${conn.connection.host}`);
     logger.info(`MongoDB Database Name: ${conn.connection.name}`);
+    
+    // Listen for connection events
+    mongoose.connection.on('error', (err) => {
+      logger.error('Mongoose connection error:', err);
+    });
+
+    mongoose.connection.on('disconnected', () => {
+      logger.warn('Mongoose disconnected');
+      
+      // In development, try to reconnect
+      if (process.env.NODE_ENV !== 'production') {
+        logger.info('Attempting to reconnect to MongoDB in 5 seconds...');
+        setTimeout(connectDB, 5000);
+      }
+    });
+    
     return conn;
   } catch (error) {
     logger.error(`Error connecting to MongoDB: ${error.message}`);
@@ -44,31 +62,6 @@ const connectDB = async () => {
     }
   }
 };
-
-// Listen for connection events
-mongoose.connection.on('connected', () => {
-  logger.info('Mongoose connected to DB');
-});
-
-mongoose.connection.on('error', (err) => {
-  logger.error('Mongoose connection error:', err);
-});
-
-mongoose.connection.on('disconnected', () => {
-  logger.warn('Mongoose disconnected');
-  
-  // In production, don't automatically reconnect
-  if (process.env.NODE_ENV !== 'production') {
-    setTimeout(connectDB, 5000);
-  }
-});
-
-// Handle application shutdown
-process.on('SIGINT', async () => {
-  await mongoose.connection.close();
-  logger.info('Mongoose disconnected through app termination');
-  process.exit(0);
-});
 
 // Add a health check function
 const checkDBHealth = () => {

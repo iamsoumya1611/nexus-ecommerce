@@ -1,12 +1,23 @@
 const Product = require('../models/Product');
 const asyncHandler = require('express-async-handler');
 const logger = require('../utils/logger');
+const mongoose = require('mongoose');
 
 // @desc    Fetch all products
 // @route   GET /api/products
 // @access  Public
 const getProducts = asyncHandler(async (req, res) => {
   try {
+    // Check if we have a database connection
+    if (mongoose.connection.readyState !== 1) {
+      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        readyState: mongoose.connection.readyState,
+        timestamp: new Date().toISOString()
+      });
+    }
+
     const pageSize = 10;
     const page = Number(req.query.pageNumber) || 1;
 
@@ -35,6 +46,14 @@ const getProducts = asyncHandler(async (req, res) => {
       query: req.query
     });
     
+    // Handle database connection errors specifically
+    if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        error: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
+    
     // Return a more detailed error response in development
     if (process.env.NODE_ENV !== 'production') {
       return res.status(500).json({ 
@@ -56,6 +75,16 @@ const getProductById = asyncHandler(async (req, res) => {
   logger.info(`Fetching product with ID: ${req.params.id}`);
 
   try {
+    // Check if we have a database connection
+    if (mongoose.connection.readyState !== 1) {
+      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        readyState: mongoose.connection.readyState,
+        timestamp: new Date().toISOString()
+      });
+    }
+
     const product = await Product.findById(req.params.id);
 
     if (product) {
@@ -76,6 +105,14 @@ const getProductById = asyncHandler(async (req, res) => {
     // Handle invalid ObjectId
     if (error.name === 'CastError') {
       return res.status(400).json({ message: 'Invalid product ID' });
+    }
+    
+    // Handle database connection errors specifically
+    if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        error: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
     }
     
     // Return a more detailed error response in development
@@ -99,6 +136,16 @@ const deleteProduct = asyncHandler(async (req, res) => {
   logger.info(`Deleting product with ID: ${req.params.id}`);
 
   try {
+    // Check if we have a database connection
+    if (mongoose.connection.readyState !== 1) {
+      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        readyState: mongoose.connection.readyState,
+        timestamp: new Date().toISOString()
+      });
+    }
+
     const product = await Product.findById(req.params.id);
 
     if (product) {
@@ -120,6 +167,14 @@ const deleteProduct = asyncHandler(async (req, res) => {
     // Handle invalid ObjectId
     if (error.name === 'CastError') {
       return res.status(400).json({ message: 'Invalid product ID' });
+    }
+    
+    // Handle database connection errors specifically
+    if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        error: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
     }
     
     // Return a more detailed error response in development
@@ -167,6 +222,16 @@ const createProduct = asyncHandler(async (req, res) => {
   logger.info(`Creating new product: ${name}`);
 
   try {
+    // Check if we have a database connection
+    if (mongoose.connection.readyState !== 1) {
+      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        readyState: mongoose.connection.readyState,
+        timestamp: new Date().toISOString()
+      });
+    }
+
     const product = new Product({
       name,
       price,
@@ -201,6 +266,14 @@ const createProduct = asyncHandler(async (req, res) => {
       stack: error.stack,
       productData: req.body
     });
+    
+    // Handle database connection errors specifically
+    if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        error: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
     
     // Return a more detailed error response in development
     if (process.env.NODE_ENV !== 'production') {
@@ -247,6 +320,16 @@ const updateProduct = asyncHandler(async (req, res) => {
   logger.info(`Updating product with ID: ${req.params.id}`);
 
   try {
+    // Check if we have a database connection
+    if (mongoose.connection.readyState !== 1) {
+      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        readyState: mongoose.connection.readyState,
+        timestamp: new Date().toISOString()
+      });
+    }
+
     const product = await Product.findById(req.params.id);
 
     if (product) {
@@ -295,6 +378,14 @@ const updateProduct = asyncHandler(async (req, res) => {
       return res.status(400).json({ message: 'Invalid product ID' });
     }
     
+    // Handle database connection errors specifically
+    if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        error: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
+    
     // Return a more detailed error response in development
     if (process.env.NODE_ENV !== 'production') {
       return res.status(500).json({ 
@@ -316,6 +407,16 @@ const createProductReview = asyncHandler(async (req, res) => {
   const { rating, comment } = req.body;
 
   try {
+    // Check if we have a database connection
+    if (mongoose.connection.readyState !== 1) {
+      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        readyState: mongoose.connection.readyState,
+        timestamp: new Date().toISOString()
+      });
+    }
+
     const product = await Product.findById(req.params.id);
 
     if (product) {
@@ -360,6 +461,14 @@ const createProductReview = asyncHandler(async (req, res) => {
       return res.status(400).json({ message: 'Invalid product ID' });
     }
     
+    // Handle database connection errors specifically
+    if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        error: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
+    
     // Return a more detailed error response in development
     if (process.env.NODE_ENV !== 'production') {
       return res.status(500).json({ 
@@ -379,6 +488,16 @@ const createProductReview = asyncHandler(async (req, res) => {
 // @access  Public
 const getTopProducts = asyncHandler(async (req, res) => {
   try {
+    // Check if we have a database connection
+    if (mongoose.connection.readyState !== 1) {
+      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        readyState: mongoose.connection.readyState,
+        timestamp: new Date().toISOString()
+      });
+    }
+
     const products = await Product.find({}).sort({ rating: -1 }).limit(3);
     res.json(products);
   } catch (error) {
@@ -386,6 +505,14 @@ const getTopProducts = asyncHandler(async (req, res) => {
       message: error.message,
       stack: error.stack
     });
+    
+    // Handle database connection errors specifically
+    if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
+      return res.status(503).json({ 
+        message: 'Database connection error. Please try again later.',
+        error: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
     
     // Return a more detailed error response in development
     if (process.env.NODE_ENV !== 'production') {
