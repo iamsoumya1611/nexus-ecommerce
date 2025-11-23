@@ -306,7 +306,7 @@ app.use((err, req, res, next) => {
       body: req.body
     });
     return res.status(400).json({
-      message: 'Resource not found'
+      message: 'Invalid data format'
     });
   }
   

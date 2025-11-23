@@ -146,6 +146,17 @@ export const recommendationActions = {
         payload: data
       });
     } catch (error) {
+      // Handle 401 errors (unauthorized) - user not logged in
+      if (error.response && error.response.status === 401) {
+        // Don't show error toast for unauthorized access to recommendations
+        // This is expected for non-logged-in users
+        dispatch({
+          type: 'RECOMMENDATION_LIST_FAIL',
+          payload: 'Please log in to see personalized recommendations'
+        });
+        return;
+      }
+      
       dispatch({
         type: 'RECOMMENDATION_LIST_FAIL',
         payload:
@@ -153,6 +164,15 @@ export const recommendationActions = {
             ? error.response.data.message
             : error.message
       });
+      
+      // Show error toast only for unexpected errors
+      if (error.response && error.response.status !== 401) {
+        toast.error(
+          error.response && error.response.data.message
+            ? error.response.data.message
+            : 'Failed to fetch recommendations'
+        );
+      }
     }
   },
 
@@ -193,6 +213,12 @@ export const recommendationActions = {
             ? error.response.data.message
             : error.message
       });
+      
+      toast.error(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : 'Failed to fetch category recommendations'
+      );
     }
   }
 };

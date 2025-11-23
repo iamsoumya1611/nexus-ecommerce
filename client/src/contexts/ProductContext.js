@@ -309,7 +309,13 @@ export const productActions = {
         baseUrl = '';
       }
 
-      const { data } = await axios.get(`${baseUrl}/products?keyword=${keyword}&pageNumber=${pageNumber}`);
+      // Ensure we're using HTTPS in production
+      let finalUrl = `${baseUrl}/products?keyword=${keyword}&pageNumber=${pageNumber}`;
+      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
+        finalUrl = finalUrl.replace('http://', 'https://');
+      }
+
+      const { data } = await axios.get(finalUrl);
 
       dispatch({
         type: 'PRODUCT_LIST_SUCCESS',
@@ -323,6 +329,15 @@ export const productActions = {
             ? error.response.data.message
             : error.message
       });
+      
+      // Show error toast only for unexpected errors
+      if (!error.response || error.response.status !== 404) {
+        toast.error(
+          error.response && error.response.data.message
+            ? error.response.data.message
+            : 'Failed to fetch products'
+        );
+      }
     }
   },
 
@@ -337,7 +352,13 @@ export const productActions = {
         baseUrl = '';
       }
 
-      const { data } = await axios.get(`${baseUrl}/products/${id}`);
+      // Ensure we're using HTTPS in production
+      let finalUrl = `${baseUrl}/products/${id}`;
+      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
+        finalUrl = finalUrl.replace('http://', 'https://');
+      }
+
+      const { data } = await axios.get(finalUrl);
 
       dispatch({
         type: 'PRODUCT_DETAILS_SUCCESS',
@@ -351,6 +372,15 @@ export const productActions = {
             ? error.response.data.message
             : error.message
       });
+      
+      // Show error toast only for unexpected errors (not 404)
+      if (!error.response || error.response.status !== 404) {
+        toast.error(
+          error.response && error.response.data.message
+            ? error.response.data.message
+            : 'Failed to fetch product details'
+        );
+      }
     }
   },
 
@@ -378,7 +408,13 @@ export const productActions = {
         baseUrl = '';
       }
 
-      const { data } = await axios.post(`${baseUrl}/products/${productId}/reviews`, review, config);
+      // Ensure we're using HTTPS in production
+      let finalUrl = `${baseUrl}/products/${productId}/reviews`;
+      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
+        finalUrl = finalUrl.replace('http://', 'https://');
+      }
+
+      const { data } = await axios.post(finalUrl, review, config);
 
       dispatch({
         type: 'PRODUCT_CREATE_REVIEW_SUCCESS',
@@ -403,15 +439,10 @@ export const productActions = {
     }
   },
 
-  // Reset create review state
-  resetCreateReview: () => (dispatch) => {
-    dispatch({ type: 'PRODUCT_CREATE_REVIEW_RESET' });
-  },
-
-  // Update product
-  updateProduct: (product) => async (dispatch) => {
+  // Delete product
+  deleteProduct: (id) => async (dispatch) => {
     try {
-      dispatch({ type: 'PRODUCT_UPDATE_REQUEST' });
+      dispatch({ type: 'PRODUCT_DELETE_REQUEST' });
 
       // Get user info from localStorage
       const userInfoFromStorage = localStorage.getItem('userInfo')
@@ -420,7 +451,6 @@ export const productActions = {
 
       const config = {
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${userInfoFromStorage?.token}`
         },
         withCredentials: true
@@ -432,17 +462,22 @@ export const productActions = {
         baseUrl = '';
       }
 
-      const { data } = await axios.put(`${baseUrl}/products/${product._id}`, product, config);
+      // Ensure we're using HTTPS in production
+      let finalUrl = `${baseUrl}/products/${id}`;
+      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
+        finalUrl = finalUrl.replace('http://', 'https://');
+      }
+
+      await axios.delete(finalUrl, config);
 
       dispatch({
-        type: 'PRODUCT_UPDATE_SUCCESS',
-        payload: data
+        type: 'PRODUCT_DELETE_SUCCESS'
       });
 
-      toast.success('Product updated successfully!');
+      toast.success('Product deleted successfully!');
     } catch (error) {
       dispatch({
-        type: 'PRODUCT_UPDATE_FAIL',
+        type: 'PRODUCT_DELETE_FAIL',
         payload:
           error.response && error.response.data.message
             ? error.response.data.message
@@ -452,14 +487,9 @@ export const productActions = {
       toast.error(
         error.response && error.response.data.message
           ? error.response.data.message
-          : 'Failed to update product'
+          : 'Failed to delete product'
       );
     }
-  },
-
-  // Reset update product state
-  resetUpdateProduct: () => (dispatch) => {
-    dispatch({ type: 'PRODUCT_UPDATE_RESET' });
   },
 
   // Create product
@@ -486,7 +516,13 @@ export const productActions = {
         baseUrl = '';
       }
 
-      const { data } = await axios.post(`${baseUrl}/products`, product, config);
+      // Ensure we're using HTTPS in production
+      let finalUrl = `${baseUrl}/products`;
+      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
+        finalUrl = finalUrl.replace('http://', 'https://');
+      }
+
+      const { data } = await axios.post(finalUrl, product, config);
 
       dispatch({
         type: 'PRODUCT_CREATE_SUCCESS',
@@ -511,15 +547,10 @@ export const productActions = {
     }
   },
 
-  // Reset create product state
-  resetCreateProduct: () => (dispatch) => {
-    dispatch({ type: 'PRODUCT_CREATE_RESET' });
-  },
-
-  // Delete product
-  deleteProduct: (id) => async (dispatch) => {
+  // Update product
+  updateProduct: (product) => async (dispatch) => {
     try {
-      dispatch({ type: 'PRODUCT_DELETE_REQUEST' });
+      dispatch({ type: 'PRODUCT_UPDATE_REQUEST' });
 
       // Get user info from localStorage
       const userInfoFromStorage = localStorage.getItem('userInfo')
@@ -528,6 +559,7 @@ export const productActions = {
 
       const config = {
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${userInfoFromStorage?.token}`
         },
         withCredentials: true
@@ -539,16 +571,23 @@ export const productActions = {
         baseUrl = '';
       }
 
-      await axios.delete(`${baseUrl}/products/${id}`, config);
+      // Ensure we're using HTTPS in production
+      let finalUrl = `${baseUrl}/products/${product._id}`;
+      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
+        finalUrl = finalUrl.replace('http://', 'https://');
+      }
+
+      const { data } = await axios.put(finalUrl, product, config);
 
       dispatch({
-        type: 'PRODUCT_DELETE_SUCCESS'
+        type: 'PRODUCT_UPDATE_SUCCESS',
+        payload: data
       });
 
-      toast.success('Product deleted successfully!');
+      toast.success('Product updated successfully!');
     } catch (error) {
       dispatch({
-        type: 'PRODUCT_DELETE_FAIL',
+        type: 'PRODUCT_UPDATE_FAIL',
         payload:
           error.response && error.response.data.message
             ? error.response.data.message
@@ -558,8 +597,23 @@ export const productActions = {
       toast.error(
         error.response && error.response.data.message
           ? error.response.data.message
-          : 'Failed to delete product'
+          : 'Failed to update product'
       );
     }
+  },
+
+  // Reset product create state
+  resetProductCreate: () => (dispatch) => {
+    dispatch({ type: 'PRODUCT_CREATE_RESET' });
+  },
+
+  // Reset product update state
+  resetProductUpdate: () => (dispatch) => {
+    dispatch({ type: 'PRODUCT_UPDATE_RESET' });
+  },
+
+  // Reset product create review state
+  resetProductCreateReview: () => (dispatch) => {
+    dispatch({ type: 'PRODUCT_CREATE_REVIEW_RESET' });
   }
 };

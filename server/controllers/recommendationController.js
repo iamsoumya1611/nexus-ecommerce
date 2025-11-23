@@ -3,12 +3,15 @@ const User = require('../models/User');
 const Order = require('../models/Order');
 const asyncHandler = require('express-async-handler');
 const geminiModel = require('../config/gemini');
+const logger = require('../utils/logger');
 
 // @desc    Get AI-powered product recommendations based on user's purchase history
 // @route   GET /api/recommendations
 // @access  Private
 const getRecommendations = asyncHandler(async (req, res) => {
   try {
+    logger.info(`Fetching recommendations for user ID: ${req.user._id}`);
+    
     // Get user's purchase history
     const userOrders = await Order.find({ user: req.user._id }).populate({
       path: 'orderItems.product',
@@ -67,7 +70,7 @@ const getRecommendations = asyncHandler(async (req, res) => {
         try {
           aiRecommendedIds = JSON.parse(text);
         } catch (parseError) {
-          console.error('Error parsing AI response:', parseError);
+          logger.error('Error parsing AI response:', parseError);
           // Fallback to category-based recommendations
           const categoryRecommendations = await Product.find({ 
             category: { $in: purchasedCategories },
@@ -95,7 +98,7 @@ const getRecommendations = asyncHandler(async (req, res) => {
           .limit(10);
         }
       } catch (aiError) {
-        console.error('AI recommendation error:', aiError);
+        logger.error('AI recommendation error:', aiError);
         // Fallback to category-based recommendations
         recommendations = await Product.find({ 
           category: { $in: purchasedCategories },
@@ -111,10 +114,26 @@ const getRecommendations = asyncHandler(async (req, res) => {
         .limit(10);
     }
     
+    logger.info(`Successfully fetched ${recommendations.length} recommendations for user ID: ${req.user._id}`);
     res.json(recommendations);
   } catch (error) {
-    res.status(500);
-    throw new Error('Failed to fetch recommendations');
+    logger.error('Error fetching recommendations:', {
+      message: error.message,
+      stack: error.stack,
+      userId: req.user._id
+    });
+    
+    // Return a more detailed error response in development
+    if (process.env.NODE_ENV !== 'production') {
+      return res.status(500).json({ 
+        message: 'Internal server error while fetching recommendations',
+        error: error.message,
+        stack: error.stack
+      });
+    }
+    
+    // Return a generic error in production
+    return res.status(500).json({ message: 'Internal server error while fetching recommendations' });
   }
 });
 
@@ -123,15 +142,32 @@ const getRecommendations = asyncHandler(async (req, res) => {
 // @access  Public
 const getPopularProducts = asyncHandler(async (req, res) => {
   try {
+    logger.info('Fetching popular products for public access');
+    
     // Get popular products based on ratings and number of reviews
     const popularProducts = await Product.find({})
       .sort({ rating: -1, numReviews: -1 })
       .limit(10);
     
+    logger.info(`Successfully fetched ${popularProducts.length} popular products`);
     res.json(popularProducts);
   } catch (error) {
-    res.status(500);
-    throw new Error('Failed to fetch popular products');
+    logger.error('Error fetching popular products:', {
+      message: error.message,
+      stack: error.stack
+    });
+    
+    // Return a more detailed error response in development
+    if (process.env.NODE_ENV !== 'production') {
+      return res.status(500).json({ 
+        message: 'Internal server error while fetching popular products',
+        error: error.message,
+        stack: error.stack
+      });
+    }
+    
+    // Return a generic error in production
+    return res.status(500).json({ message: 'Internal server error while fetching popular products' });
   }
 });
 
@@ -141,6 +177,7 @@ const getPopularProducts = asyncHandler(async (req, res) => {
 const getRecommendationsByCategory = asyncHandler(async (req, res) => {
   try {
     const category = req.params.category;
+    logger.info(`Fetching recommendations for category: ${category}`);
     
     // Get products in the specified category
     const categoryProducts = await Product.find({ category })
@@ -148,6 +185,7 @@ const getRecommendationsByCategory = asyncHandler(async (req, res) => {
       .limit(20);
     
     if (categoryProducts.length === 0) {
+      logger.info(`No products found for category: ${category}`);
       return res.json([]);
     }
     
@@ -173,8 +211,9 @@ const getRecommendationsByCategory = asyncHandler(async (req, res) => {
       try {
         selectedIndices = JSON.parse(text);
       } catch (parseError) {
-        console.error('Error parsing AI category selection:', parseError);
+        logger.error('Error parsing AI category selection:', parseError);
         // Fallback to top-rated products
+        logger.info(`Using fallback for category ${category}: top-rated products`);
         return res.json(categoryProducts.slice(0, 10));
       }
       
@@ -184,15 +223,32 @@ const getRecommendationsByCategory = asyncHandler(async (req, res) => {
         .map(index => categoryProducts[index - 1])
         .slice(0, 10);
       
+      logger.info(`Successfully fetched ${selectedProducts.length} AI-selected products for category: ${category}`);
       res.json(selectedProducts);
     } catch (aiError) {
-      console.error('AI category recommendation error:', aiError);
+      logger.error('AI category recommendation error:', aiError);
       // Fallback to top-rated products
+      logger.info(`Using fallback for category ${category}: top-rated products`);
       res.json(categoryProducts.slice(0, 10));
     }
   } catch (error) {
-    res.status(500);
-    throw new Error('Failed to fetch recommendations');
+    logger.error('Error fetching category recommendations:', {
+      message: error.message,
+      stack: error.stack,
+      category: req.params.category
+    });
+    
+    // Return a more detailed error response in development
+    if (process.env.NODE_ENV !== 'production') {
+      return res.status(500).json({ 
+        message: 'Internal server error while fetching category recommendations',
+        error: error.message,
+        stack: error.stack
+      });
+    }
+    
+    // Return a generic error in production
+    return res.status(500).json({ message: 'Internal server error while fetching category recommendations' });
   }
 });
 

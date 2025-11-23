@@ -6,27 +6,47 @@ const logger = require('../utils/logger');
 // @route   GET /api/products
 // @access  Public
 const getProducts = asyncHandler(async (req, res) => {
-  const pageSize = 10;
-  const page = Number(req.query.pageNumber) || 1;
+  try {
+    const pageSize = 10;
+    const page = Number(req.query.pageNumber) || 1;
 
-  const keyword = req.query.keyword
-    ? {
-        name: {
-          $regex: req.query.keyword,
-          $options: 'i',
-        },
-      }
-    : {};
+    const keyword = req.query.keyword
+      ? {
+          name: {
+            $regex: req.query.keyword,
+            $options: 'i',
+          },
+        }
+      : {};
 
-  logger.info(`Fetching products - page: ${page}, keyword: ${req.query.keyword || 'none'}`);
+    logger.info(`Fetching products - page: ${page}, keyword: ${req.query.keyword || 'none'}`);
 
-  const count = await Product.countDocuments({ ...keyword });
-  const products = await Product.find({ ...keyword })
-    .limit(pageSize)
-    .skip(pageSize * (page - 1));
+    const count = await Product.countDocuments({ ...keyword });
+    const products = await Product.find({ ...keyword })
+      .limit(pageSize)
+      .skip(pageSize * (page - 1));
 
-  logger.info(`Successfully fetched ${products.length} products`);
-  res.json({ products, page, pages: Math.ceil(count / pageSize) });
+    logger.info(`Successfully fetched ${products.length} products`);
+    res.json({ products, page, pages: Math.ceil(count / pageSize) });
+  } catch (error) {
+    logger.error('Error fetching products:', {
+      message: error.message,
+      stack: error.stack,
+      query: req.query
+    });
+    
+    // Return a more detailed error response in development
+    if (process.env.NODE_ENV !== 'production') {
+      return res.status(500).json({ 
+        message: 'Internal server error while fetching products',
+        error: error.message,
+        stack: error.stack
+      });
+    }
+    
+    // Return a generic error in production
+    return res.status(500).json({ message: 'Internal server error while fetching products' });
+  }
 });
 
 // @desc    Fetch single product
@@ -35,15 +55,40 @@ const getProducts = asyncHandler(async (req, res) => {
 const getProductById = asyncHandler(async (req, res) => {
   logger.info(`Fetching product with ID: ${req.params.id}`);
 
-  const product = await Product.findById(req.params.id);
+  try {
+    const product = await Product.findById(req.params.id);
 
-  if (product) {
-    logger.info(`Successfully fetched product with ID: ${req.params.id}`);
-    res.json(product);
-  } else {
-    logger.warn(`Product not found with ID: ${req.params.id}`);
-    res.status(404);
-    throw new Error('Product not found');
+    if (product) {
+      logger.info(`Successfully fetched product with ID: ${req.params.id}`);
+      res.json(product);
+    } else {
+      logger.warn(`Product not found with ID: ${req.params.id}`);
+      res.status(404);
+      throw new Error('Product not found');
+    }
+  } catch (error) {
+    logger.error('Error fetching product by ID:', {
+      message: error.message,
+      stack: error.stack,
+      productId: req.params.id
+    });
+    
+    // Handle invalid ObjectId
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid product ID' });
+    }
+    
+    // Return a more detailed error response in development
+    if (process.env.NODE_ENV !== 'production') {
+      return res.status(500).json({ 
+        message: 'Internal server error while fetching product',
+        error: error.message,
+        stack: error.stack
+      });
+    }
+    
+    // Return a generic error in production
+    return res.status(500).json({ message: 'Internal server error while fetching product' });
   }
 });
 
@@ -53,16 +98,41 @@ const getProductById = asyncHandler(async (req, res) => {
 const deleteProduct = asyncHandler(async (req, res) => {
   logger.info(`Deleting product with ID: ${req.params.id}`);
 
-  const product = await Product.findById(req.params.id);
+  try {
+    const product = await Product.findById(req.params.id);
 
-  if (product) {
-    await product.remove();
-    logger.info(`Successfully deleted product with ID: ${req.params.id}`);
-    res.json({ message: 'Product removed' });
-  } else {
-    logger.warn(`Product not found for deletion with ID: ${req.params.id}`);
-    res.status(404);
-    throw new Error('Product not found');
+    if (product) {
+      await product.remove();
+      logger.info(`Successfully deleted product with ID: ${req.params.id}`);
+      res.json({ message: 'Product removed' });
+    } else {
+      logger.warn(`Product not found for deletion with ID: ${req.params.id}`);
+      res.status(404);
+      throw new Error('Product not found');
+    }
+  } catch (error) {
+    logger.error('Error deleting product:', {
+      message: error.message,
+      stack: error.stack,
+      productId: req.params.id
+    });
+    
+    // Handle invalid ObjectId
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid product ID' });
+    }
+    
+    // Return a more detailed error response in development
+    if (process.env.NODE_ENV !== 'production') {
+      return res.status(500).json({ 
+        message: 'Internal server error while deleting product',
+        error: error.message,
+        stack: error.stack
+      });
+    }
+    
+    // Return a generic error in production
+    return res.status(500).json({ message: 'Internal server error while deleting product' });
   }
 });
 
@@ -96,34 +166,54 @@ const createProduct = asyncHandler(async (req, res) => {
 
   logger.info(`Creating new product: ${name}`);
 
-  const product = new Product({
-    name,
-    price,
-    image,
-    cloudinaryId,
-    brand,
-    category,
-    countInStock,
-    description,
-    model: model || '',
-    storage: storage || '',
-    color: color || '',
-    screenSize: screenSize || '',
-    size: size || '',
-    material: material || '',
-    gender: gender || '',
-    author: author || '',
-    publisher: publisher || '',
-    pages: pages || 0,
-    weight: weight || '',
-    dimensions: dimensions || '',
-    specifications: specifications || new Map(),
-    user: req.user._id
-  });
+  try {
+    const product = new Product({
+      name,
+      price,
+      image,
+      cloudinaryId,
+      brand,
+      category,
+      countInStock,
+      description,
+      model: model || '',
+      storage: storage || '',
+      color: color || '',
+      screenSize: screenSize || '',
+      size: size || '',
+      material: material || '',
+      gender: gender || '',
+      author: author || '',
+      publisher: publisher || '',
+      pages: pages || 0,
+      weight: weight || '',
+      dimensions: dimensions || '',
+      specifications: specifications || new Map(),
+      user: req.user._id
+    });
 
-  const createdProduct = await product.save();
-  logger.info(`Successfully created product with ID: ${createdProduct._id}`);
-  res.status(201).json(createdProduct);
+    const createdProduct = await product.save();
+    logger.info(`Successfully created product with ID: ${createdProduct._id}`);
+    res.status(201).json(createdProduct);
+  } catch (error) {
+    logger.error('Error creating product:', {
+      message: error.message,
+      stack: error.stack,
+      productData: req.body
+    });
+    
+    // Return a more detailed error response in development
+    if (process.env.NODE_ENV !== 'production') {
+      return res.status(500).json({ 
+        message: 'Internal server error while creating product',
+        error: error.message,
+        stack: error.stack
+      });
+    }
+    
+    // Return a generic error in production
+    return res.status(500).json({ message: 'Internal server error while creating product' });
+  }
 });
 
 // @desc    Update a product
@@ -156,40 +246,66 @@ const updateProduct = asyncHandler(async (req, res) => {
 
   logger.info(`Updating product with ID: ${req.params.id}`);
 
-  const product = await Product.findById(req.params.id);
+  try {
+    const product = await Product.findById(req.params.id);
 
-  if (product) {
-    product.name = name;
-    product.price = price;
-    product.description = description;
-    product.image = image;
-    product.cloudinaryId = cloudinaryId || product.cloudinaryId;
-    product.brand = brand;
-    product.category = category;
-    product.countInStock = countInStock;
+    if (product) {
+      product.name = name;
+      product.price = price;
+      product.description = description;
+      product.image = image;
+      product.cloudinaryId = cloudinaryId || product.cloudinaryId;
+      product.brand = brand;
+      product.category = category;
+      product.countInStock = countInStock;
+      
+      // Update new attributes
+      product.model = model || '';
+      product.storage = storage || '';
+      product.color = color || '';
+      product.screenSize = screenSize || '';
+      product.size = size || '';
+      product.material = material || '';
+      product.gender = gender || '';
+      product.author = author || '';
+      product.publisher = publisher || '';
+      product.pages = pages || 0;
+      product.weight = weight || '';
+      product.dimensions = dimensions || '';
+      product.specifications = specifications || new Map();
+
+      const updatedProduct = await product.save();
+      logger.info(`Successfully updated product with ID: ${req.params.id}`);
+      res.json(updatedProduct);
+    } else {
+      logger.warn(`Product not found for update with ID: ${req.params.id}`);
+      res.status(404);
+      throw new Error('Product not found');
+    }
+  } catch (error) {
+    logger.error('Error updating product:', {
+      message: error.message,
+      stack: error.stack,
+      productId: req.params.id,
+      productData: req.body
+    });
     
-    // Update new attributes
-    product.model = model || '';
-    product.storage = storage || '';
-    product.color = color || '';
-    product.screenSize = screenSize || '';
-    product.size = size || '';
-    product.material = material || '';
-    product.gender = gender || '';
-    product.author = author || '';
-    product.publisher = publisher || '';
-    product.pages = pages || 0;
-    product.weight = weight || '';
-    product.dimensions = dimensions || '';
-    product.specifications = specifications || new Map();
-
-    const updatedProduct = await product.save();
-    logger.info(`Successfully updated product with ID: ${req.params.id}`);
-    res.json(updatedProduct);
-  } else {
-    logger.warn(`Product not found for update with ID: ${req.params.id}`);
-    res.status(404);
-    throw new Error('Product not found');
+    // Handle invalid ObjectId
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid product ID' });
+    }
+    
+    // Return a more detailed error response in development
+    if (process.env.NODE_ENV !== 'production') {
+      return res.status(500).json({ 
+        message: 'Internal server error while updating product',
+        error: error.message,
+        stack: error.stack
+      });
+    }
+    
+    // Return a generic error in production
+    return res.status(500).json({ message: 'Internal server error while updating product' });
   }
 });
 
@@ -199,42 +315,62 @@ const updateProduct = asyncHandler(async (req, res) => {
 const createProductReview = asyncHandler(async (req, res) => {
   const { rating, comment } = req.body;
 
-  logger.info(`Creating review for product ID: ${req.params.id}`);
+  try {
+    const product = await Product.findById(req.params.id);
 
-  const product = await Product.findById(req.params.id);
+    if (product) {
+      const alreadyReviewed = product.reviews.find(
+        (r) => r.user.toString() === req.user._id.toString()
+      );
 
-  if (product) {
-    const alreadyReviewed = product.reviews.find(
-      (r) => r.user.toString() === req.user._id.toString()
-    );
+      if (alreadyReviewed) {
+        res.status(400);
+        throw new Error('Product already reviewed');
+      }
 
-    if (alreadyReviewed) {
-      logger.warn(`User already reviewed product ID: ${req.params.id}`);
-      res.status(400);
-      throw new Error('Product already reviewed');
+      const review = {
+        name: req.user.name,
+        rating: Number(rating),
+        comment,
+        user: req.user._id,
+      };
+
+      product.reviews.push(review);
+      product.numReviews = product.reviews.length;
+      product.rating =
+        product.reviews.reduce((acc, item) => item.rating + acc, 0) /
+        product.reviews.length;
+
+      await product.save();
+      res.status(201).json({ message: 'Review added' });
+    } else {
+      res.status(404);
+      throw new Error('Product not found');
     }
-
-    const review = {
-      name: req.user.name,
-      rating: Number(rating),
-      comment,
-      user: req.user._id,
-    };
-
-    product.reviews.push(review);
-
-    product.numReviews = product.reviews.length;
-    product.rating =
-      product.reviews.reduce((acc, item) => item.rating + acc, 0) /
-      product.reviews.length;
-
-    await product.save();
-    logger.info(`Successfully added review for product ID: ${req.params.id}`);
-    res.status(201).json({ message: 'Review added' });
-  } else {
-    logger.warn(`Product not found for review with ID: ${req.params.id}`);
-    res.status(404);
-    throw new Error('Product not found');
+  } catch (error) {
+    logger.error('Error creating product review:', {
+      message: error.message,
+      stack: error.stack,
+      productId: req.params.id,
+      reviewData: req.body
+    });
+    
+    // Handle invalid ObjectId
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid product ID' });
+    }
+    
+    // Return a more detailed error response in development
+    if (process.env.NODE_ENV !== 'production') {
+      return res.status(500).json({ 
+        message: 'Internal server error while creating review',
+        error: error.message,
+        stack: error.stack
+      });
+    }
+    
+    // Return a generic error in production
+    return res.status(500).json({ message: 'Internal server error while creating review' });
   }
 });
 
@@ -242,12 +378,27 @@ const createProductReview = asyncHandler(async (req, res) => {
 // @route   GET /api/products/top
 // @access  Public
 const getTopProducts = asyncHandler(async (req, res) => {
-  logger.info('Fetching top rated products');
-
-  const products = await Product.find({}).sort({ rating: -1 }).limit(3);
-
-  logger.info(`Successfully fetched ${products.length} top rated products`);
-  res.json(products);
+  try {
+    const products = await Product.find({}).sort({ rating: -1 }).limit(3);
+    res.json(products);
+  } catch (error) {
+    logger.error('Error fetching top products:', {
+      message: error.message,
+      stack: error.stack
+    });
+    
+    // Return a more detailed error response in development
+    if (process.env.NODE_ENV !== 'production') {
+      return res.status(500).json({ 
+        message: 'Internal server error while fetching top products',
+        error: error.message,
+        stack: error.stack
+      });
+    }
+    
+    // Return a generic error in production
+    return res.status(500).json({ message: 'Internal server error while fetching top products' });
+  }
 });
 
 module.exports = {
