@@ -2,7 +2,6 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const asyncHandler = require('express-async-handler');
-const logger = require('../utils/logger');
 const { generateToken } = require('../config/jwt');
 const mongoose = require('mongoose');
 
@@ -13,25 +12,19 @@ const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
-    logger.info('Registration attempt:', { name, email });
-    logger.info('Request headers:', req.headers);
-    logger.info('Request body:', req.body);
     
     // Validate input
     if (!name || !email || !password) {
-      logger.warn('Registration attempt with missing fields');
       return res.status(400).json({ message: 'Name, email, and password are required' });
     }
     
     // Check password strength
     if (password.length < 6) {
-      logger.warn('Registration attempt with weak password');
       return res.status(400).json({ message: 'Password must be at least 6 characters long' });
     }
 
     // Check if we have a database connection
     if (mongoose.connection.readyState !== 1) {
-      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
       return res.status(503).json({ 
         message: 'Database connection error. Please try again later.',
         readyState: mongoose.connection.readyState,
@@ -39,37 +32,22 @@ const registerUser = asyncHandler(async (req, res) => {
       });
     }
 
-    // Log database connection info
-    logger.info('Database connection info:', {
-      readyState: mongoose.connection.readyState,
-      host: mongoose.connection.host,
-      name: mongoose.connection.name
-    });
-
     // Check if user already exists
-    logger.info(`Checking if user already exists with email: ${email}`);
     const userExists = await User.findOne({ email });
-    logger.info(`User exists check result: ${userExists ? 'User found' : 'User not found'}`);
 
     if (userExists) {
-      logger.warn(`Registration failed - user already exists with email: ${email}`);
       return res.status(400).json({ message: 'User already exists with this email address' });
     }
 
     // Create user
-    logger.info(`Creating new user with email: ${email}`);
     const user = await User.create({
       name,
       email,
       password,
     });
     
-    logger.info(`User creation result: ${user ? 'Success' : 'Failed'}`);
-    
     if (user) {
-      logger.info(`Successfully registered user with email: ${email}`);
       const token = generateToken(user._id);
-      logger.info(`Generated token for user ${email}`);
       
       // Set secure cookie for production
       try {
@@ -84,13 +62,11 @@ const registerUser = asyncHandler(async (req, res) => {
         // Only set sameSite: 'none' if we're in production and have a valid origin
         if (isProduction && (!req.headers.origin || !req.headers.origin.includes('vercel.app'))) {
           cookieOptions.sameSite = 'lax';
-          logger.info('Setting sameSite to lax for non-Vercel origin in production');
         }
         
         res.cookie('token', token, cookieOptions);
-        logger.info('Cookie set successfully for user:', email);
       } catch (cookieError) {
-        logger.error('Error setting cookie:', cookieError);
+        console.log('Error setting cookie:', cookieError);
       }
       
       res.status(201).json({
@@ -101,7 +77,6 @@ const registerUser = asyncHandler(async (req, res) => {
         token: token
       });
     } else {
-      logger.error(`Invalid user data for email: ${email}`);
       return res.status(400).json({ message: 'Invalid user data' });
     }
   } catch (error) {
@@ -229,7 +204,6 @@ const authUser = asyncHandler(async (req, res) => {
     }
 
     if (user) {
-      logger.info(`User found, attempting password comparison`);
       try {
         // Check if the user object has the matchPassword method
         if (typeof user.matchPassword !== 'function') {
@@ -238,19 +212,15 @@ const authUser = asyncHandler(async (req, res) => {
         }
         
         const isPasswordMatch = await user.matchPassword(password);
-        logger.info(`Password match result: ${isPasswordMatch}`);
         
         if (isPasswordMatch) {
-          logger.info(`Successfully authenticated user with email: ${email}`);
           
           // Check if we have a valid user ID before generating token
           if (!user._id) {
-            logger.error(`User object missing _id for email: ${email}`);
             return res.status(500).json({ message: 'Authentication system error' });
           }
           
           const token = generateToken(user._id);
-          logger.info(`Token generated for user: ${user.email}`);
           
           // Set secure cookie for production
           try {
@@ -265,13 +235,11 @@ const authUser = asyncHandler(async (req, res) => {
             // Only set sameSite: 'none' if we're in production and have a valid origin
             if (isProduction && (!req.headers.origin || !req.headers.origin.includes('vercel.app'))) {
               cookieOptions.sameSite = 'lax';
-              logger.info('Setting sameSite to lax for non-Vercel origin in production');
             }
             
             res.cookie('token', token, cookieOptions);
-            logger.info('Cookie set successfully for user:', email);
           } catch (cookieError) {
-            logger.error('Error setting cookie:', cookieError);
+            console.log('Error setting cookie:', cookieError);
           }
           
           const responseData = {
@@ -282,33 +250,20 @@ const authUser = asyncHandler(async (req, res) => {
             token: token
           };
           
-          logger.info(`Sending response: ${JSON.stringify(responseData)}`);
-          
           return res.json(responseData);
         } else {
-          logger.warn(`Authentication failed - password mismatch for email: ${email}`);
           return res.status(401).json({ message: 'Invalid email or password' });
         }
       } catch (passwordError) {
-        logger.error(`Error during password comparison for email: ${email}`, {
-          message: passwordError.message,
-          stack: passwordError.stack
-        });
         return res.status(500).json({ message: 'Error during authentication' });
       }
     } else {
-      logger.warn(`Authentication failed - user not found with email: ${email}`);
       // This is the key change - provide a more specific error message
       return res.status(401).json({ 
         message: 'No account found with this email address. Please register first.' 
       });
     }
   } catch (error) {
-    logger.error(`Authentication error for email: ${req.body.email || 'unknown'}`, {
-      message: error.message,
-      stack: error.stack,
-      email: req.body.email
-    });
     
     // Handle database connection errors specifically
     if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
@@ -365,10 +320,6 @@ const getUserProfile = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
-    logger.error(`Error fetching profile for user ID: ${req.user._id || 'unknown'}`, {
-      message: error.message,
-      stack: error.stack
-    });
     
     // Handle database connection errors specifically
     if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
@@ -401,7 +352,6 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     
     // Check if we have a database connection
     if (mongoose.connection.readyState !== 1) {
-      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
       return res.status(503).json({ 
         message: 'Database connection error. Please try again later.',
         readyState: mongoose.connection.readyState,
@@ -419,8 +369,6 @@ const updateUserProfile = asyncHandler(async (req, res) => {
       }
 
       const updatedUser = await user.save();
-
-      logger.info(`Successfully updated profile for user ID: ${req.user._id}`);
       
       // Generate new token after profile update
       const token = generateToken(updatedUser._id);
@@ -438,11 +386,9 @@ const updateUserProfile = asyncHandler(async (req, res) => {
         // Only set sameSite: 'none' if we're in production and have a valid origin
         if (isProduction && (!req.headers.origin || !req.headers.origin.includes('vercel.app'))) {
           cookieOptions.sameSite = 'lax';
-          logger.info('Setting sameSite to lax for non-Vercel origin in production');
         }
         
         res.cookie('token', token, cookieOptions);
-        logger.info('Cookie set successfully for user:', updatedUser.email);
       } catch (cookieError) {
         logger.error('Error setting cookie:', cookieError);
       }
@@ -455,14 +401,9 @@ const updateUserProfile = asyncHandler(async (req, res) => {
         token: token
       });
     } else {
-      logger.warn(`User not found for ID: ${req.user._id}`);
       return res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
-    logger.error(`Error updating profile for user ID: ${req.user._id || 'unknown'}`, {
-      message: error.message,
-      stack: error.stack
-    });
     
     // Handle database connection errors specifically
     if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {

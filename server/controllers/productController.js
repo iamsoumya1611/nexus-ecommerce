@@ -1,6 +1,5 @@
 const Product = require('../models/Product');
 const asyncHandler = require('express-async-handler');
-const logger = require('../utils/logger');
 const mongoose = require('mongoose');
 
 // @desc    Fetch all products
@@ -10,7 +9,6 @@ const getProducts = asyncHandler(async (req, res) => {
   try {
     // Check if we have a database connection
     if (mongoose.connection.readyState !== 1) {
-      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
       return res.status(503).json({ 
         message: 'Database connection error. Please try again later.',
         readyState: mongoose.connection.readyState,
@@ -30,21 +28,13 @@ const getProducts = asyncHandler(async (req, res) => {
         }
       : {};
 
-    logger.info(`Fetching products - page: ${page}, keyword: ${req.query.keyword || 'none'}`);
-
     const count = await Product.countDocuments({ ...keyword });
     const products = await Product.find({ ...keyword })
       .limit(pageSize)
       .skip(pageSize * (page - 1));
 
-    logger.info(`Successfully fetched ${products.length} products`);
     res.json({ products, page, pages: Math.ceil(count / pageSize) });
   } catch (error) {
-    logger.error('Error fetching products:', {
-      message: error.message,
-      stack: error.stack,
-      query: req.query
-    });
     
     // Handle database connection errors specifically
     if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
@@ -72,12 +62,10 @@ const getProducts = asyncHandler(async (req, res) => {
 // @route   GET /api/products/:id
 // @access  Public
 const getProductById = asyncHandler(async (req, res) => {
-  logger.info(`Fetching product with ID: ${req.params.id}`);
 
   try {
     // Check if we have a database connection
     if (mongoose.connection.readyState !== 1) {
-      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
       return res.status(503).json({ 
         message: 'Database connection error. Please try again later.',
         readyState: mongoose.connection.readyState,
@@ -88,19 +76,12 @@ const getProductById = asyncHandler(async (req, res) => {
     const product = await Product.findById(req.params.id);
 
     if (product) {
-      logger.info(`Successfully fetched product with ID: ${req.params.id}`);
       res.json(product);
     } else {
-      logger.warn(`Product not found with ID: ${req.params.id}`);
       res.status(404);
       throw new Error('Product not found');
     }
   } catch (error) {
-    logger.error('Error fetching product by ID:', {
-      message: error.message,
-      stack: error.stack,
-      productId: req.params.id
-    });
     
     // Handle invalid ObjectId
     if (error.name === 'CastError') {
@@ -133,12 +114,10 @@ const getProductById = asyncHandler(async (req, res) => {
 // @route   DELETE /api/products/:id
 // @access  Private/Admin
 const deleteProduct = asyncHandler(async (req, res) => {
-  logger.info(`Deleting product with ID: ${req.params.id}`);
 
   try {
     // Check if we have a database connection
     if (mongoose.connection.readyState !== 1) {
-      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
       return res.status(503).json({ 
         message: 'Database connection error. Please try again later.',
         readyState: mongoose.connection.readyState,
@@ -150,19 +129,12 @@ const deleteProduct = asyncHandler(async (req, res) => {
 
     if (product) {
       await product.remove();
-      logger.info(`Successfully deleted product with ID: ${req.params.id}`);
       res.json({ message: 'Product removed' });
     } else {
-      logger.warn(`Product not found for deletion with ID: ${req.params.id}`);
       res.status(404);
       throw new Error('Product not found');
     }
   } catch (error) {
-    logger.error('Error deleting product:', {
-      message: error.message,
-      stack: error.stack,
-      productId: req.params.id
-    });
     
     // Handle invalid ObjectId
     if (error.name === 'CastError') {
@@ -219,12 +191,9 @@ const createProduct = asyncHandler(async (req, res) => {
     specifications
   } = req.body;
 
-  logger.info(`Creating new product: ${name}`);
-
   try {
     // Check if we have a database connection
     if (mongoose.connection.readyState !== 1) {
-      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
       return res.status(503).json({ 
         message: 'Database connection error. Please try again later.',
         readyState: mongoose.connection.readyState,
@@ -258,14 +227,8 @@ const createProduct = asyncHandler(async (req, res) => {
     });
 
     const createdProduct = await product.save();
-    logger.info(`Successfully created product with ID: ${createdProduct._id}`);
     res.status(201).json(createdProduct);
   } catch (error) {
-    logger.error('Error creating product:', {
-      message: error.message,
-      stack: error.stack,
-      productData: req.body
-    });
     
     // Handle database connection errors specifically
     if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
@@ -317,12 +280,9 @@ const updateProduct = asyncHandler(async (req, res) => {
     specifications
   } = req.body;
 
-  logger.info(`Updating product with ID: ${req.params.id}`);
-
   try {
     // Check if we have a database connection
     if (mongoose.connection.readyState !== 1) {
-      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
       return res.status(503).json({ 
         message: 'Database connection error. Please try again later.',
         readyState: mongoose.connection.readyState,
@@ -358,20 +318,12 @@ const updateProduct = asyncHandler(async (req, res) => {
       product.specifications = specifications || new Map();
 
       const updatedProduct = await product.save();
-      logger.info(`Successfully updated product with ID: ${req.params.id}`);
       res.json(updatedProduct);
     } else {
-      logger.warn(`Product not found for update with ID: ${req.params.id}`);
       res.status(404);
       throw new Error('Product not found');
     }
   } catch (error) {
-    logger.error('Error updating product:', {
-      message: error.message,
-      stack: error.stack,
-      productId: req.params.id,
-      productData: req.body
-    });
     
     // Handle invalid ObjectId
     if (error.name === 'CastError') {
@@ -409,7 +361,6 @@ const createProductReview = asyncHandler(async (req, res) => {
   try {
     // Check if we have a database connection
     if (mongoose.connection.readyState !== 1) {
-      logger.error('Database not connected - readyState:', mongoose.connection.readyState);
       return res.status(503).json({ 
         message: 'Database connection error. Please try again later.',
         readyState: mongoose.connection.readyState,
@@ -449,12 +400,6 @@ const createProductReview = asyncHandler(async (req, res) => {
       throw new Error('Product not found');
     }
   } catch (error) {
-    logger.error('Error creating product review:', {
-      message: error.message,
-      stack: error.stack,
-      productId: req.params.id,
-      reviewData: req.body
-    });
     
     // Handle invalid ObjectId
     if (error.name === 'CastError') {
@@ -501,10 +446,6 @@ const getTopProducts = asyncHandler(async (req, res) => {
     const products = await Product.find({}).sort({ rating: -1 }).limit(3);
     res.json(products);
   } catch (error) {
-    logger.error('Error fetching top products:', {
-      message: error.message,
-      stack: error.stack
-    });
     
     // Handle database connection errors specifically
     if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {

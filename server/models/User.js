@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const logger = require('../utils/logger');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -31,64 +30,25 @@ const userSchema = new mongoose.Schema({
 });
 
 // Encrypt password before saving
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
+  // Only run this function if password was actually modified
   if (!this.isModified('password')) {
-    logger.info('Password not modified, skipping hash');
     next();
-    return;
   }
 
   try {
-    logger.info('Hashing password for user:', this.email);
-    logger.info(`Plain password length: ${this.password ? this.password.length : 0}`);
-    
+    // Hash password with bcrypt
     const salt = await bcrypt.genSalt(10);
-    logger.info('Salt generated');
-    
     this.password = await bcrypt.hash(this.password, salt);
-    logger.info('Password hashed successfully');
-    logger.info(`Hashed password length: ${this.password ? this.password.length : 0}`);
-    
     next();
   } catch (error) {
-    logger.error('Error hashing password:', {
-      message: error.message,
-      stack: error.stack,
-      email: this.email
-    });
     next(error);
   }
 });
 
 // Match user entered password to hashed password in database
-userSchema.methods.matchPassword = async function(enteredPassword) {
-  try {
-    // Validate inputs
-    if (!enteredPassword) {
-      logger.warn('No password provided for comparison');
-      return false;
-    }
-    
-    if (!this.password) {
-      logger.error('No stored password found for user:', this.email);
-      return false;
-    }
-    
-    logger.info('Matching password for user:', this.email);
-    logger.info(`Entered password length: ${enteredPassword ? enteredPassword.length : 0}`);
-    logger.info(`Stored password length: ${this.password ? this.password.length : 0}`);
-    
-    const isMatch = await bcrypt.compare(enteredPassword, this.password);
-    logger.info('Password match result:', isMatch);
-    return isMatch;
-  } catch (error) {
-    logger.error('Error comparing passwords:', {
-      message: error.message,
-      stack: error.stack,
-      email: this.email
-    });
-    return false;
-  }
+userSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
 module.exports = mongoose.model('User', userSchema);

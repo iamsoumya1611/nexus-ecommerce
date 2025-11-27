@@ -1,396 +1,89 @@
+// http://localhost:3000 
+// http://localhost:5000
+// https://nexus-ecommerce-chi.vercel.app
+
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const path = require('path');
-const fs = require('fs');
-const cookieParser = require('cookie-parser');
-const logger = require('./utils/logger');
 
 dotenv.config();
-
-// Log environment variables for debugging (mask sensitive ones)
-logger.info('Environment variables check:');
-logger.info('NODE_ENV:', process.env.NODE_ENV);
-logger.info('PORT:', process.env.PORT);
-logger.info('MONGO_URI present:', !!process.env.MONGO_URI);
-logger.info('JWT_SECRET present:', !!process.env.JWT_SECRET);
-logger.info('FRONTEND_URL:', process.env.FRONTEND_URL);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enhanced CORS configuration for production
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    // Normalize the origin by removing trailing slashes
-    const normalizedOrigin = origin.replace(/\/$/, '');
-    
-    // List of allowed origins (without trailing slashes)
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:5000',
-      'https://nexus-ecommerce-chi.vercel.app'
-    ];
-    
-    // In production, also allow the FRONTEND_URL from environment variables
-    if (process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL) {
-      allowedOrigins.push(process.env.FRONTEND_URL.replace(/\/$/, ''));
-    }
-    
-    // Check if the normalized origin is in our allowed list, is a Vercel subdomain, or is a localhost origin
-    if (allowedOrigins.includes(normalizedOrigin) || 
-        (normalizedOrigin && normalizedOrigin.endsWith('.vercel.app')) ||
-        (normalizedOrigin && normalizedOrigin.startsWith('http://localhost:'))) {
-      callback(null, true);
-    } else {
-      // Log the origin that was blocked for debugging
-      logger.warn('CORS blocked origin:', origin);
-      logger.warn('Normalized origin:', normalizedOrigin);
-      logger.warn('Allowed origins:', allowedOrigins);
-      
-      // In development, be more permissive to avoid CORS issues during local testing
-      if (process.env.NODE_ENV !== 'production') {
-        logger.warn('Allowing blocked origin in development mode:', origin);
-        callback(null, true);
-      } else {
-        // In production, reject unauthorized origins
-        callback(new Error('Not allowed by CORS'));
-      }
-    }
-  },
-  credentials: true,
-  optionsSuccessStatus: 200
-};
 
-// Apply CORS middleware before any other middleware
-app.use(cors(corsOptions));
+// Enable CORS with specific origin and methods
+app.use(cors({
+  origin: ['https://nexus-ecommerce-chi.vercel.app', 'http://localhost:3000', 'http://localhost:5000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
+  credentials: true
+}));
+
+// Handle preflight requests explicitly
+app.options('*', cors());
 
 // Handle preflight requests explicitly for all routes
-app.options('*', cors(corsOptions));
-
-// Cookie parser middleware with logging
-app.use((req, res, next) => {
-  logger.info('Request received:', {
-    method: req.method,
-    url: req.url,
-    headers: {
-      origin: req.headers.origin,
-      'content-type': req.headers['content-type'],
-      'user-agent': req.headers['user-agent']
-    }
-  });
-  next();
-});
-
-// Cookie parser middleware
-app.use(cookieParser());
+app.options('*', cors());
 
 // Middleware
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
-
-// Simple test route to check if server is working
-app.get('/test', (req, res) => {
-  res.json({ message: 'Server is working', timestamp: new Date().toISOString() });
-});
-
-// Database connection test route
-app.get('/db-test', async (req, res) => {
-  try {
-    const { checkDBHealth } = require('./config/db');
-    const dbHealth = checkDBHealth();
-    
-    // Try to count users
-    const User = require('./models/User');
-    let userCount = 0;
-    let sampleUsers = [];
-    
-    try {
-      userCount = await User.countDocuments();
-      sampleUsers = await User.find({}, 'email name').limit(5);
-    } catch (userError) {
-      logger.error('Error querying users:', userError.message);
-    }
-    
-    if (dbHealth.isConnected) {
-      res.json({ 
-        message: 'Database connection successful', 
-        host: dbHealth.host,
-        name: dbHealth.name,
-        userCount: userCount,
-        sampleUsers: sampleUsers,
-        timestamp: new Date().toISOString() 
-      });
-    } else {
-      res.status(503).json({ 
-        message: 'Database not connected',
-        readyState: dbHealth.readyState,
-        timestamp: new Date().toISOString() 
-      });
-    }
-  } catch (error) {
-    logger.error('Database test error:', error);
-    res.status(500).json({ 
-      message: 'Database test failed',
-      error: error.message,
-      timestamp: new Date().toISOString() 
-    });
-  }
-});
+app.use(express.json());
 
 // Database connection
 const connectDB = require('./config/db');
 
-// Connect to database with error handling and start server only after successful connection
-logger.info('Initializing database connection...');
-let server;
+connectDB();
 
-connectDB()
-  .then(() => {
-    logger.info('Database connected successfully, starting server...');
-    
-    // API Routes - These should be before static file serving
-    // User routes
-    app.use('/users', require('./routes/userRoutes'));
+// User routes
+app.use('/users', require('./routes/userRoutes'));
 
-    // Product routes
-    app.use('/products', require('./routes/productRoutes'));
+// Product routes
+app.use('/products', require('./routes/productRoutes'));
 
-    // Cart routes
-    app.use('/cart', require('./routes/cartRoutes'));
+// Cart routes
+app.use('/cart', require('./routes/cartRoutes'));
 
-    // Order routes
-    app.use('/orders', require('./routes/orderRoutes'));
+// Order routes
+app.use('/orders', require('./routes/orderRoutes'));
 
-    // Admin routes
-    app.use('/admin', require('./routes/adminRoutes'));
+// Admin routes
+app.use('/admin', require('./routes/adminRoutes'));
 
-    // Upload routes
-    app.use('/upload', require('./routes/uploadRoutes'));
+// Upload routes
+app.use('/upload', require('./routes/uploadRoutes'));
 
-    // Payment routes
-    app.use('/payment', require('./routes/paymentRoutes'));
+// Payment routes
+app.use('/payment', require('./routes/paymentRoutes'));
 
-    // Recommendation routes
-    app.use('/recommendations', require('./routes/recommendationRoutes'));
+// Recommendation routes
+app.use('/recommendations', require('./routes/recommendationRoutes'));
 
-    // Health check endpoint for Render
-    app.get('/health', async (req, res) => {
-      const { checkDBHealth } = require('./config/db');
-      
-      try {
-        const dbHealth = checkDBHealth();
-        
-        // Check if database is connected
-        if (!dbHealth.isConnected) {
-          logger.error('Health check failed: Database not connected');
-          return res.status(503).json({
-            status: 'ERROR',
-            message: 'Database not connected',
-            mongoose: dbHealth,
-            environment: {
-              NODE_ENV: process.env.NODE_ENV,
-              PORT: process.env.PORT
-            }
-          });
-        }
-        
-        const healthData = {
-          status: 'OK',
-          timestamp: new Date().toISOString(),
-          uptime: process.uptime(),
-          memory: process.memoryUsage(),
-          mongoose: dbHealth,
-          environment: {
-            NODE_ENV: process.env.NODE_ENV,
-            PORT: process.env.PORT
-          }
-        };
-        
-        logger.info('Health check accessed:', healthData);
-        res.status(200).json(healthData);
-      } catch (error) {
-        logger.error('Health check error:', {
-          message: error.message,
-          stack: error.stack
-        });
-        res.status(500).json({
-          status: 'ERROR',
-          message: 'Health check failed',
-          error: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message
-        });
-      }
-    });
+// Root route - This should be after static file serving
+app.get('/', (req, res) => {
+  res.send('E-Commerce API is running...');
+});
 
-    // Serve static files from the React app build directory
-    if (process.env.NODE_ENV === 'production') {
-      const buildPath = path.join(__dirname, '../client/build');
-      
-      logger.info('Checking for build directory at:', buildPath);
-      
-      // Check if build directory exists
-      if (fs.existsSync(buildPath)) {
-        logger.info('Build directory found, serving static files');
-        app.use(express.static(buildPath));
-        
-        // Handle React routing, return all requests to React app
-        // This should be AFTER all API routes
-        app.get('*', (req, res) => {
-          res.sendFile(path.join(buildPath, 'index.html'));
-        });
-      } else {
-        logger.warn('Build directory not found at:', buildPath);
-        app.get('/', (req, res) => {
-          res.send('E-Commerce API is running... (Frontend build not found)');
-        });
-      }
-    }
-
-    // Root route - This should be after static file serving
-    app.get('/', (req, res) => {
-      res.send('E-Commerce API is running...');
-    });
-
-    // Handle 404 errors - This should be after all routes
-    app.use('*', (req, res) => {
-      logger.warn(`Route not found: ${req.originalUrl}`);
-      res.status(404);
-      res.json({
-        message: 'Route not found'
-      });
-    });
-
-    // Error handling middleware
-    app.use((err, req, res, next) => {
-      // Specifically handle CORS errors
-      if (err.message && err.message.includes('CORS')) {
-        logger.error('CORS error:', {
-          message: err.message,
-          origin: req.headers.origin,
-          url: req.originalUrl,
-          method: req.method
-        });
-        return res.status(403).json({
-          message: 'CORS error: ' + err.message,
-          origin: req.headers.origin
-        });
-      }
-      
-      // Handle mongoose validation errors
-      if (err.name === 'ValidationError') {
-        logger.error('Validation error:', {
-          message: err.message,
-          stack: err.stack,
-          url: req.originalUrl,
-          method: req.method,
-          body: req.body
-        });
-        return res.status(400).json({
-          message: 'Validation Error',
-          error: Object.values(err.errors).map(e => e.message)
-        });
-      }
-      
-      // Handle mongoose duplicate key errors
-      if (err.code && err.code === 11000) {
-        logger.error('Duplicate key error:', {
-          message: err.message,
-          stack: err.stack,
-          url: req.originalUrl,
-          method: req.method,
-          body: req.body
-        });
-        return res.status(400).json({
-          message: 'Duplicate field value entered'
-        });
-      }
-      
-      // Handle mongoose cast errors
-      if (err.name === 'CastError') {
-        logger.error('Cast error:', {
-          message: err.message,
-          stack: err.stack,
-          url: req.originalUrl,
-          method: req.method,
-          body: req.body
-        });
-        return res.status(400).json({
-          message: 'Invalid data format'
-        });
-      }
-      
-      // Handle general errors
-      logger.error('Unhandled error:', {
-        message: err.message,
-        stack: err.stack,
-        url: req.originalUrl,
-        method: req.method,
-        body: req.body
-      });
-      
-      const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-      res.status(statusCode).json({
-        message: err.message,
-        stack: process.env.NODE_ENV === 'production' ? null : err.stack,
-      });
-    });
-
-    // Start server only after database connection is established
-    server = app.listen(PORT, () => {
-      logger.info(`Server running on port ${PORT}`);
-      logger.info(`CORS configuration allows origins: http://localhost:3000, https://nexus-ecommerce-chi.vercel.app, and Vercel subdomains`);
-      logger.info(`Server startup completed successfully`);
-    });
-
-    // Handle unhandled promise rejections
-    process.on('unhandledRejection', (err, promise) => {
-      logger.error(`Unhandled Promise Rejection: ${err.message}`);
-      logger.error('Stack trace:', err.stack);
-      // Close server & exit process
-      if (server) {
-        server.close(() => {
-          process.exit(1);
-        });
-      } else {
-        process.exit(1);
-      }
-    });
-
-    // Handle uncaught exceptions
-    process.on('uncaughtException', (err) => {
-      logger.error(`Uncaught Exception: ${err.message}`);
-      logger.error('Stack trace:', err.stack);
-      if (server) {
-        server.close(() => {
-          process.exit(1);
-        });
-      } else {
-        process.exit(1);
-      }
-    });
-  })
-  .catch(err => {
-    logger.error('Failed to connect to database:', err);
-    logger.error('Server will not start due to database connection failure');
-    
-    // Provide specific guidance for MongoDB Atlas IP whitelist issues
-    if (err.message && (err.message.includes('IP that isn\'t whitelisted') || 
-        err.message.includes('Could not connect to any servers'))) {
-      logger.error('=====================================================');
-      logger.error('MONGODB ATLAS IP WHITELIST ISSUE DETECTED');
-      logger.error('=====================================================');
-      logger.error('SOLUTION REQUIRED:');
-      logger.error('1. Go to MongoDB Atlas Dashboard (https://cloud.mongodb.com)');
-      logger.error('2. Navigate to Network Access section in your cluster');
-      logger.error('3. Add your Render server IP address to the whitelist');
-      logger.error('   OR temporarily add 0.0.0.0/0 (ALLOW ALL) for testing');
-      logger.error('4. Wait 1-2 minutes for changes to propagate');
-      logger.error('=====================================================');
-    }
-    
-    process.exit(1);
+// Handle 404 errors - This should be after all routes
+app.use('*', (req, res) => {
+  res.status(404);
+  res.json({
+    message: 'Route not found'
   });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err.stack);
+  res.status(500).json({ message: 'Something went wrong!' });
+});
+
+const server = app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log('MongoDB URI:', process.env.MONGO_URI ? 'Connected' : 'Not found');
+  console.log('CORS origins:', ['https://nexus-ecommerce-chi.vercel.app', 'http://localhost:3000', 'http://localhost:5000']);
+});
+
+// Handle server errors
+server.on('error', (err) => {
+  console.error('Server error:', err);
+});
