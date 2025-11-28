@@ -27,10 +27,13 @@ const Navbar = () => {
   const { userInfo, logout } = useUser();
 
   // Get cart items from Context
-  const { cartItems } = useCart();
+  const { state: cartState } = useCart();
+  const { cartItems } = cartState;
 
   // Calculate total number of items in cart
-  const cartItemCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
+  const cartItemCount = cartItems && Array.isArray(cartItems) 
+    ? cartItems.reduce((acc, item) => acc + item.qty, 0) 
+    : 0;
 
   // Handle user logout
   const logoutHandler = () => {
