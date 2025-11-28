@@ -1,4 +1,3 @@
-// Centralized color palette configuration
 // All color changes should be made here to update the entire application theme
 
 const colorPalette = {
