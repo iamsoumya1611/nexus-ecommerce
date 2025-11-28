@@ -235,24 +235,11 @@ export const userActions = {
         withCredentials: true
       };
 
-      // Construct the URL correctly based on environment
-      let baseUrl = API_BASE_URL;
-      // In development, we don't need the full URL because of proxy
-      if (process.env.NODE_ENV === 'development') {
-        baseUrl = '';
-      }
+      // Use proxy path in development, full URL in production
+      const finalUrl = process.env.NODE_ENV === 'development' 
+        ? '/users/login' 
+        : `${API_BASE_URL.replace(/\/$/, '')}/users/login`;
 
-      // Ensure we don't have double slashes in the URL and use HTTPS in production
-      const loginUrl = baseUrl ? 
-        `${baseUrl.replace(/\/$/, '')}/users/login` : 
-        '/users/login';
-      
-      // Ensure we're using HTTPS in production
-      let finalUrl = loginUrl;
-      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
-        finalUrl = finalUrl.replace('http://', 'https://');
-      }
-      
       const { data } = await axios.post(
         finalUrl,
         { email, password },
@@ -309,24 +296,11 @@ export const userActions = {
         withCredentials: true
       };
 
-      // Construct the URL correctly based on environment
-      let baseUrl = API_BASE_URL;
-      // In development, we don't need the full URL because of proxy
-      if (process.env.NODE_ENV === 'development') {
-        baseUrl = '';
-      }
+      // Use proxy path in development, full URL in production
+      const finalUrl = process.env.NODE_ENV === 'development' 
+        ? '/users/register' 
+        : `${API_BASE_URL.replace(/\/$/, '')}/users/register`;
 
-      // Ensure we don't have double slashes in the URL and use HTTPS in production
-      const registerUrl = baseUrl ? 
-        `${baseUrl.replace(/\/$/, '')}/users/register` : 
-        '/users/register';
-      
-      // Ensure we're using HTTPS in production
-      let finalUrl = registerUrl;
-      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
-        finalUrl = finalUrl.replace('http://', 'https://');
-      }
-      
       const { data } = await axios.post(
         finalUrl,
         { name, email, password },
@@ -381,24 +355,11 @@ export const userActions = {
         withCredentials: true
       };
 
-      // Construct the URL correctly based on environment
-      let baseUrl = API_BASE_URL;
-      // In development, we don't need the full URL because of proxy
-      if (process.env.NODE_ENV === 'development') {
-        baseUrl = '';
-      }
+      // Use proxy path in development, full URL in production
+      const finalUrl = process.env.NODE_ENV === 'development' 
+        ? '/users/profile' 
+        : `${API_BASE_URL.replace(/\/$/, '')}/users/profile`;
 
-      // Ensure we don't have double slashes in the URL and use HTTPS in production
-      const profileUrl = baseUrl ? 
-        `${baseUrl.replace(/\/$/, '')}/users/profile` : 
-        '/users/profile';
-      
-      // Ensure we're using HTTPS in production
-      let finalUrl = profileUrl;
-      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
-        finalUrl = finalUrl.replace('http://', 'https://');
-      }
-      
       const { data } = await axios.get(finalUrl, config);
 
       dispatch({
@@ -441,24 +402,11 @@ export const userActions = {
         withCredentials: true
       };
 
-      // Construct the URL correctly based on environment
-      let baseUrl = API_BASE_URL;
-      // In development, we don't need the full URL because of proxy
-      if (process.env.NODE_ENV === 'development') {
-        baseUrl = '';
-      }
+      // Use proxy path in development, full URL in production
+      const finalUrl = process.env.NODE_ENV === 'development' 
+        ? '/users/profile' 
+        : `${API_BASE_URL.replace(/\/$/, '')}/users/profile`;
 
-      // Ensure we don't have double slashes in the URL and use HTTPS in production
-      const profileUrl = baseUrl ? 
-        `${baseUrl.replace(/\/$/, '')}/users/profile` : 
-        '/users/profile';
-      
-      // Ensure we're using HTTPS in production
-      let finalUrl = profileUrl;
-      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
-        finalUrl = finalUrl.replace('http://', 'https://');
-      }
-      
       const { data } = await axios.put(finalUrl, user, config);
 
       dispatch({
