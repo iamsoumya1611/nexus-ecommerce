@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useUser, userActions } from '../contexts/UserContext';
+import { useUser } from '../contexts/UserContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const { state, dispatch } = useUser();
-  const { login } = state;
-  const { loading, userInfo } = login;
-
+  const { userInfo, loading, error, login } = useUser();
+  
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -21,9 +19,9 @@ const Login = () => {
     }
   }, [navigate, userInfo, redirect]);
 
-  const submitHandler = (e) => {
+  const submitHandler = async (e) => {
     e.preventDefault();
-    userActions.login(email, password)(dispatch);
+    await login(email, password);
   };
 
   return (
@@ -35,6 +33,11 @@ const Login = () => {
           {loading && (
             <div className="flex justify-center my-4">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500"></div>
+            </div>
+          )}
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              {error}
             </div>
           )}
           <form onSubmit={submitHandler}>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useUser, userActions } from '../../contexts/UserContext';
+import { useUser } from '../../contexts/UserContext';
+import axios from 'axios';
 
 const UserEdit = () => {
   const { id } = useParams();
@@ -8,32 +9,81 @@ const UserEdit = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loadingUpdate, setLoadingUpdate] = useState(false);
+  const [error, setError] = useState(null);
+  const [errorUpdate, setErrorUpdate] = useState(null);
+  const [successUpdate, setSuccessUpdate] = useState(false);
+  const [user, setUser] = useState({});
 
-  const { state: userState, dispatch: userDispatch } = useUser();
-  const { details: userDetails, updateAdmin: userUpdateProfile } = userState;
-  const { loading, error, user } = userDetails;
-  const { loading: loadingUpdate, error: errorUpdate, success: successUpdate } = userUpdateProfile;
-
+  const { userInfo } = useUser();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (successUpdate) {
-      userActions.resetUserUpdate()(userDispatch);
       navigate('/admin/userlist');
     } else {
+      const fetchUser = async () => {
+        try {
+          setLoading(true);
+          const config = {
+            headers: {
+              Authorization: `Bearer ${userInfo.token}`
+            }
+          };
+
+          // Use proxy path in development, full URL in production
+          const finalUrl = process.env.NODE_ENV === 'development' 
+            ? `/users/${id}` 
+            : `${process.env.REACT_APP_API_URL.replace(/\/$/, '')}/users/${id}`;
+
+          const { data } = await axios.get(finalUrl, config);
+          setUser(data);
+          setName(data.name);
+          setEmail(data.email);
+          setIsAdmin(data.isAdmin);
+        } catch (err) {
+          setError(err.response?.data?.message || err.message || 'Error fetching user');
+        } finally {
+          setLoading(false);
+        }
+      };
+
       if (!user.name || user._id !== id) {
-        userActions.getUserDetails(id)(userDispatch);
+        fetchUser();
       } else {
         setName(user.name);
         setEmail(user.email);
         setIsAdmin(user.isAdmin);
       }
     }
-  }, [userDispatch, navigate, user, id, successUpdate]);
+  }, [navigate, user, id, successUpdate, userInfo.token]);
 
-  const submitHandler = (e) => {
+  const submitHandler = async (e) => {
     e.preventDefault();
-    userActions.updateUser({ _id: user._id, name, email, isAdmin })(userDispatch);
+    try {
+      setLoadingUpdate(true);
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userInfo.token}`
+        }
+      };
+
+      // Use proxy path in development, full URL in production
+      const finalUrl = process.env.NODE_ENV === 'development' 
+        ? `/users/${id}` 
+        : `${process.env.REACT_APP_API_URL.replace(/\/$/, '')}/users/${id}`;
+
+      const { data } = await axios.put(finalUrl, { name, email, isAdmin }, config);
+      
+      setUser(data);
+      setSuccessUpdate(true);
+    } catch (err) {
+      setErrorUpdate(err.response?.data?.message || err.message || 'Error updating user');
+    } finally {
+      setLoadingUpdate(false);
+    }
   };
 
   return (

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useUser, userActions } from '../contexts/UserContext';
+import { useUser } from '../contexts/UserContext';
 import { useCart } from '../contexts/CartContext';
 import SearchIcon from '@mui/icons-material/Search';
 import Badge from '@mui/material/Badge';
@@ -24,20 +24,17 @@ const Navbar = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
 
   // Get user login state from Context
-  const { state: userState, dispatch: userDispatch } = useUser();
-  const { login: userLogin } = userState;
-  const { userInfo } = userLogin;
+  const { userInfo, logout } = useUser();
 
   // Get cart items from Context
-  const { state: cartState } = useCart();
-  const { cartItems } = cartState;
+  const { cartItems } = useCart();
 
   // Calculate total number of items in cart
   const cartItemCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
 
   // Handle user logout
   const logoutHandler = () => {
-    userActions.logout()(userDispatch);
+    logout();
     setIsUserMenuOpen(false); // Close user menu after logout
   };
 

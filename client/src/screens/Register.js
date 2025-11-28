@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useUser, userActions } from '../contexts/UserContext';
+import { useUser } from '../contexts/UserContext';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -9,9 +9,7 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState(null);
 
-  const { state, dispatch } = useUser();
-  const { register } = state;
-  const { loading, userInfo } = register;
+  const { userInfo, loading, error, register } = useUser();
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -24,12 +22,15 @@ const Register = () => {
     }
   }, [navigate, userInfo, redirect]);
 
-  const submitHandler = (e) => {
+  const submitHandler = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
       setMessage('Passwords do not match');
     } else {
-      userActions.register(name, email, password)(dispatch);
+      const result = await register(name, email, password);
+      if (!result.success) {
+        setMessage(result.error);
+      }
     }
   };
 
@@ -42,6 +43,11 @@ const Register = () => {
           {message && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
               {message}
+            </div>
+          )}
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
+              {error}
             </div>
           )}
           {loading && (

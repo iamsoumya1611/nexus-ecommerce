@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useUser, userActions } from '../contexts/UserContext';
+import { useUser } from '../contexts/UserContext';
 import { useOrder, orderActions } from '../contexts/OrderContext';
 
 const Profile = () => {
@@ -9,12 +9,9 @@ const Profile = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [updateSuccess, setUpdateSuccess] = useState(false);
 
-  const { state: userState, dispatch: userDispatch } = useUser();
-  const { details: userDetails, login: userLogin, updateProfile: userUpdateProfile } = userState;
-  const { loading, error, user } = userDetails;
-  const { userInfo } = userLogin;
-
+  const { userInfo, getUserProfile, updateUserProfile } = useUser();
   const { state: orderState, dispatch: orderDispatch } = useOrder();
   const { listMy: orderListMy } = orderState;
   const { loading: loadingOrders, error: errorOrders, orders } = orderListMy;
@@ -23,22 +20,33 @@ const Profile = () => {
     if (!userInfo) {
       // Redirect to login if not logged in
     } else {
-      if (!user || !user.name) {
-        userActions.getUserDetails('profile')(userDispatch);
-        orderActions.listMyOrders()(orderDispatch);
-      } else {
-        setName(user.name);
-        setEmail(user.email);
-      }
+      // Fetch user profile
+      const fetchProfile = async () => {
+        const result = await getUserProfile();
+        if (result.success) {
+          setName(result.data.name);
+          setEmail(result.data.email);
+        }
+      };
+      fetchProfile();
+      
+      // Fetch user orders
+      orderActions.listMyOrders()(orderDispatch);
     }
-  }, [userDispatch, orderDispatch, userInfo, user]);
+  }, [userInfo, getUserProfile, orderDispatch]);
 
-  const submitHandler = (e) => {
+  const submitHandler = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
       setMessage('Passwords do not match');
     } else {
-      userActions.updateUserProfile({ id: user._id, name, email, password })(userDispatch);
+      const result = await updateUserProfile({ name, email, password });
+      if (result.success) {
+        setUpdateSuccess(true);
+        setMessage('');
+      } else {
+        setMessage(result.error);
+      }
     }
   };
 
@@ -49,13 +57,7 @@ const Profile = () => {
           <div className="card p-6">
             <h2 className="text-2xl font-bold text-primary-900 mb-6">User Profile</h2>
             {message && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{message}</div>}
-            {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
-            {userUpdateProfile.success && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">Profile Updated Successfully!</div>}
-            {loading && (
-              <div className="flex justify-center my-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500"></div>
-              </div>
-            )}
+            {updateSuccess && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">Profile Updated Successfully!</div>}
             <form onSubmit={submitHandler}>
               <div className="mb-4">
                 <label htmlFor="name" className="block text-sm font-medium text-primary-700 mb-2">
@@ -109,8 +111,8 @@ const Profile = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                 />
               </div>
-              <button type="submit" className="btn btn-primary w-full" disabled={loading}>
-                {loading ? 'Updating...' : 'Update Profile'}
+              <button type="submit" className="btn btn-primary w-full">
+                Update Profile
               </button>
             </form>
           </div>
