@@ -9,9 +9,7 @@ const AIRecommendations = () => {
   const { list: recommendationList } = recommendationState;
   const { loading, error, recommendations } = recommendationList;
 
-  const { state: userState } = useUser();
-  const { login: userLogin } = userState;
-  const { userInfo } = userLogin;
+  const { userInfo } = useUser();
 
   useEffect(() => {
     // Always fetch recommendations, even for non-logged-in users
