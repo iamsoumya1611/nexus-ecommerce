@@ -31,6 +31,12 @@ const registerUser = asyncHandler(async (req, res) => {
         timestamp: new Date().toISOString()
       });
     }
+    
+    // Log database connection info for debugging
+    console.log('Database connection info:');
+    console.log('- Host:', mongoose.connection.host);
+    console.log('- Name:', mongoose.connection.name);
+    console.log('- Port:', mongoose.connection.port);
 
     // Check if user already exists
     const userExists = await User.findOne({ email });
@@ -147,6 +153,12 @@ const authUser = asyncHandler(async (req, res) => {
         timestamp: new Date().toISOString()
       });
     }
+    
+    // Log database connection info for debugging
+    console.log('Database connection info:');
+    console.log('- Host:', mongoose.connection.host);
+    console.log('- Name:', mongoose.connection.name);
+    console.log('- Port:', mongoose.connection.port);
 
     // Find user with case-insensitive email search
     const user = await User.findOne({ 
@@ -170,6 +182,8 @@ const authUser = asyncHandler(async (req, res) => {
           // Try to find any user to see what's in the database
           const sampleUser = await User.findOne({}, 'email name');
           console.log('Sample user from database:', sampleUser);
+        } else {
+          console.log('No users found in the current database');
         }
       } catch (countError) {
         console.log('Error counting users:', countError.message);

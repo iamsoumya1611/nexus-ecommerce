@@ -8,9 +8,14 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
+// Log environment variables for debugging
+console.log('Environment Variables:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('MONGO_URI exists:', !!process.env.MONGO_URI);
+console.log('PORT:', process.env.PORT || 5000);
+
 const app = express();
 const PORT = process.env.PORT || 5000;
-
 
 // Enable CORS with specific origin and methods
 app.use(cors({
@@ -32,58 +37,64 @@ app.use(express.json());
 // Database connection
 const connectDB = require('./config/db');
 
-connectDB();
+// Connect to database and start server only if connection is successful
+connectDB().then((conn) => {
+  console.log('Database connection established successfully');
+  
+  // User routes
+  app.use('/users', require('./routes/userRoutes'));
 
-// User routes
-app.use('/users', require('./routes/userRoutes'));
+  // Product routes
+  app.use('/products', require('./routes/productRoutes'));
 
-// Product routes
-app.use('/products', require('./routes/productRoutes'));
+  // Cart routes
+  app.use('/cart', require('./routes/cartRoutes'));
 
-// Cart routes
-app.use('/cart', require('./routes/cartRoutes'));
+  // Order routes
+  app.use('/orders', require('./routes/orderRoutes'));
 
-// Order routes
-app.use('/orders', require('./routes/orderRoutes'));
+  // Admin routes
+  app.use('/admin', require('./routes/adminRoutes'));
 
-// Admin routes
-app.use('/admin', require('./routes/adminRoutes'));
+  // Upload routes
+  app.use('/upload', require('./routes/uploadRoutes'));
 
-// Upload routes
-app.use('/upload', require('./routes/uploadRoutes'));
+  // Payment routes
+  app.use('/payment', require('./routes/paymentRoutes'));
 
-// Payment routes
-app.use('/payment', require('./routes/paymentRoutes'));
+  // Recommendation routes
+  app.use('/recommendations', require('./routes/recommendationRoutes'));
 
-// Recommendation routes
-app.use('/recommendations', require('./routes/recommendationRoutes'));
-
-// Root route - This should be after static file serving
-app.get('/', (req, res) => {
-  res.send('E-Commerce API is running...');
-});
-
-// Handle 404 errors - This should be after all routes
-app.use('*', (req, res) => {
-  res.status(404);
-  res.json({
-    message: 'Route not found'
+  // Root route - This should be after static file serving
+  app.get('/', (req, res) => {
+    res.send('E-Commerce API is running...');
   });
-});
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
-});
+  // Handle 404 errors - This should be after all routes
+  app.use('*', (req, res) => {
+    res.status(404);
+    res.json({
+      message: 'Route not found'
+    });
+  });
 
-const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log('MongoDB URI:', process.env.MONGO_URI ? 'Connected' : 'Not found');
-  console.log('CORS origins:', ['https://nexus-ecommerce-chi.vercel.app', 'http://localhost:3000', 'http://localhost:5000']);
-});
+  // Error handling middleware
+  app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err.stack);
+    res.status(500).json({ message: 'Something went wrong!' });
+  });
 
-// Handle server errors
-server.on('error', (err) => {
-  console.error('Server error:', err);
+  const server = app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log('MongoDB URI:', process.env.MONGO_URI ? 'Connected' : 'Not found');
+    console.log('CORS origins:', ['https://nexus-ecommerce-chi.vercel.app', 'http://localhost:3000', 'http://localhost:5000']);
+  });
+
+  // Handle server errors
+  server.on('error', (err) => {
+    console.error('Server error:', err);
+  });
+}).catch((error) => {
+  console.error('Failed to connect to database:', error.message);
+  process.exit(1);
 });
