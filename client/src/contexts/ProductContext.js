@@ -5,6 +5,9 @@ import { toast } from 'react-toastify';
 // Set base URL for API requests
 const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
+// Configure axios defaults
+axios.defaults.withCredentials = true;
+
 // Initial states
 const initialProductListState = {
   products: [],
@@ -304,15 +307,13 @@ export const productActions = {
       dispatch({ type: 'PRODUCT_LIST_REQUEST' });
 
       // Construct the URL correctly based on environment
-      let baseUrl = API_BASE_URL;
+      let finalUrl;
       if (process.env.NODE_ENV === 'development') {
-        baseUrl = '';
-      }
-
-      // Ensure we're using HTTPS in production
-      let finalUrl = `${baseUrl}/products?keyword=${keyword}&pageNumber=${pageNumber}`;
-      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
-        finalUrl = finalUrl.replace('http://', 'https://');
+        // In development, use relative paths for proxy
+        finalUrl = `/products?keyword=${keyword}&pageNumber=${pageNumber}`;
+      } else {
+        // In production, use full URL
+        finalUrl = `${API_BASE_URL.replace(/\/$/, '')}/products?keyword=${keyword}&pageNumber=${pageNumber}`;
       }
 
       const { data } = await axios.get(finalUrl);

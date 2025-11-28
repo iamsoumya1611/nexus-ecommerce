@@ -134,12 +134,16 @@ export const recommendationActions = {
       };
 
       // Construct the URL correctly based on environment
-      let baseUrl = API_BASE_URL;
+      let finalUrl;
       if (process.env.NODE_ENV === 'development') {
-        baseUrl = '';
+        // In development, use relative paths for proxy
+        finalUrl = '/recommendations';
+      } else {
+        // In production, use full URL
+        finalUrl = `${API_BASE_URL.replace(/\/$/, '')}/recommendations`;
       }
 
-      const { data } = await axios.get(`${baseUrl}/recommendations`, config);
+      const { data } = await axios.get(finalUrl, config);
 
       dispatch({
         type: 'RECOMMENDATION_LIST_SUCCESS',
@@ -194,12 +198,16 @@ export const recommendationActions = {
       };
 
       // Construct the URL correctly based on environment
-      let baseUrl = API_BASE_URL;
+      let finalUrl;
       if (process.env.NODE_ENV === 'development') {
-        baseUrl = '';
+        // In development, use relative paths for proxy
+        finalUrl = `/recommendations/category/${category}`;
+      } else {
+        // In production, use full URL
+        finalUrl = `${API_BASE_URL.replace(/\/$/, '')}/recommendations/category/${category}`;
       }
 
-      const { data } = await axios.get(`${baseUrl}/recommendations/category/${category}`, config);
+      const { data } = await axios.get(finalUrl, config);
 
       dispatch({
         type: 'CATEGORY_RECOMMENDATION_SUCCESS',
