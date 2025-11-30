@@ -46,7 +46,7 @@ export const UserProvider = ({ children }) => {
       // Use proxy path in development, full URL in production
       const finalUrl = process.env.NODE_ENV === 'development' 
         ? '/users/login' 
-        : `${API_BASE_URL.replace(/\/$/, '')}/users/login`;
+        : `${API_BASE_URL}/users/login`;
 
       const { data } = await axios.post(
         finalUrl,
@@ -84,7 +84,7 @@ export const UserProvider = ({ children }) => {
       // Use proxy path in development, full URL in production
       const finalUrl = process.env.NODE_ENV === 'development' 
         ? '/users/register' 
-        : `${API_BASE_URL.replace(/\/$/, '')}/users/register`;
+        : `${API_BASE_URL}/users/register`;
 
       const { data } = await axios.post(
         finalUrl,
@@ -132,7 +132,7 @@ export const UserProvider = ({ children }) => {
       // Use proxy path in development, full URL in production
       const finalUrl = process.env.NODE_ENV === 'development' 
         ? '/users/profile' 
-        : `${API_BASE_URL.replace(/\/$/, '')}/users/profile`;
+        : `${API_BASE_URL}/users/profile`;
 
       const { data } = await axios.get(finalUrl, config);
       return { success: true, data };
@@ -163,7 +163,7 @@ export const UserProvider = ({ children }) => {
       // Use proxy path in development, full URL in production
       const finalUrl = process.env.NODE_ENV === 'development' 
         ? '/users/profile' 
-        : `${API_BASE_URL.replace(/\/$/, '')}/users/profile`;
+        : `${API_BASE_URL}/users/profile`;
 
       const { data } = await axios.put(finalUrl, userData, config);
 
@@ -207,7 +207,7 @@ export const UserProvider = ({ children }) => {
       // Use proxy path in development, full URL in production
       const finalUrl = process.env.NODE_ENV === 'development' 
         ? '/users' 
-        : `${API_BASE_URL.replace(/\/$/, '')}/users`;
+        : `${API_BASE_URL}/users`;
 
       const { data } = await axios.get(finalUrl, config);
       return { success: true, data };
@@ -237,7 +237,7 @@ export const UserProvider = ({ children }) => {
       // Use proxy path in development, full URL in production
       const finalUrl = process.env.NODE_ENV === 'development' 
         ? `/users/${id}` 
-        : `${API_BASE_URL.replace(/\/$/, '')}/users/${id}`;
+        : `${API_BASE_URL}/users/${id}`;
 
       const { data } = await axios.get(finalUrl, config);
       return { success: true, data };
@@ -268,7 +268,7 @@ export const UserProvider = ({ children }) => {
       // Use proxy path in development, full URL in production
       const finalUrl = process.env.NODE_ENV === 'development' 
         ? `/users/${userData._id}` 
-        : `${API_BASE_URL.replace(/\/$/, '')}/users/${userData._id}`;
+        : `${API_BASE_URL}/users/${userData._id}`;
 
       const { data } = await axios.put(finalUrl, userData, config);
       toast.success('User updated successfully!');
@@ -299,7 +299,7 @@ export const UserProvider = ({ children }) => {
       // Use proxy path in development, full URL in production
       const finalUrl = process.env.NODE_ENV === 'development' 
         ? `/users/${id}` 
-        : `${API_BASE_URL.replace(/\/$/, '')}/users/${id}`;
+        : `${API_BASE_URL}/users/${id}`;
 
       await axios.delete(finalUrl, config);
       toast.success('User deleted successfully!');
