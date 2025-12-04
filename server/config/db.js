@@ -18,15 +18,24 @@ const logger = winston.createLogger({
 
 const connectDB = async () => {
   try {
-    // Add connection options for production
+    // Log the connection URI (masked for security)
+    logger.info('Attempting MongoDB connection');
+    if (process.env.MONGO_URI) {
+      const uriParts = process.env.MONGO_URI.split('@');
+      if (uriParts.length > 1) {
+        const maskedUri = `mongodb+srv://****:${uriParts[1].substring(0, 20)}...`;
+        logger.info('Connection URI format', { maskedUri });
+      }
+    }
+
+    // Add connection options for production based on MongoDB Atlas requirements
+    // Note: Removed deprecated options that are not supported in newer MongoDB drivers
     const conn = await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      // Additional production options
+      // useNewUrlParser and useUnifiedTopology are no longer needed in Mongoose 6+
+      // Additional production options for MongoDB Atlas
       serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of default 30s
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-      bufferMaxEntries: 0, // Don't buffer operations when disconnected
-      bufferCommands: false, // Disable command buffering
+      maxPoolSize: 10, // Limit connection pool size
     });
 
     logger.info(`MongoDB Connected: ${conn.connection.host}`);
@@ -48,7 +57,20 @@ const connectDB = async () => {
     });
 
   } catch (error) {
-    logger.error('MongoDB Connection Failed:', error.message);
+    logger.error('MongoDB Connection Failed:', { 
+      message: error.message,
+      stack: error.stack
+    });
+    
+    // Log the URI being used (masked for security)
+    if (process.env.MONGO_URI) {
+      logger.error('Connection URI provided', { 
+        length: process.env.MONGO_URI.length 
+      });
+    } else {
+      logger.error('No MONGO_URI provided in environment variables');
+    }
+    
     process.exit(1);
   }
 };

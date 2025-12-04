@@ -13,7 +13,13 @@ const winston = require('winston');
 const redis = require('redis');
 
 // Load environment variables from .env file
-dotenv.config({ path: path.resolve(__dirname, '.env') });
+const envResult = dotenv.config({ path: path.resolve(__dirname, '.env') });
+
+// Check if dotenv loaded successfully
+if (envResult.error) {
+  console.error('❌ Error loading .env file:', envResult.error);
+  process.exit(1);
+}
 
 // Configure Winston logger
 const logger = winston.createLogger({
@@ -47,6 +53,16 @@ logger.info('Environment variables loaded', {
   MONGO_URI_defined: !!process.env.MONGO_URI,
   JWT_SECRET_defined: !!process.env.JWT_SECRET
 });
+
+// Log the actual MONGO_URI (first and last 10 characters for security)
+if (process.env.MONGO_URI) {
+  const uri = process.env.MONGO_URI;
+  logger.info('MongoDB URI format', {
+    start: uri.substring(0, Math.min(10, uri.length)),
+    end: uri.substring(Math.max(0, uri.length - 10), uri.length),
+    length: uri.length
+  });
+}
 
 // Database connection
 const connectDB = require('./config/db');
@@ -234,6 +250,7 @@ process.on('uncaughtException', (err) => {
 // Connect to database and start server
 const startServer = async () => {
   try {
+    logger.info('Attempting to connect to database...');
     await connectDB();
     logger.info('Database connected successfully');
     
@@ -251,7 +268,10 @@ const startServer = async () => {
       logger.info('Server closed');
     });
   } catch (error) {
-    logger.error('Failed to connect to database', { error: error.message });
+    logger.error('Failed to connect to database', { 
+      error: error.message,
+      stack: error.stack
+    });
     process.exit(1);
   }
 };
