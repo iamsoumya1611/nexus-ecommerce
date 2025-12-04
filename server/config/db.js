@@ -6,9 +6,13 @@ const connectDB = async () => {
         
         // Ensure we're connecting to the correct database
         const mongoUri = process.env.MONGO_URI;
+        console.log('MONGO_URI:', mongoUri ? 'Defined' : 'Not defined');
+        
         if (!mongoUri) {
             throw new Error('MONGO_URI is not defined in environment variables');
         }
+        
+        console.log('Connecting to MongoDB with URI:', mongoUri.replace(/:\w+@/, ':***@')); // Hide password in logs
         
         const conn = await mongoose.connect(mongoUri, {
             useNewUrlParser: true,
@@ -21,6 +25,7 @@ const connectDB = async () => {
         return conn;
     } catch (error) {
         console.error(`Error connecting to MongoDB: ${error.message}`);
+        console.error('Stack trace:', error.stack);
         process.exit(1);
     }
 };

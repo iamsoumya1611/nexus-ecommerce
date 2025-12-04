@@ -13,6 +13,12 @@ const compression = require('compression');
 // Load environment variables from .env file
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
+// Log environment variables for debugging (without sensitive data)
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('PORT:', process.env.PORT);
+console.log('MONGO_URI defined:', !!process.env.MONGO_URI);
+console.log('JWT_SECRET defined:', !!process.env.JWT_SECRET);
+
 // Database connection
 const connectDB = require('./config/db');
 
