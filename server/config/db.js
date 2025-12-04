@@ -14,6 +14,14 @@ const connectDB = async () => {
         
         console.log('Connecting to MongoDB with URI:', mongoUri.replace(/:\w+@/, ':***@')); // Hide password in logs
         
+        // Check if the URI contains the database name
+        if (mongoUri.includes('/nexus-ecommerce')) {
+            console.log('URI correctly targets nexus-ecommerce database');
+        } else {
+            console.log('WARNING: URI does not target nexus-ecommerce database');
+            console.log('Full URI:', mongoUri);
+        }
+        
         const conn = await mongoose.connect(mongoUri, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
