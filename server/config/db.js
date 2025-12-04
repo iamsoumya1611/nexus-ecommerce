@@ -15,14 +15,26 @@ const connectDB = async () => {
         console.log('Connecting to MongoDB with URI:', mongoUri.replace(/:\w+@/, ':***@')); // Hide password in logs
         
         // Check if the URI contains the database name
+        let finalMongoUri = mongoUri;
         if (mongoUri.includes('/nexus-ecommerce')) {
             console.log('URI correctly targets nexus-ecommerce database');
         } else {
             console.log('WARNING: URI does not target nexus-ecommerce database');
             console.log('Full URI:', mongoUri);
+            
+            // Fix the URI by appending the database name if missing
+            if (mongoUri.endsWith('.net/') || mongoUri.includes('.net?')) {
+                // Remove any trailing slash or query parameters and append database name
+                finalMongoUri = mongoUri.replace(/\.net\/?\??[^/]*$/, '.net/nexus-ecommerce');
+                console.log('Fixed URI:', finalMongoUri);
+            } else if (mongoUri.endsWith('.net')) {
+                // Append database name directly
+                finalMongoUri = mongoUri + '/nexus-ecommerce';
+                console.log('Fixed URI:', finalMongoUri);
+            }
         }
         
-        const conn = await mongoose.connect(mongoUri, {
+        const conn = await mongoose.connect(finalMongoUri, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
             serverSelectionTimeoutMS: 5000,
