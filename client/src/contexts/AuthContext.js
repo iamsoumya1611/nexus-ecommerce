@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const AuthContext = createContext(null);
 
@@ -42,10 +43,12 @@ export const AuthProvider = ({ children }) => {
             
             setUser(data);
             localStorage.setItem('user', JSON.stringify(data));
+            toast.success('Login successful');
             return { success: true };
         } catch (err) {
             const errorMessage = err.response?.data?.message || err.message || 'Login failed';
             setError(errorMessage);
+            toast.error(errorMessage);
             return { success: false, error: errorMessage };
         } finally {
             setLoading(false);
@@ -72,10 +75,12 @@ export const AuthProvider = ({ children }) => {
             
             setUser(data);
             localStorage.setItem('user', JSON.stringify(data));
+            toast.success('Registration successful');
             return { success: true };
         } catch (err) {
             const errorMessage = err.response?.data?.message || err.message || 'Registration failed';
             setError(errorMessage);
+            toast.error(errorMessage);
             return { success: false, error: errorMessage };
         } finally {
             setLoading(false);
@@ -85,11 +90,13 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         setUser(null);
         localStorage.removeItem('user');
+        toast.success('Logout successful');
     };
 
     const getUserProfile = async () => {
         try {
             if (!user || !user.token) {
+                toast.error('Not authenticated');
                 return { success: false, error: 'Not authenticated' };
             }
             
@@ -117,6 +124,7 @@ export const AuthProvider = ({ children }) => {
             return { success: true, data };
         } catch (err) {
             const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch profile';
+            toast.error(errorMessage);
             setError(errorMessage);
             return { success: false, error: errorMessage };
         } finally {
@@ -155,6 +163,7 @@ export const AuthProvider = ({ children }) => {
             return { success: true, data };
         } catch (err) {
             const errorMessage = err.response?.data?.message || err.message || 'Failed to update profile';
+            toast.error(errorMessage);
             setError(errorMessage);
             return { success: false, error: errorMessage };
         } finally {
