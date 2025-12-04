@@ -8,7 +8,7 @@ const UserList = () => {
   const { userList: adminUserList } = adminState;
   const { loading, error, users } = adminUserList;
 
-  const { state: userDeleteState, dispatch: userDeleteDispatch } = useAdmin();
+  const { state: userDeleteState } = useAdmin();
   const { userDelete } = userDeleteState;
   const { success: successDelete } = userDelete;
 

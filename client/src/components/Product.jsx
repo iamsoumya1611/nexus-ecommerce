@@ -44,47 +44,6 @@ const Product = ({ product }) => {
     );
   };
 
-  // Get product specifications based on category
-  const getSpecifications = () => {
-    // Initialize empty array for specifications
-    const specs = [];
-    
-    // Return empty array if no category
-    if (!product.category) return specs;
-    
-    // Add specifications based on product category
-    if (product.category === 'Electronics') {
-      if (product.brand) specs.push({ label: 'Brand', value: product.brand });
-      if (product.model) specs.push({ label: 'Model', value: product.model });
-      if (product.storage) specs.push({ label: 'Storage', value: product.storage });
-      if (product.color) specs.push({ label: 'Color', value: product.color });
-      if (product.screenSize) specs.push({ label: 'Screen Size', value: product.screenSize });
-    } else if (product.category === 'Fashion') {
-      if (product.brand) specs.push({ label: 'Brand', value: product.brand });
-      if (product.size) specs.push({ label: 'Size', value: product.size });
-      if (product.material) specs.push({ label: 'Material', value: product.material });
-      if (product.color) specs.push({ label: 'Color', value: product.color });
-      if (product.gender) specs.push({ label: 'Gender', value: product.gender });
-    } else if (product.category === 'Books') {
-      if (product.author) specs.push({ label: 'Author', value: product.author });
-      if (product.publisher) specs.push({ label: 'Publisher', value: product.publisher });
-      if (product.pages) specs.push({ label: 'Pages', value: product.pages });
-    } else if (product.category === 'Home & Kitchen') {
-      if (product.brand) specs.push({ label: 'Brand', value: product.brand });
-      if (product.material) specs.push({ label: 'Material', value: product.material });
-      if (product.weight) specs.push({ label: 'Weight', value: product.weight });
-      if (product.dimensions) specs.push({ label: 'Dimensions', value: product.dimensions });
-    } else if (product.category === 'Sports') {
-      if (product.brand) specs.push({ label: 'Brand', value: product.brand });
-      if (product.gender) specs.push({ label: 'Gender', value: product.gender });
-    } else if (product.category === 'Beauty') {
-      if (product.brand) specs.push({ label: 'Brand', value: product.brand });
-      if (product.gender) specs.push({ label: 'Gender', value: product.gender });
-    }
-    
-    return specs;
-  };
-
   return (
     // Product card container with hover effects
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
