@@ -2,282 +2,205 @@ const Product = require('../models/Product');
 const User = require('../models/User');
 const Order = require('../models/Order');
 const asyncHandler = require('express-async-handler');
+const { getContentBasedRecommendations, getUserContentBasedRecommendations } = require('../recommender/contentBasedRecommender');
+const { getCollaborativeRecommendations, getPopularProducts } = require('../recommender/collaborativeRecommender');
 const geminiModel = require('../config/gemini');
 const mongoose = require('mongoose');
 
-// @desc    Get AI-powered product recommendations based on user's purchase history
-// @route   GET /api/recommendations
-// @access  Private
-const getRecommendations = asyncHandler(async (req, res) => {
+// Simple in-memory cache for recommendations
+const recommendationCache = new Map();
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+
+// @desc    Get AI-powered product recommendations based on a specific product
+// @route   GET /api/recommendations/:productId
+// @access  Public
+const getProductRecommendations = asyncHandler(async (req, res) => {
   try {
+    const { productId } = req.params;
     
-    // Check if we have a database connection
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ 
-        message: 'Database connection error. Please try again later.',
-        readyState: mongoose.connection.readyState,
-        timestamp: new Date().toISOString()
-      });
+    // Validate product ID
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ message: 'Invalid product ID' });
     }
     
-    // Get user's purchase history
-    const userOrders = await Order.find({ user: req.user._id }).populate({
-      path: 'orderItems.product',
-      select: 'name category description price rating'
-    });
+    // Check cache first
+    const cacheKey = `product_${productId}`;
+    const cachedResult = recommendationCache.get(cacheKey);
+    if (cachedResult && Date.now() - cachedResult.timestamp < CACHE_DURATION) {
+      return res.json(cachedResult.data);
+    }
     
-    // Extract purchased product categories and details
-    const purchasedCategories = [];
-    const purchasedProducts = [];
-    const purchasedProductIds = [];
+    // Get content-based recommendations
+    const contentRecommendations = await getContentBasedRecommendations(productId, 5);
     
-    userOrders.forEach(order => {
-      order.orderItems.forEach(item => {
-        if (item.product) {
-          purchasedProducts.push({
-            name: item.product.name,
-            category: item.product.category,
-            description: item.product.description,
-            price: item.product.price,
-            rating: item.product.rating
-          });
-          
-          // Collect product IDs for exclusion from recommendations
-          purchasedProductIds.push(item.product._id);
-          
-          if (!purchasedCategories.includes(item.product.category)) {
-            purchasedCategories.push(item.product.category);
-          }
-        }
-      });
-    });
+    // Get collaborative recommendations if user is logged in
+    let collaborativeRecommendations = [];
+    if (req.user) {
+      collaborativeRecommendations = await getCollaborativeRecommendations(req.user._id, 5);
+    }
     
-    let recommendations = [];
+    // Combine recommendations
+    let recommendations = [...contentRecommendations];
     
-    if (purchasedProducts.length > 0) {
-      // Use AI to generate personalized recommendations
-      try {
-        const prompt = `
-          Based on the user's purchase history, recommend 8-10 products they might like.
-          User has purchased products in these categories: ${purchasedCategories.join(', ')}
-          
-          User's purchased products:
-          ${purchasedProducts.map(product => `- ${product.name} (${product.category}): ${product.description}`).join('\n')}
-          
-          Please recommend similar products from our catalog that match the user's interests.
-          Respond ONLY with a JSON array of product IDs that exist in our database.
-          Do not include any explanations or markdown formatting.
-        `;
-        
-        const result = await geminiModel.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
-        
-        // Parse the AI response to extract product IDs
-        let aiRecommendedIds = [];
-        try {
-          aiRecommendedIds = JSON.parse(text);
-        } catch (parseError) {
-          // Fallback to category-based recommendations
-          const categoryRecommendations = await Product.find({ 
-            category: { $in: purchasedCategories },
-            _id: { $nin: purchasedProductIds }
-          })
-          .sort({ rating: -1 })
-          .limit(10);
-          
-          recommendations = categoryRecommendations;
-        }
-        
-        if (Array.isArray(aiRecommendedIds) && aiRecommendedIds.length > 0) {
-          // Fetch the recommended products by IDs
-          recommendations = await Product.find({
-            _id: { $in: aiRecommendedIds },
-            _id: { $nin: purchasedProductIds }
-          }).limit(10);
-        } else if (recommendations.length === 0) {
-          // Fallback to category-based recommendations
-          recommendations = await Product.find({ 
-            category: { $in: purchasedCategories },
-            _id: { $nin: purchasedProductIds }
-          })
-          .sort({ rating: -1 })
-          .limit(10);
-        }
-      } catch (aiError) {
-        // Fallback to category-based recommendations
-        recommendations = await Product.find({ 
-          category: { $in: purchasedCategories },
-          _id: { $nin: purchasedProductIds }
-        })
-        .sort({ rating: -1 })
-        .limit(10);
+    // Add collaborative recommendations, avoiding duplicates
+    collaborativeRecommendations.forEach(collabProduct => {
+      if (!recommendations.some(rec => rec._id.toString() === collabProduct._id.toString())) {
+        recommendations.push(collabProduct);
       }
-    } else {
-      // For new users with no purchase history, recommend popular products
-      recommendations = await Product.find({})
-        .sort({ rating: -1, numReviews: -1 })
-        .limit(10);
-    }
+    });
+    
+    // Limit to 10 recommendations
+    recommendations = recommendations.slice(0, 10);
+    
+    // Cache the result
+    recommendationCache.set(cacheKey, {
+      data: recommendations,
+      timestamp: Date.now()
+    });
     
     res.json(recommendations);
   } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch product recommendations', error: error.message });
+  }
+});
+
+// @desc    Get personalized recommendations for a user
+// @route   GET /api/recommendations/user/:userId
+// @access  Private
+const getUserRecommendations = asyncHandler(async (req, res) => {
+  try {
+    const { userId } = req.params;
     
-    // Handle database connection errors specifically
-    if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
-      return res.status(503).json({ 
-        message: 'Database connection error. Please try again later.',
-        error: process.env.NODE_ENV !== 'production' ? error.message : undefined
-      });
+    // Validate user ID
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
     }
     
-    // Return a more detailed error response in development
-    if (process.env.NODE_ENV !== 'production') {
-      return res.status(500).json({ 
-        message: 'Internal server error while fetching recommendations',
-        error: error.message,
-        stack: error.stack
-      });
+    // Check if user is authorized to get recommendations for this user
+    if (req.user._id.toString() !== userId && !req.user.isAdmin) {
+      return res.status(403).json({ message: 'Not authorized to access these recommendations' });
     }
     
-    // Return a generic error in production
-    return res.status(500).json({ message: 'Internal server error while fetching recommendations' });
+    // Check cache first
+    const cacheKey = `user_${userId}`;
+    const cachedResult = recommendationCache.get(cacheKey);
+    if (cachedResult && Date.now() - cachedResult.timestamp < CACHE_DURATION) {
+      return res.json(cachedResult.data);
+    }
+    
+    // Get collaborative recommendations
+    const collaborativeRecommendations = await getCollaborativeRecommendations(userId, 8);
+    
+    // Get user's recent activity for content-based recommendations
+    const userOrders = await Order.find({ user: userId }).populate('orderItems.product');
+    
+    // Extract user preferences from order history
+    const userPreferences = extractUserPreferences(userOrders);
+    
+    // Get content-based recommendations
+    const contentRecommendations = await getUserContentBasedRecommendations(userPreferences, 8);
+    
+    // Combine recommendations
+    let recommendations = [...collaborativeRecommendations];
+    
+    // Add content-based recommendations, avoiding duplicates
+    contentRecommendations.forEach(contentProduct => {
+      if (!recommendations.some(rec => rec._id.toString() === contentProduct._id.toString())) {
+        recommendations.push(contentProduct);
+      }
+    });
+    
+    // Limit to 10 recommendations
+    recommendations = recommendations.slice(0, 10);
+    
+    // Cache the result
+    recommendationCache.set(cacheKey, {
+      data: recommendations,
+      timestamp: Date.now()
+    });
+    
+    res.json(recommendations);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch user recommendations', error: error.message });
   }
 });
 
 // @desc    Get popular products for non-logged-in users
-// @route   GET /api/recommendations/category/popular
+// @route   GET /api/recommendations/popular
 // @access  Public
-const getPopularProducts = asyncHandler(async (req, res) => {
+const getPopularRecommendations = asyncHandler(async (req, res) => {
   try {
-    
-    // Check if we have a database connection
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ 
-        message: 'Database connection error. Please try again later.',
-        readyState: mongoose.connection.readyState,
-        timestamp: new Date().toISOString()
-      });
+    // Check cache first
+    const cacheKey = 'popular';
+    const cachedResult = recommendationCache.get(cacheKey);
+    if (cachedResult && Date.now() - cachedResult.timestamp < CACHE_DURATION) {
+      return res.json(cachedResult.data);
     }
     
-    // Get popular products based on ratings and number of reviews
-    const popularProducts = await Product.find({})
-      .sort({ rating: -1, numReviews: -1 })
-      .limit(10);
-  
+    // Get popular products
+    const popularProducts = await getPopularProducts(10);
+    
+    // Cache the result
+    recommendationCache.set(cacheKey, {
+      data: popularProducts,
+      timestamp: Date.now()
+    });
+    
     res.json(popularProducts);
   } catch (error) {
-    
-    // Handle database connection errors specifically
-    if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
-      return res.status(503).json({ 
-        message: 'Database connection error. Please try again later.',
-        error: process.env.NODE_ENV !== 'production' ? error.message : undefined
-      });
-    }
-    
-    // Return a more detailed error response in development
-    if (process.env.NODE_ENV !== 'production') {
-      return res.status(500).json({ 
-        message: 'Internal server error while fetching popular products',
-        error: error.message,
-        stack: error.stack
-      });
-    }
-    
-    // Return a generic error in production
-    return res.status(500).json({ message: 'Internal server error while fetching popular products' });
+    res.status(500).json({ message: 'Failed to fetch popular recommendations', error: error.message });
   }
 });
 
-// @desc    Get AI-powered recommendations by category
-// @route   GET /api/recommendations/category/:category
-// @access  Public
-const getRecommendationsByCategory = asyncHandler(async (req, res) => {
-  try {
-    const category = req.params.category;
-    
-    // Check if we have a database connection
-    if (mongoose.connection.readyState !== 1) {
-      return res.status(503).json({ 
-        message: 'Database connection error. Please try again later.',
-        readyState: mongoose.connection.readyState,
-        timestamp: new Date().toISOString()
-      });
-    }
-    
-    // Get products in the specified category
-    const categoryProducts = await Product.find({ category })
-      .sort({ rating: -1 })
-      .limit(20);
-    
-    if (categoryProducts.length === 0) {
-      return res.json([]);
-    }
-    
-    // Use AI to select the most relevant products
-    try {
-      const prompt = `
-        From the following list of products in the ${category} category, 
-        select the 8-10 most appealing and diverse products to recommend.
-        
-        Products:
-        ${categoryProducts.map((p, index) => `${index + 1}. ${p.name}: ${p.description} (Rating: ${p.rating})`).join('\n')}
-        
-        Please respond ONLY with a JSON array of the indices (1-based) of the selected products.
-        Do not include any explanations or markdown formatting.
-      `;
-      
-      const result = await geminiModel.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-      
-      // Parse the AI response to extract indices
-      let selectedIndices = [];
-      try {
-        selectedIndices = JSON.parse(text);
-      } catch (parseError) {
-        // Fallback to top-rated products
-        return res.json(categoryProducts.slice(0, 10));
-      }
-      
-      // Map indices to products
-      const selectedProducts = selectedIndices
-        .filter(index => index >= 1 && index <= categoryProducts.length)
-        .map(index => categoryProducts[index - 1])
-        .slice(0, 10);
-    
-      res.json(selectedProducts);
-    } catch (aiError) {
-      // Fallback to top-rated products
-      res.json(categoryProducts.slice(0, 10));
-    }
-  } catch (error) {
-    
-    // Handle database connection errors specifically
-    if (error.name === 'MongoNetworkError' || error.name === 'MongooseServerSelectionError') {
-      return res.status(503).json({ 
-        message: 'Database connection error. Please try again later.',
-        error: process.env.NODE_ENV !== 'production' ? error.message : undefined
-      });
-    }
-    
-    // Return a more detailed error response in development
-    if (process.env.NODE_ENV !== 'production') {
-      return res.status(500).json({ 
-        message: 'Internal server error while fetching category recommendations',
-        error: error.message,
-        stack: error.stack
-      });
-    }
-    
-    // Return a generic error in production
-    return res.status(500).json({ message: 'Internal server error while fetching category recommendations' });
+// Extract user preferences from order history
+const extractUserPreferences = (userOrders) => {
+  const preferences = {
+    categories: [],
+    brands: [],
+    priceRange: { min: 0, max: 0 }
+  };
+  
+  if (!userOrders || userOrders.length === 0) {
+    return preferences;
   }
-});
+  
+  const categories = [];
+  const brands = [];
+  const prices = [];
+  
+  userOrders.forEach(order => {
+    order.orderItems.forEach(item => {
+      if (item.product) {
+        categories.push(item.product.category);
+        brands.push(item.product.brand);
+        prices.push(item.product.price);
+      }
+    });
+  });
+  
+  // Get unique categories and brands
+  preferences.categories = [...new Set(categories)];
+  preferences.brands = [...new Set(brands)];
+  
+  // Calculate price range
+  if (prices.length > 0) {
+    preferences.priceRange = {
+      min: Math.min(...prices),
+      max: Math.max(...prices)
+    };
+  }
+  
+  return preferences;
+};
+
+// Clear recommendation cache
+const clearRecommendationCache = () => {
+  recommendationCache.clear();
+};
 
 module.exports = {
-  getRecommendations,
-  getPopularProducts,
-  getRecommendationsByCategory
+  getProductRecommendations,
+  getUserRecommendations,
+  getPopularRecommendations,
+  clearRecommendationCache
 };

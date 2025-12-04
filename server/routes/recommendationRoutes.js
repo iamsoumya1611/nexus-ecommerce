@@ -1,19 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const {
-  getRecommendations,
-  getPopularProducts,
-  getRecommendationsByCategory
+  getProductRecommendations,
+  getUserRecommendations,
+  getPopularRecommendations
 } = require('../controllers/recommendationController');
 const { protect } = require('../middleware/authMiddleware');
 
-router.route('/')
-  .get(protect, getRecommendations);
+// Public routes
+router.route('/popular')
+  .get(getPopularRecommendations);
 
-router.route('/category/popular')
-  .get(getPopularProducts);
+router.route('/:productId')
+  .get(getProductRecommendations);
 
-router.route('/category/:category')
-  .get(getRecommendationsByCategory);
+// Protected routes
+router.route('/user/:userId')
+  .get(protect, getUserRecommendations);
 
 module.exports = router;

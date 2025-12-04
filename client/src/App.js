@@ -30,6 +30,7 @@ import ProductList from './screens/admin/ProductList';
 import ProductEdit from './screens/admin/ProductEdit';
 import ProductCreate from './screens/admin/ProductCreate';
 import OrderList from './screens/admin/OrderList';
+import Dashboard from './screens/admin/Dashboard';
 
 // Components
 import Navbar from './components/Navbar';
@@ -65,6 +66,7 @@ function App() {
                         <Route path="/order/:id" element={<Order />} />
                         
                         {/* Admin Routes */}
+                        <Route path="/admin/dashboard" element={<Dashboard />} />
                         <Route path="/admin/userlist" element={<UserList />} />
                         <Route path="/admin/user/:id/edit" element={<UserEdit />} />
                         <Route path="/admin/productlist" element={<ProductList />} />

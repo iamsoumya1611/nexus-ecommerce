@@ -45,6 +45,21 @@ const initialOrderDeliverState = {
   error: null
 };
 
+const initialDashboardStatsState = {
+  stats: null,
+  recentOrders: [],
+  categorySales: [],
+  salesTrend: [],
+  loading: false,
+  error: null
+};
+
+const initialLowStockProductsState = {
+  products: [],
+  loading: false,
+  error: null
+};
+
 // Admin reducer
 const adminReducer = (state, action) => {
   switch (action.type) {
@@ -261,6 +276,68 @@ const adminReducer = (state, action) => {
         }
       };
     
+    // Dashboard stats actions
+    case 'DASHBOARD_STATS_REQUEST':
+      return {
+        ...state,
+        dashboardStats: {
+          ...state.dashboardStats,
+          loading: true,
+          error: null
+        }
+      };
+    
+    case 'DASHBOARD_STATS_SUCCESS':
+      return {
+        ...state,
+        dashboardStats: {
+          ...state.dashboardStats,
+          loading: false,
+          ...action.payload
+        }
+      };
+    
+    case 'DASHBOARD_STATS_FAIL':
+      return {
+        ...state,
+        dashboardStats: {
+          ...state.dashboardStats,
+          loading: false,
+          error: action.payload
+        }
+      };
+    
+    // Low stock products actions
+    case 'LOW_STOCK_PRODUCTS_REQUEST':
+      return {
+        ...state,
+        lowStockProducts: {
+          ...state.lowStockProducts,
+          loading: true,
+          error: null
+        }
+      };
+    
+    case 'LOW_STOCK_PRODUCTS_SUCCESS':
+      return {
+        ...state,
+        lowStockProducts: {
+          ...state.lowStockProducts,
+          loading: false,
+          products: action.payload
+        }
+      };
+    
+    case 'LOW_STOCK_PRODUCTS_FAIL':
+      return {
+        ...state,
+        lowStockProducts: {
+          ...state.lowStockProducts,
+          loading: false,
+          error: action.payload
+        }
+      };
+    
     default:
       return state;
   }
@@ -277,7 +354,9 @@ export const AdminProvider = ({ children }) => {
     userDelete: initialUserDeleteState,
     userUpdate: initialUserUpdateAdminState,
     orderList: initialAdminOrderListState,
-    orderDeliver: initialOrderDeliverState
+    orderDeliver: initialOrderDeliverState,
+    dashboardStats: initialDashboardStatsState,
+    lowStockProducts: initialLowStockProductsState
   });
   
   return (
@@ -570,5 +649,85 @@ export const adminActions = {
   // Reset order deliver state
   resetOrderDeliver: () => (dispatch) => {
     dispatch({ type: 'ORDER_DELIVER_RESET' });
+  },
+
+  // Get dashboard statistics
+  getDashboardStats: () => async (dispatch) => {
+    try {
+      dispatch({ type: 'DASHBOARD_STATS_REQUEST' });
+
+      // Get user info from localStorage
+      const userInfoFromStorage = localStorage.getItem('userInfo')
+        ? JSON.parse(localStorage.getItem('userInfo'))
+        : null;
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${userInfoFromStorage?.token}`
+        },
+        withCredentials: true
+      };
+
+      // Construct the URL correctly based on environment
+      let baseUrl = API_BASE_URL;
+      if (process.env.NODE_ENV === 'development') {
+        baseUrl = '';
+      }
+
+      const { data } = await axios.get(`${baseUrl}/admin/stats`, config);
+
+      dispatch({
+        type: 'DASHBOARD_STATS_SUCCESS',
+        payload: data
+      });
+    } catch (error) {
+      dispatch({
+        type: 'DASHBOARD_STATS_FAIL',
+        payload:
+          error.response && error.response.data.message
+            ? error.response.data.message
+            : error.message
+      });
+    }
+  },
+
+  // Get low stock products
+  getLowStockProducts: () => async (dispatch) => {
+    try {
+      dispatch({ type: 'LOW_STOCK_PRODUCTS_REQUEST' });
+
+      // Get user info from localStorage
+      const userInfoFromStorage = localStorage.getItem('userInfo')
+        ? JSON.parse(localStorage.getItem('userInfo'))
+        : null;
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${userInfoFromStorage?.token}`
+        },
+        withCredentials: true
+      };
+
+      // Construct the URL correctly based on environment
+      let baseUrl = API_BASE_URL;
+      if (process.env.NODE_ENV === 'development') {
+        baseUrl = '';
+      }
+
+      const { data } = await axios.get(`${baseUrl}/admin/low-stock`, config);
+
+      dispatch({
+        type: 'LOW_STOCK_PRODUCTS_SUCCESS',
+        payload: data
+      });
+    } catch (error) {
+      dispatch({
+        type: 'LOW_STOCK_PRODUCTS_FAIL',
+        payload:
+          error.response && error.response.data.message
+            ? error.response.data.message
+            : error.message
+      });
+    }
   }
 };

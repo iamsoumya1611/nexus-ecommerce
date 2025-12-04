@@ -9,7 +9,7 @@ const sampleProducts = [
     storage: '256GB',
     color: 'Phantom Black',
     screenSize: '6.8 inches',
-    image: '/images/samsung-galaxy-s23-ultra.jpg',
+    image: 'https://rukminim1.flixcart.com/image/416/416/xif0q/mobile/q/r/t/-original-imagmg6gz3bs7vhe.jpeg?q=70',
     countInStock: 15,
     rating: 4.8,
     numReviews: 124
@@ -24,7 +24,7 @@ const sampleProducts = [
     storage: '128GB',
     color: 'Deep Purple',
     screenSize: '6.7 inches',
-    image: '/images/iphone-14-pro-max.jpg',
+    image: 'https://rukminim1.flixcart.com/image/416/416/xif0q/mobile/q/s/r/-original-imaghx9qudmydgc4.jpeg?q=70',
     countInStock: 8,
     rating: 4.7,
     numReviews: 98
@@ -39,7 +39,7 @@ const sampleProducts = [
     material: 'Cotton',
     color: 'Black',
     gender: 'Men',
-    image: '/images/nike-tshirt.jpg',
+    image: 'https://rukminim1.flixcart.com/image/832/832/xif0q/t-shirt/s/t/a/l-uc-003-u-s-polo-assn-original-imagr3gtggg5zxza.jpeg?q=70',
     countInStock: 50,
     rating: 4.3,
     numReviews: 42
@@ -54,7 +54,7 @@ const sampleProducts = [
     material: 'Mesh',
     color: 'White',
     gender: 'Women',
-    image: '/images/adidas-running-shoes.jpg',
+    image: 'https://rukminim1.flixcart.com/image/832/832/xif0q/shoe/f/g/u/7-mrj1697-7-metro-white-original-imags2wr7cfxghja.jpeg?q=70',
     countInStock: 25,
     rating: 4.6,
     numReviews: 67
@@ -68,7 +68,7 @@ const sampleProducts = [
     author: 'F. Scott Fitzgerald',
     publisher: 'Scribner',
     pages: 180,
-    image: '/images/the-great-gatsby.jpg',
+    image: 'https://rukminim1.flixcart.com/image/416/416/kmmcrrk0/book/i/0/g/the-great-gatsby-original-imagfgxfvhggyzzv.jpeg?q=70',
     countInStock: 100,
     rating: 4.2,
     numReviews: 89
@@ -81,7 +81,7 @@ const sampleProducts = [
     brand: 'Philips',
     weight: '2.5 kg',
     dimensions: '20 x 20 x 40 cm',
-    image: '/images/kitchen-blender.jpg',
+    image: 'https://rukminim1.flixcart.com/image/416/416/kzsqykw0/blender/hrb-rj-009-original-imagbhyhzgpfhfqq.jpeg?q=70',
     countInStock: 30,
     rating: 4.1,
     numReviews: 34

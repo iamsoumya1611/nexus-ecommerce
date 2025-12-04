@@ -132,7 +132,7 @@ export const usePayment = () => {
 
 // Action creators
 export const paymentActions = {
-  // Process payment
+  // Process payment (create Razorpay order)
   processPayment: (paymentData) => async (dispatch) => {
     try {
       dispatch({ type: 'PAYMENT_PROCESS_REQUEST' });
@@ -156,14 +156,15 @@ export const paymentActions = {
         baseUrl = '';
       }
 
-      const { data } = await axios.post(`${baseUrl}/payment/process`, paymentData, config);
+      // Updated endpoint to match backend
+      const { data } = await axios.post(`${baseUrl}/payment/order`, paymentData, config);
 
       dispatch({
         type: 'PAYMENT_PROCESS_SUCCESS',
         payload: data
       });
 
-      toast.success('Payment processed successfully!');
+      toast.success('Payment order created successfully!');
       return data;
     } catch (error) {
       dispatch({
@@ -177,7 +178,7 @@ export const paymentActions = {
       toast.error(
         error.response && error.response.data.message
           ? error.response.data.message
-          : 'Failed to process payment'
+          : 'Failed to create payment order'
       );
       
       throw error;
@@ -185,7 +186,7 @@ export const paymentActions = {
   },
 
   // Verify payment
-  verifyPayment: (paymentId, orderId) => async (dispatch) => {
+  verifyPayment: (verificationData) => async (dispatch) => {
     try {
       dispatch({ type: 'PAYMENT_VERIFY_REQUEST' });
 
@@ -196,6 +197,7 @@ export const paymentActions = {
 
       const config = {
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${userInfoFromStorage?.token}`
         },
         withCredentials: true
@@ -207,7 +209,8 @@ export const paymentActions = {
         baseUrl = '';
       }
 
-      const { data } = await axios.post(`${baseUrl}/payment/verify`, { paymentId, orderId }, config);
+      // Updated endpoint to match backend
+      const { data } = await axios.post(`${baseUrl}/payment/verify`, verificationData, config);
 
       dispatch({
         type: 'PAYMENT_VERIFY_SUCCESS',
@@ -230,6 +233,51 @@ export const paymentActions = {
           ? error.response.data.message
           : 'Failed to verify payment'
       );
+      
+      throw error;
+    }
+  },
+
+  // Get payment details
+  getPaymentDetails: (paymentId) => async (dispatch) => {
+    try {
+      dispatch({ type: 'PAYMENT_PROCESS_REQUEST' });
+
+      // Get user info from localStorage
+      const userInfoFromStorage = localStorage.getItem('userInfo')
+        ? JSON.parse(localStorage.getItem('userInfo'))
+        : null;
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${userInfoFromStorage?.token}`
+        },
+        withCredentials: true
+      };
+
+      // Construct the URL correctly based on environment
+      let baseUrl = API_BASE_URL;
+      if (process.env.NODE_ENV === 'development') {
+        baseUrl = '';
+      }
+
+      // Updated endpoint to match backend
+      const { data } = await axios.get(`${baseUrl}/payment/${paymentId}`, config);
+
+      dispatch({
+        type: 'PAYMENT_PROCESS_SUCCESS',
+        payload: data
+      });
+
+      return data;
+    } catch (error) {
+      dispatch({
+        type: 'PAYMENT_PROCESS_FAIL',
+        payload:
+          error.response && error.response.data.message
+            ? error.response.data.message
+            : error.message
+      });
       
       throw error;
     }

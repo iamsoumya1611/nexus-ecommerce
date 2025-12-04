@@ -1,19 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const {
-  processPayment,
+  createOrder,
   verifyPayment,
-  sendRazorpayApi
+  getPaymentDetails
 } = require('../controllers/paymentController');
 const { protect } = require('../middleware/authMiddleware');
 
-router.route('/process')
-  .post(protect, processPayment);
+router.route('/order')
+  .post(protect, createOrder);
 
 router.route('/verify')
   .post(protect, verifyPayment);
 
-router.route('/config')
-  .get(sendRazorpayApi);
+router.route('/:paymentId')
+  .get(protect, getPaymentDetails);
 
 module.exports = router;

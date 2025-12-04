@@ -1,49 +1,93 @@
-const razorpay = require('../config/razorpay');
 const asyncHandler = require('express-async-handler');
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
 
-// @desc    Process payment
-// @route   POST /api/payment/process
+// Initialize Razorpay instance only if credentials are available
+let razorpay = null;
+if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+  razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET
+  });
+} else {
+  console.warn('Razorpay credentials not found. Payment functionality will be disabled.');
+}
+
+// Helper function to check if Razorpay is configured
+const isRazorpayConfigured = () => {
+  return razorpay !== null;
+};
+
+// @desc    Create a Razorpay order
+// @route   POST /payment/order
 // @access  Private
-const processPayment = asyncHandler(async (req, res) => {
+const createOrder = asyncHandler(async (req, res) => {
+  // Check if Razorpay is configured
+  if (!isRazorpayConfigured()) {
+    return res.status(503).json({ 
+      success: false, 
+      message: 'Payment service is not configured' 
+    });
+  }
+  
   try {
-    const { amount, currency, receipt } = req.body;
-
-    // Create order
+    const { amount, currency = 'INR', receipt } = req.body;
+    
+    // Validate amount
+    if (!amount || amount <= 0) {
+      res.status(400);
+      throw new Error('Invalid amount');
+    }
+    
+    // Create order options
     const options = {
-      amount: amount * 100, // Convert to paise
-      currency: currency || 'INR',
-      receipt: receipt || 'order_receipt'
+      amount: amount * 100, // Razorpay expects amount in paise
+      currency,
+      receipt: receipt || `receipt_${Date.now()}`,
+      payment_capture: 1 // Auto-capture payment
     };
-
+    
+    // Create order
     const order = await razorpay.orders.create(options);
-
+    
     res.json({
       success: true,
       order
     });
   } catch (error) {
-    res.status(500);
-    throw new Error('Payment processing failed');
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to create order', 
+      error: error.message 
+    });
   }
 });
 
-// @desc    Verify payment
-// @route   POST /api/payment/verify
+// @desc    Verify Razorpay payment
+// @route   POST /payment/verify
 // @access  Private
 const verifyPayment = asyncHandler(async (req, res) => {
+  // Check if Razorpay is configured
+  if (!isRazorpayConfigured()) {
+    return res.status(503).json({ 
+      success: false, 
+      message: 'Payment service is not configured' 
+    });
+  }
+  
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
     
-    // Verify payment signature
-    const crypto = require('crypto');
+    // Create expected signature
     const expectedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-      .update(razorpay_order_id + '|' + razorpay_payment_id)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
     
-    const isAuthentic = expectedSignature === razorpay_signature;
+    // Verify signature
+    const isVerified = expectedSignature === razorpay_signature;
     
-    if (isAuthentic) {
+    if (isVerified) {
       res.json({
         success: true,
         message: 'Payment verified successfully'
@@ -53,22 +97,47 @@ const verifyPayment = asyncHandler(async (req, res) => {
       throw new Error('Invalid payment signature');
     }
   } catch (error) {
-    res.status(500);
-    throw new Error('Payment verification failed');
+    res.status(400).json({ 
+      success: false, 
+      message: 'Payment verification failed', 
+      error: error.message 
+    });
   }
 });
 
-// @desc    Send Razorpay API Key
-// @route   GET /api/payment/config
-// @access  Public
-const sendRazorpayApi = asyncHandler(async (req, res) => {
-  res.status(200).json({
-    razorpayKeyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_your_key_id'
-  });
+// @desc    Get payment details
+// @route   GET /payment/:paymentId
+// @access  Private
+const getPaymentDetails = asyncHandler(async (req, res) => {
+  // Check if Razorpay is configured
+  if (!isRazorpayConfigured()) {
+    return res.status(503).json({ 
+      success: false, 
+      message: 'Payment service is not configured' 
+    });
+  }
+  
+  try {
+    const { paymentId } = req.params;
+    
+    // Fetch payment details from Razorpay
+    const payment = await razorpay.payments.fetch(paymentId);
+    
+    res.json({
+      success: true,
+      payment
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch payment details', 
+      error: error.message 
+    });
+  }
 });
 
 module.exports = {
-  processPayment,
+  createOrder,
   verifyPayment,
-  sendRazorpayApi
+  getPaymentDetails
 };

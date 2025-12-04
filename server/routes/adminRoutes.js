@@ -1,23 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const {
-  getProducts,
   getUsers,
-  getOrders,
-  updateUserToAdmin
-} = require('../controllers/adminController');
+  getUserById,
+  updateUser,
+  deleteUser
+} = require('../controllers/userAdminController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
-router.route('/products')
-  .get(protect, admin, getProducts);
-
+// User management routes
 router.route('/users')
   .get(protect, admin, getUsers);
 
 router.route('/users/:id')
-  .put(protect, admin, updateUserToAdmin);
-
-router.route('/orders')
-  .get(protect, admin, getOrders);
+  .get(protect, admin, getUserById)
+  .put(protect, admin, updateUser)
+  .delete(protect, admin, deleteUser);
 
 module.exports = router;

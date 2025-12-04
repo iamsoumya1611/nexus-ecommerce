@@ -1,6 +1,10 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
+console.log('Loading setupProxy.js'); // Add logging to see if this file is being loaded
+
 module.exports = function(app) {
+  console.log('Setting up proxy middleware'); // Add logging to see if this function is being called
+  
   app.use(
     '/users',
     createProxyMiddleware({
@@ -64,4 +68,6 @@ module.exports = function(app) {
       changeOrigin: true,
     })
   );
+  
+  console.log('Proxy middleware setup complete'); // Add logging to see if setup is complete
 };

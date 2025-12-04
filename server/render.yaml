@@ -1,0 +1,24 @@
+services:
+  # Backend API service
+  - type: web
+    name: nexus-ecommerce-api
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+    domains:
+      - nexus-ecommerce-api.onrender.com
+
+  # Frontend web service
+  - type: web
+    name: nexus-ecommerce-frontend
+    env: static
+    buildCommand: npm run build
+    staticPublishPath: ./build
+    domains:
+      - nexus-ecommerce-chi.vercel.app

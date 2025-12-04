@@ -62,7 +62,7 @@ const PlaceOrder = () => {
       // Process payment through Razorpay
       const paymentData = await paymentActions.processPayment(
         {
-          amount: Math.round(parseFloat(totalPrice) * 100) / 100, // Convert to proper format
+          amount: Math.round(parseFloat(totalPrice) * 100), // Convert to paise
           currency: 'INR',
           receipt: `order_${Date.now()}`
         }
@@ -84,8 +84,24 @@ const PlaceOrder = () => {
             description: 'Test Transaction',
             order_id: paymentData.order.id,
             handler: async function (response) {
-              // Payment successful, create order
-              placeOrderHandler();
+              // Verify payment with Razorpay
+              try {
+                const verificationData = {
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature
+                };
+                
+                const verificationResult = await paymentActions.verifyPayment(verificationData)(paymentDispatch);
+                
+                if (verificationResult && verificationResult.success) {
+                  // Payment verified, create order
+                  placeOrderHandler();
+                }
+              } catch (verificationError) {
+                console.error('Payment verification failed:', verificationError);
+                alert('Payment verification failed. Please try again.');
+              }
             },
             prefill: {
               name: shippingAddress.firstName + ' ' + shippingAddress.lastName,

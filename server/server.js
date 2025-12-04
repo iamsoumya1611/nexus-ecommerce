@@ -1,102 +1,161 @@
-// http://localhost:3000 
-// http://localhost:5000
-// https://nexus-ecommerce-chi.vercel.app
-
 const express = require('express');
-const cors = require('cors');
 const dotenv = require('dotenv');
 const path = require('path');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
+const compression = require('compression');
 
 // Load environment variables from .env file
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
-// Log environment variables for debugging
-console.log('Environment Variables:');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('MONGO_URI exists:', !!process.env.MONGO_URI);
-console.log('PORT:', process.env.PORT || 5000);
-
-const app = express();
-const PORT = process.env.PORT || 5000;
-
-// Enable CORS with specific origin and methods
-app.use(cors({
-  origin: ['https://nexus-ecommerce-chi.vercel.app', 'http://localhost:3000', 'http://localhost:5000'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
-  credentials: true
-}));
-
-// Handle preflight requests explicitly
-app.options('*', cors());
-
-// Handle preflight requests explicitly for all routes
-app.options('*', cors());
-
-// Middleware
-app.use(express.json());
-
 // Database connection
 const connectDB = require('./config/db');
 
-// Connect to database and start server only if connection is successful
-connectDB().then((conn) => {
-  console.log('Database connection established successfully');
+// Initialize app
+const app = express();
+
+// Port configuration
+const PORT = process.env.PORT || 5000;
+
+// Trust proxy for load balancers
+app.set('trust proxy', 1);
+
+// Global middleware
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+      imgSrc: ["'self'", 'data:', 'https://res.cloudinary.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      connectSrc: ["'self'", 'https://*.googleapis.com'],
+    },
+  },
+  hsts: {
+    maxAge: 31536000, // 1 year
+    includeSubDomains: true,
+    preload: true
+  }
+}));
+
+// CORS configuration
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: {
+    success: false,
+    error: 'Too many requests from this IP, please try again later.'
+  },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false // Disable the `X-RateLimit-*` headers
+});
+app.use('/api/', limiter);
+
+// Body parser
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Cookie parser
+app.use(cookieParser());
+
+// Data sanitization against NoSQL query injection
+app.use(mongoSanitize());
+
+// Data sanitization against XSS
+app.use(xss());
+
+// Prevent parameter pollution
+app.use(hpp());
+
+// Compression
+app.use(compression());
+
+// Serve static files
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
+
+// Routes
+app.use('/users', require('./routes/userRoutes'));
+app.use('/products', require('./routes/productRoutes'));
+app.use('/cart', require('./routes/cartRoutes'));
+app.use('/orders', require('./routes/orderRoutes'));
+app.use('/admin', require('./routes/adminRoutes'));
+app.use('/upload', require('./routes/uploadRoutes'));
+app.use('/payment', require('./routes/paymentRoutes'));
+app.use('/recommendations', require('./routes/recommendationRoutes'));
+app.use('/wishlist', require('./routes/wishlistRoutes'));
+app.use('/reviews', require('./routes/reviewRoutes'));
+app.use('/address', require('./routes/addressRoutes'));
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Server is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Catch-all route for frontend
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/build')));
   
-  // User routes
-  app.use('/users', require('./routes/userRoutes'));
-
-  // Product routes
-  app.use('/products', require('./routes/productRoutes'));
-
-  // Cart routes
-  app.use('/cart', require('./routes/cartRoutes'));
-
-  // Order routes
-  app.use('/orders', require('./routes/orderRoutes'));
-
-  // Admin routes
-  app.use('/admin', require('./routes/adminRoutes'));
-
-  // Upload routes
-  app.use('/upload', require('./routes/uploadRoutes'));
-
-  // Payment routes
-  app.use('/payment', require('./routes/paymentRoutes'));
-
-  // Recommendation routes
-  app.use('/recommendations', require('./routes/recommendationRoutes'));
-
-  // Root route - This should be after static file serving
-  app.get('/', (req, res) => {
-    res.send('E-Commerce API is running...');
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../client/build', 'index.html'));
   });
+}
 
-  // Handle 404 errors - This should be after all routes
-  app.use('*', (req, res) => {
-    res.status(404);
-    res.json({
-      message: 'Route not found'
-    });
-  });
+// Error handling middleware
+app.use(require('./middleware/errorMiddleware'));
 
-  // Error handling middleware
-  app.use((err, req, res, next) => {
-    console.error('Unhandled error:', err.stack);
-    res.status(500).json({ message: 'Something went wrong!' });
-  });
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err, promise) => {
+  console.error(`Error: ${err.message}`);
+  // Close server & exit process
+  // server.close(() => {
+    process.exit(1);
+  // });
+});
 
-  const server = app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log('MongoDB URI:', process.env.MONGO_URI ? 'Connected' : 'Not found');
-    console.log('CORS origins:', ['https://nexus-ecommerce-chi.vercel.app', 'http://localhost:3000', 'http://localhost:5000']);
-  });
-
-  // Handle server errors
-  server.on('error', (err) => {
-    console.error('Server error:', err);
-  });
-}).catch((error) => {
-  console.error('Failed to connect to database:', error.message);
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error(`Error: ${err.message}`);
   process.exit(1);
 });
+
+// Connect to database and start server
+const startServer = async () => {
+  try {
+    await connectDB();
+    console.log('Database connected successfully');
+    
+    const server = app.listen(PORT, () => {
+      console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+    });
+    
+    // Handle server errors
+    server.on('error', (err) => {
+      console.error('Server error:', err);
+    });
+  } catch (error) {
+    console.error('Failed to connect to database:', error.message);
+    process.exit(1);
+  }
+};
+
+startServer();
+
+module.exports = app;
