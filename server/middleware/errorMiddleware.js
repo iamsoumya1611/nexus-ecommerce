@@ -1,22 +1,46 @@
+const winston = require('winston');
+
+// Configure Winston logger
+const logger = winston.createLogger({
+  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
+  ),
+  defaultMeta: { service: 'nexus-ecommerce-server' },
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      )
+    })
+  ]
+});
+
+// Add file transport in production
+if (process.env.NODE_ENV === 'production') {
+  logger.add(new winston.transports.File({ filename: 'logs/error.log', level: 'error' }));
+  logger.add(new winston.transports.File({ filename: 'logs/combined.log' }));
+}
+
 const errorHandler = (err, req, res, next) => {
+  // Log error with request context
+  logger.error({
+    message: err.message,
+    stack: err.stack,
+    url: req.url,
+    method: req.method,
+    ip: req.ip,
+    userAgent: req.get('User-Agent'),
+    body: req.body,
+    params: req.params,
+    query: req.query
+  });
+
   let error = { ...err };
   error.message = err.message;
-
-  // Log error for debugging in development
-  console.error(err.stack);
-
-  // Log error details for production (without sensitive data)
-  if (process.env.NODE_ENV === 'production') {
-    console.error({
-      message: err.message,
-      stack: err.stack,
-      url: req.url,
-      method: req.method,
-      ip: req.ip,
-      userAgent: req.get('User-Agent'),
-      timestamp: new Date().toISOString()
-    });
-  }
 
   // Mongoose bad ObjectId
   if (err.name === 'CastError') {
@@ -47,13 +71,10 @@ const errorHandler = (err, req, res, next) => {
     error = { statusCode: 401, message };
   }
 
-  // Default to 500 server error if no status code is set
-  const statusCode = error.statusCode || 500;
-  const message = error.message || 'Server Error';
-
-  res.status(statusCode).json({
+  res.status(error.statusCode || 500).json({
     success: false,
-    error: message,
+    error: error.message || 'Server Error',
+    // Include stack trace in development only
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 };

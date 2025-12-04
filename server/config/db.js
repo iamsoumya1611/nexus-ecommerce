@@ -1,41 +1,56 @@
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-dotenv.config();
+const winston = require('winston');
+
+// Configure Winston logger
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.simple()
+    })
+  ]
+});
 
 const connectDB = async () => {
-    try {
-        // Enhanced MongoDB connection with production-ready options
-        const conn = await mongoose.connect(process.env.MONGO_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-            socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-            retryWrites: false, // Disable retry writes for better control
-            maxPoolSize: 10, // Maintain up to 10 socket connections
-        });
+  try {
+    // Add connection options for production
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      // Additional production options
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of default 30s
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      bufferMaxEntries: 0, // Don't buffer operations when disconnected
+      bufferCommands: false, // Disable command buffering
+    });
 
-        console.log(`MongoDB Connected: ${conn.connection.host}`);
+    logger.info(`MongoDB Connected: ${conn.connection.host}`);
 
-        // Connection event handlers
-        mongoose.connection.on('error', (err) => {
-            console.error('MongoDB connection error:', err);
-        });
+    // Handle connection events
+    mongoose.connection.on('error', (err) => {
+      logger.error('MongoDB connection error:', err);
+    });
 
-        mongoose.connection.on('disconnected', () => {
-            console.log('MongoDB disconnected');
-        });
+    mongoose.connection.on('disconnected', () => {
+      logger.warn('MongoDB disconnected');
+    });
 
-        // If the Node process ends, close the Mongoose connection
-        process.on('SIGINT', async () => {
-            await mongoose.connection.close();
-            console.log('MongoDB connection closed through app termination');
-            process.exit(0);
-        });
+    // Handle process termination
+    process.on('SIGINT', async () => {
+      await mongoose.connection.close();
+      logger.info('MongoDB connection closed through app termination');
+      process.exit(0);
+    });
 
-    } catch (error) {
-        console.error('MongoDB Connection Failed:', error.message);
-        process.exit(1);
-    }
+  } catch (error) {
+    logger.error('MongoDB Connection Failed:', error.message);
+    process.exit(1);
+  }
 };
 
 module.exports = connectDB;

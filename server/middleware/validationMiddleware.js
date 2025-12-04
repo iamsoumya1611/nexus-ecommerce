@@ -1,34 +1,43 @@
-const { body, validationResult, query, param } = require('express-validator');
+const { body, validationResult, param, query } = require('express-validator');
+const winston = require('winston');
 
-// Validation result handler
-const validate = (req, res, next) => {
+// Configure Winston logger
+const logger = winston.createLogger({
+  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      )
+    })
+  ]
+});
+
+// Validation middleware to handle validation results
+const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    const errorMessages = errors.array().map(error => error.msg);
+    
+    logger.warn('Validation failed', {
+      errors: errorMessages,
+      url: req.url,
+      method: req.method,
+      userId: req.user ? req.user._id : 'anonymous'
+    });
+    
     return res.status(400).json({
       success: false,
-      message: 'Validation Error',
-      errors: errors.array()
+      error: 'Validation failed',
+      details: errorMessages
     });
   }
-  next();
-};
-
-// Sanitization middleware
-const sanitizeInput = (req, res, next) => {
-  // Trim and escape all string inputs
-  for (const key in req.body) {
-    if (typeof req.body[key] === 'string') {
-      req.body[key] = req.body[key].trim();
-    }
-  }
-  
-  // Trim and escape all query parameters
-  for (const key in req.query) {
-    if (typeof req.query[key] === 'string') {
-      req.query[key] = req.query[key].trim();
-    }
-  }
-  
   next();
 };
 
@@ -37,18 +46,15 @@ const validateUserRegistration = [
   body('name')
     .trim()
     .isLength({ min: 2, max: 50 })
-    .withMessage('Name must be between 2 and 50 characters')
-    .escape(),
+    .withMessage('Name must be between 2 and 50 characters'),
   body('email')
     .isEmail()
     .normalizeEmail()
     .withMessage('Please provide a valid email address'),
   body('password')
-    .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/)
-    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
-  validate
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters long'),
+  handleValidationErrors
 ];
 
 // User login validation
@@ -60,33 +66,34 @@ const validateUserLogin = [
   body('password')
     .notEmpty()
     .withMessage('Password is required'),
-  validate
+  handleValidationErrors
 ];
 
 // Product validation
 const validateProduct = [
   body('name')
     .trim()
-    .isLength({ min: 3, max: 100 })
-    .withMessage('Product name must be between 3 and 100 characters')
-    .escape(),
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Product name is required and must be less than 100 characters'),
   body('price')
-    .isFloat({ gt: 0 })
+    .isFloat({ min: 0 })
     .withMessage('Price must be a positive number'),
+  body('description')
+    .trim()
+    .isLength({ min: 10, max: 2000 })
+    .withMessage('Description must be between 10 and 2000 characters'),
   body('category')
     .trim()
-    .notEmpty()
-    .withMessage('Category is required')
-    .escape(),
+    .isLength({ min: 1 })
+    .withMessage('Category is required'),
   body('brand')
     .trim()
-    .notEmpty()
-    .withMessage('Brand is required')
-    .escape(),
+    .isLength({ min: 1 })
+    .withMessage('Brand is required'),
   body('countInStock')
     .isInt({ min: 0 })
-    .withMessage('Stock count must be a non-negative integer'),
-  validate
+    .withMessage('Count in stock must be a non-negative integer'),
+  handleValidationErrors
 ];
 
 // Order validation
@@ -94,32 +101,42 @@ const validateOrder = [
   body('orderItems')
     .isArray({ min: 1 })
     .withMessage('Order must have at least one item'),
+  body('shippingAddress')
+    .isObject()
+    .withMessage('Shipping address is required'),
   body('shippingAddress.address')
     .trim()
-    .notEmpty()
-    .withMessage('Shipping address is required')
-    .escape(),
+    .isLength({ min: 5 })
+    .withMessage('Address must be at least 5 characters'),
   body('shippingAddress.city')
     .trim()
-    .notEmpty()
-    .withMessage('City is required')
-    .escape(),
+    .isLength({ min: 2 })
+    .withMessage('City is required'),
   body('shippingAddress.postalCode')
     .trim()
-    .notEmpty()
-    .withMessage('Postal code is required')
-    .escape(),
+    .isLength({ min: 3 })
+    .withMessage('Postal code is required'),
   body('shippingAddress.country')
     .trim()
-    .notEmpty()
-    .withMessage('Country is required')
-    .escape(),
+    .isLength({ min: 2 })
+    .withMessage('Country is required'),
   body('paymentMethod')
     .trim()
-    .notEmpty()
-    .withMessage('Payment method is required')
-    .escape(),
-  validate
+    .isLength({ min: 2 })
+    .withMessage('Payment method is required'),
+  body('itemsPrice')
+    .isFloat({ min: 0 })
+    .withMessage('Items price must be a positive number'),
+  body('taxPrice')
+    .isFloat({ min: 0 })
+    .withMessage('Tax price must be a non-negative number'),
+  body('shippingPrice')
+    .isFloat({ min: 0 })
+    .withMessage('Shipping price must be a non-negative number'),
+  body('totalPrice')
+    .isFloat({ min: 0 })
+    .withMessage('Total price must be a positive number'),
+  handleValidationErrors
 ];
 
 // Review validation
@@ -130,25 +147,40 @@ const validateReview = [
   body('comment')
     .trim()
     .isLength({ min: 5, max: 500 })
-    .withMessage('Comment must be between 5 and 500 characters')
-    .escape(),
-  validate
+    .withMessage('Comment must be between 5 and 500 characters'),
+  handleValidationErrors
 ];
 
-// ID validation
+// ID validation (for routes with :id parameters)
 const validateId = [
   param('id')
-    .isMongoId()
+    .matches(/^[0-9a-fA-F]{24}$/)
     .withMessage('Invalid ID format'),
-  validate
+  handleValidationErrors
+];
+
+// Pagination validation
+const validatePagination = [
+  query('pageNumber')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Page number must be a positive integer')
+    .toInt(),
+  query('pageSize')
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage('Page size must be between 1 and 100')
+    .toInt(),
+  handleValidationErrors
 ];
 
 module.exports = {
-  sanitizeInput,
   validateUserRegistration,
   validateUserLogin,
   validateProduct,
   validateOrder,
   validateReview,
-  validateId
+  validateId,
+  validatePagination,
+  handleValidationErrors
 };

@@ -9,15 +9,44 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const compression = require('compression');
+const winston = require('winston');
+const redis = require('redis');
 
 // Load environment variables from .env file
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
+// Configure Winston logger
+const logger = winston.createLogger({
+  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
+  ),
+  defaultMeta: { service: 'nexus-ecommerce-server' },
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      )
+    })
+  ]
+});
+
+// Add file transport in production
+if (process.env.NODE_ENV === 'production') {
+  logger.add(new winston.transports.File({ filename: 'logs/error.log', level: 'error' }));
+  logger.add(new winston.transports.File({ filename: 'logs/combined.log' }));
+}
+
 // Log environment variables for debugging (without sensitive data)
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('PORT:', process.env.PORT);
-console.log('MONGO_URI defined:', !!process.env.MONGO_URI);
-console.log('JWT_SECRET defined:', !!process.env.JWT_SECRET);
+logger.info('Environment variables loaded', {
+  NODE_ENV: process.env.NODE_ENV,
+  PORT: process.env.PORT,
+  MONGO_URI_defined: !!process.env.MONGO_URI,
+  JWT_SECRET_defined: !!process.env.JWT_SECRET
+});
 
 // Database connection
 const connectDB = require('./config/db');
@@ -67,6 +96,7 @@ app.use(cors({
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      logger.warn('CORS blocked request', { origin });
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -83,7 +113,16 @@ const limiter = rateLimit({
     error: 'Too many requests from this IP, please try again later.'
   },
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false // Disable the `X-RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  handler: (req, res, next, options) => {
+    logger.warn('Rate limit exceeded', {
+      ip: req.ip,
+      url: req.url,
+      method: req.method
+    });
+    
+    res.status(options.statusCode).send(options.message);
+  }
 });
 app.use('/api/', limiter);
 
@@ -114,29 +153,26 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/build')));
 }
 
-// Sanitize all inputs
-const { sanitizeInput } = require('./middleware/validationMiddleware');
-app.use(sanitizeInput);
-
 // Routes
-app.use('/users', require('./routes/userRoutes'));
-app.use('/products', require('./routes/productRoutes'));
-app.use('/cart', require('./routes/cartRoutes'));
-app.use('/orders', require('./routes/orderRoutes'));
-app.use('/admin', require('./routes/adminRoutes'));
-app.use('/upload', require('./routes/uploadRoutes'));
-app.use('/payment', require('./routes/paymentRoutes'));
-app.use('/recommendations', require('./routes/recommendationRoutes'));
-app.use('/wishlist', require('./routes/wishlistRoutes'));
-app.use('/reviews', require('./routes/reviewRoutes'));
-app.use('/address', require('./routes/addressRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/products', require('./routes/productRoutes'));
+app.use('/api/cart', require('./routes/cartRoutes'));
+app.use('/api/orders', require('./routes/orderRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/upload', require('./routes/uploadRoutes'));
+app.use('/api/payment', require('./routes/paymentRoutes'));
+app.use('/api/recommendations', require('./routes/recommendationRoutes'));
+app.use('/api/wishlist', require('./routes/wishlistRoutes'));
+app.use('/api/reviews', require('./routes/reviewRoutes'));
+app.use('/api/address', require('./routes/addressRoutes'));
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Server is running',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
   });
 });
 
@@ -151,83 +187,71 @@ app.use(require('./middleware/errorMiddleware'));
 
 // Graceful shutdown handling
 let server;
-let connections = [];
 
 const gracefulShutdown = async (signal) => {
-  console.log(`${signal} signal received: closing HTTP server`);
+  logger.info(`${signal} received, shutting down gracefully`);
   
-  // Close server
+  // Stop accepting new connections
   if (server) {
     server.close(() => {
-      console.log('HTTP server closed');
+      logger.info('Closed out remaining connections');
     });
-    
-    // Close all connections
-    connections.forEach(conn => conn.end());
-    connections = [];
   }
   
   // Close database connection
-  const mongoose = require('mongoose');
-  if (mongoose.connection.readyState !== 0) {
+  try {
+    const mongoose = require('mongoose');
     await mongoose.connection.close();
-    console.log('MongoDB connection closed');
+    logger.info('MongoDB connection closed');
+  } catch (error) {
+    logger.error('Error closing MongoDB connection', { error: error.message });
   }
   
-  // Exit process
-  process.exit(0);
+  // Wait for 10 seconds before forcing shutdown
+  setTimeout(() => {
+    logger.error('Could not close connections in time, forcefully shutting down');
+    process.exit(1);
+  }, 10000);
 };
+
+// Handle different shutdown signals
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGUSR2', () => gracefulShutdown('SIGUSR2')); // Nodemon restart signal
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err, promise) => {
-  console.error(`Unhandled Rejection at: ${promise}, reason: ${err.message}`);
+  logger.error(`Unhandled Rejection at: ${promise}, reason: ${err.message}`);
   // Application specific logging, throwing an error, or other logic here
-  gracefulShutdown('UNHANDLED_REJECTION');
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-  console.error(`Uncaught Exception: ${err.message}`);
-  console.error(err.stack);
-  // Application specific logging, throwing an error, or other logic here
-  gracefulShutdown('UNCAUGHT_EXCEPTION');
-});
-
-// Handle SIGTERM and SIGINT signals
-process.on('SIGTERM', () => {
-  console.log('SIGTERM signal received');
-  gracefulShutdown('SIGTERM');
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT signal received');
-  gracefulShutdown('SIGINT');
-});
-
-// Track active connections for graceful shutdown
-app.on('connection', (connection) => {
-  connections.push(connection);
-  connection.on('close', () => {
-    connections = connections.filter(conn => conn !== connection);
-  });
+  logger.error(`Uncaught Exception: ${err.message}`, { stack: err.stack });
+  process.exit(1);
 });
 
 // Connect to database and start server
 const startServer = async () => {
   try {
     await connectDB();
-    console.log('Database connected successfully');
+    logger.info('Database connected successfully');
     
     server = app.listen(PORT, () => {
-      console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+      logger.info(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
     });
     
     // Handle server errors
     server.on('error', (err) => {
-      console.error('Server error:', err);
+      logger.error('Server error', { error: err.message });
+    });
+    
+    // Handle server shutdown
+    server.on('close', () => {
+      logger.info('Server closed');
     });
   } catch (error) {
-    console.error('Failed to connect to database:', error.message);
+    logger.error('Failed to connect to database', { error: error.message });
     process.exit(1);
   }
 };
