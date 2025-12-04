@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useUser } from '../../contexts/UserContext';
+import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
 
 const UserEdit = () => {
@@ -16,7 +16,7 @@ const UserEdit = () => {
   const [successUpdate, setSuccessUpdate] = useState(false);
   const [user, setUser] = useState({});
 
-  const { userInfo } = useUser();
+  const { user: userInfo } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {

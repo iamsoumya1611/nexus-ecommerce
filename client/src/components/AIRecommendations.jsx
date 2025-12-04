@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useRecommendation, recommendationActions } from '../contexts/RecommendationContext';
-import { useUser } from '../contexts/UserContext';
+import { useAuth } from '../contexts/AuthContext';
 import Product from './Product';
 import { ClipLoader } from 'react-spinners';
 
@@ -9,7 +9,7 @@ const AIRecommendations = () => {
   const { list: recommendationList } = recommendationState;
   const { loading, error, recommendations } = recommendationList;
 
-  const { userInfo } = useUser();
+  const { user: userInfo } = useAuth();
 
   useEffect(() => {
     // Always fetch recommendations, even for non-logged-in users

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAdmin, adminActions } from '../../contexts/AdminContext';
-import { useUser } from '../../contexts/UserContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 const UserList = () => {
   const { state: adminState, dispatch: adminDispatch } = useAdmin();
@@ -12,9 +12,7 @@ const UserList = () => {
   const { userDelete } = userDeleteState;
   const { success: successDelete } = userDelete;
 
-  const { state: userState } = useUser();
-  const { login: userLogin } = userState;
-  const { userInfo } = userLogin;
+  const { user: userInfo } = useAuth();
 
   useEffect(() => {
     if (userInfo && userInfo.isAdmin) {

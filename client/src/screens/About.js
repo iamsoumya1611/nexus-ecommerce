@@ -5,7 +5,7 @@ const About = () => {
     <div className="container mx-auto px-4 py-12">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold text-primary-900 mb-6">About ShopEase</h1>
+          <h1 className="text-4xl font-bold text-primary-900 mb-6">About Us</h1>
           <p className="text-xl text-primary-700 max-w-3xl mx-auto">
             We're passionate about providing the best shopping experience with quality products at competitive prices.
           </p>
@@ -55,7 +55,7 @@ const About = () => {
               <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i className="fas fa-headset text-primary-700 text-2xl"></i>
               </div>
-              <h3 className="text-xl font-bold text-primary-900 mb-2">24/7 Support</h3>
+              <h3 className="text-xl font-bold text-primary-900 mb-2">24X7 Support</h3>
               <p className="text-primary-700">
                 Our customer service team is available around the clock to assist you.
               </p>

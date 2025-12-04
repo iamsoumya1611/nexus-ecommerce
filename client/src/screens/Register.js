@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useUser } from '../contexts/UserContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -9,7 +9,7 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState(null);
 
-  const { userInfo, loading, error, register } = useUser();
+  const { userInfo, loading, error, register } = useAuth();
   
   const navigate = useNavigate();
   const location = useLocation();

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useProduct, productActions } from '../contexts/ProductContext';
 import { useCart, cartActions } from '../contexts/CartContext';
-import { useUser } from '../contexts/UserContext';
+import { useAuth } from '../contexts/AuthContext';
 
 // Product Screen Component
 // This component displays detailed information about a single product
@@ -24,9 +24,7 @@ const Product = () => {
   const { loading, error, product } = productDetails;
 
   // Get user login state from Context
-  const { state: userState } = useUser();
-  const { login: userLogin } = userState;
-  const { userInfo } = userLogin;
+  const { user: userInfo } = useAuth();
 
   // Get cart state from Context
   const { dispatch: cartDispatch } = useCart();

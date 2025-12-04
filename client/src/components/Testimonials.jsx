@@ -4,7 +4,7 @@ const Testimonials = () => {
   const testimonials = [
     {
       id: 1,
-      name: "Sarah Johnson",
+      name: "Ritika Jaiswal",
       role: "Verified Customer",
       content: "The quality of products here is exceptional. I've been a loyal customer for over a year now and have never been disappointed.",
       rating: 5,
@@ -12,7 +12,7 @@ const Testimonials = () => {
     },
     {
       id: 2,
-      name: "Michael Chen",
+      name: "Anuj Desai",
       role: "Verified Customer",
       content: "Fast shipping and excellent customer service. The product arrived in perfect condition and exceeded my expectations.",
       rating: 5,
@@ -20,7 +20,7 @@ const Testimonials = () => {
     },
     {
       id: 3,
-      name: "Emily Rodriguez",
+      name: "Nikhil Verma",
       role: "Verified Customer",
       content: "Great prices and wide selection. I always find what I'm looking for here. Will definitely recommend to friends and family.",
       rating: 4,

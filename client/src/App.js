@@ -6,7 +6,7 @@ import './components/ToastStyles.css';
 
 // Import Context Providers
 import { CartProvider } from './contexts/CartContext';
-import { UserProvider } from './contexts/UserContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { OrderProvider } from './contexts/OrderContext';
 import { PaymentProvider } from './contexts/PaymentContext';
 import { ProductProvider } from './contexts/ProductContext';
@@ -42,7 +42,7 @@ import './App.css';
 
 function App() {
   return (
-    <UserProvider>
+    <AuthProvider>
       <CartProvider>
         <OrderProvider>
           <PaymentProvider>
@@ -94,7 +94,7 @@ function App() {
           </PaymentProvider>
         </OrderProvider>
       </CartProvider>
-    </UserProvider>
+    </AuthProvider>
   );
 }
 

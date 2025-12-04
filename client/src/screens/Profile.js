@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useUser } from '../contexts/UserContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useOrder, orderActions } from '../contexts/OrderContext';
 
 const Profile = () => {
@@ -11,7 +11,7 @@ const Profile = () => {
   const [message, setMessage] = useState('');
   const [updateSuccess, setUpdateSuccess] = useState(false);
 
-  const { userInfo, getUserProfile, updateUserProfile } = useUser();
+  const { userInfo, getUserProfile, updateUserProfile } = useAuth();
   const { state: orderState, dispatch: orderDispatch } = useOrder();
   const { listMy: orderListMy } = orderState;
   const { loading: loadingOrders, error: errorOrders, orders } = orderListMy;

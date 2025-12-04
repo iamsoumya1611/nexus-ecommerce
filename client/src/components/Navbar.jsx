@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useUser } from '../contexts/UserContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import SearchIcon from '@mui/icons-material/Search';
 import Badge from '@mui/material/Badge';
@@ -24,7 +24,7 @@ const Navbar = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
 
   // Get user login state from Context
-  const { userInfo, logout } = useUser();
+  const { user: userInfo, logout } = useAuth();
 
   // Get cart items from Context
   const { state: cartState } = useCart();

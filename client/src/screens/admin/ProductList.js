@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAdmin, adminActions } from '../../contexts/AdminContext';
 import { useProduct, productActions } from '../../contexts/ProductContext';
-import { useUser } from '../../contexts/UserContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 const ProductList = () => {
   const { state: adminState, dispatch: adminDispatch } = useAdmin();
@@ -13,9 +13,7 @@ const ProductList = () => {
   const { delete: productDelete } = productState;
   const { success: successDelete } = productDelete;
 
-  const { state: userState } = useUser();
-  const { login: userLogin } = userState;
-  const { userInfo } = userLogin;
+  const { user: userInfo } = useAuth();
 
   useEffect(() => {
     if (userInfo && userInfo.isAdmin) {
