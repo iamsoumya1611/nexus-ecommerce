@@ -93,6 +93,11 @@ app.use(compression());
 // Serve static files
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 
+// Catch-all route for frontend
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/build')));
+}
+
 // Routes
 app.use('/users', require('./routes/userRoutes'));
 app.use('/products', require('./routes/productRoutes'));
@@ -115,10 +120,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Catch-all route for frontend
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/build')));
-  
   app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, '../client/build', 'index.html'));
   });
