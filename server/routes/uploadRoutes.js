@@ -1,9 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { uploadImage } = require('../controllers/uploadController');
+const { uploadImage, deleteImage } = require('../controllers/uploadController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
-router.route('/')
-  .post(protect, admin, uploadImage);
+// Upload image route
+router.post('/', protect, admin, uploadImage);
+
+// Delete image route
+router.delete('/:id', protect, admin, deleteImage);
 
 module.exports = router;

@@ -27,11 +27,21 @@ const uploadImage = asyncHandler(async (req, res) => {
       imageData = imageData.split(',')[1];
     }
 
-    // Upload image to Cloudinary
+    // Validate base64 data
+    if (!imageData) {
+      res.status(400);
+      throw new Error('Invalid image data provided');
+    }
+
+    // Upload image to Cloudinary with enhanced options
     const result = await cloudinary.uploader.upload(`data:image/jpeg;base64,${imageData}`, {
-      folder: 'ecommerce',
+      folder: 'nexus-ecommerce/products',
       width: 800,
-      crop: 'scale'
+      height: 800,
+      crop: 'fill',
+      gravity: 'auto',
+      quality: 'auto',
+      format: 'jpg'
     });
 
     res.json({
@@ -39,11 +49,44 @@ const uploadImage = asyncHandler(async (req, res) => {
       cloudinaryId: result.public_id
     });
   } catch (error) {
+    console.error('Image upload error:', error);
     res.status(500);
     throw new Error('Image upload failed: ' + error.message);
   }
 });
 
+// @desc    Delete image from Cloudinary
+// @route   DELETE /api/upload/:id
+// @access  Private/Admin
+const deleteImage = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id) {
+      res.status(400);
+      throw new Error('No image ID provided');
+    }
+
+    // Delete image from Cloudinary
+    const result = await cloudinary.uploader.destroy(id);
+
+    if (result.result === 'ok') {
+      res.json({
+        success: true,
+        message: 'Image deleted successfully'
+      });
+    } else {
+      res.status(404);
+      throw new Error('Image not found or already deleted');
+    }
+  } catch (error) {
+    console.error('Image deletion error:', error);
+    res.status(500);
+    throw new Error('Image deletion failed: ' + error.message);
+  }
+});
+
 module.exports = {
-  uploadImage
+  uploadImage,
+  deleteImage
 };

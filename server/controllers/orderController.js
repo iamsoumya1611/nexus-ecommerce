@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
+const Product = require('../models/Product');
 const asyncHandler = require('express-async-handler');
 
 // @desc    Create new order
@@ -19,8 +20,21 @@ const addOrderItems = asyncHandler(async (req, res) => {
   if (orderItems && orderItems.length === 0) {
     res.status(400);
     throw new Error('No order items');
-    return;
   } else {
+    // Validate stock availability
+    for (const item of orderItems) {
+      const product = await Product.findById(item.product);
+      if (!product) {
+        res.status(404);
+        throw new Error(`Product not found: ${item.name}`);
+      }
+      
+      if (product.countInStock < item.qty) {
+        res.status(400);
+        throw new Error(`Insufficient stock for ${product.name}`);
+      }
+    }
+    
     const order = new Order({
       orderItems,
       user: req.user._id,
@@ -33,6 +47,15 @@ const addOrderItems = asyncHandler(async (req, res) => {
     });
 
     const createdOrder = await order.save();
+    
+    // Update stock quantities
+    for (const item of order.orderItems) {
+      const product = await Product.findById(item.product);
+      if (product) {
+        product.countInStock -= item.qty;
+        await product.save();
+      }
+    }
     
     // Clear cart after order creation
     await Cart.findOneAndDelete({ user: req.user._id });

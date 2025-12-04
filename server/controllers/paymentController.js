@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
+const Order = require('../models/Order');
 
 // Initialize Razorpay instance only if credentials are available
 let razorpay = null;
@@ -31,7 +32,7 @@ const createOrder = asyncHandler(async (req, res) => {
   }
   
   try {
-    const { amount, currency = 'INR', receipt } = req.body;
+    const { amount, currency = 'INR', receipt, orderId } = req.body;
     
     // Validate amount
     if (!amount || amount <= 0) {
@@ -50,11 +51,21 @@ const createOrder = asyncHandler(async (req, res) => {
     // Create order
     const order = await razorpay.orders.create(options);
     
+    // If we have a local order ID, update it with Razorpay order ID
+    if (orderId) {
+      const localOrder = await Order.findById(orderId);
+      if (localOrder) {
+        localOrder.razorpayOrderId = order.id;
+        await localOrder.save();
+      }
+    }
+    
     res.json({
       success: true,
       order
     });
   } catch (error) {
+    console.error('Razorpay order creation error:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Failed to create order', 
@@ -76,7 +87,7 @@ const verifyPayment = asyncHandler(async (req, res) => {
   }
   
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
     
     // Create expected signature
     const expectedSignature = crypto
@@ -88,6 +99,22 @@ const verifyPayment = asyncHandler(async (req, res) => {
     const isVerified = expectedSignature === razorpay_signature;
     
     if (isVerified) {
+      // Update local order if provided
+      if (orderId) {
+        const order = await Order.findById(orderId);
+        if (order) {
+          order.isPaid = true;
+          order.paidAt = Date.now();
+          order.paymentResult = {
+            id: razorpay_payment_id,
+            status: 'completed',
+            update_time: Date.now(),
+            email_address: req.user.email,
+          };
+          await order.save();
+        }
+      }
+      
       res.json({
         success: true,
         message: 'Payment verified successfully'
@@ -97,6 +124,7 @@ const verifyPayment = asyncHandler(async (req, res) => {
       throw new Error('Invalid payment signature');
     }
   } catch (error) {
+    console.error('Payment verification error:', error);
     res.status(400).json({ 
       success: false, 
       message: 'Payment verification failed', 
@@ -128,6 +156,7 @@ const getPaymentDetails = asyncHandler(async (req, res) => {
       payment
     });
   } catch (error) {
+    console.error('Payment details fetch error:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Failed to fetch payment details', 

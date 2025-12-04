@@ -50,6 +50,16 @@ const deleteProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
 
   if (product) {
+    // Delete image from Cloudinary if it exists
+    if (product.cloudinaryId) {
+      const cloudinary = require('../config/cloudinary');
+      try {
+        await cloudinary.uploader.destroy(product.cloudinaryId);
+      } catch (error) {
+        console.error('Error deleting image from Cloudinary:', error.message);
+      }
+    }
+    
     await product.remove();
     res.json({ message: 'Product removed' });
   } else {
@@ -63,15 +73,29 @@ const deleteProduct = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 const createProduct = asyncHandler(async (req, res) => {
   const product = new Product({
-    name: 'Sample name',
-    price: 0,
+    name: req.body.name || 'Sample name',
+    price: req.body.price || 0,
     user: req.user._id,
-    image: '/images/sample.jpg',
-    brand: 'Sample brand',
-    category: 'Sample category',
-    countInStock: 0,
-    description: 'Sample description',
-    specifications: [],
+    image: req.body.image || '/images/sample.jpg',
+    cloudinaryId: req.body.cloudinaryId || '',
+    brand: req.body.brand || 'Sample brand',
+    category: req.body.category || 'Sample category',
+    countInStock: req.body.countInStock || 0,
+    description: req.body.description || 'Sample description',
+    specifications: req.body.specifications || {},
+    // Category-specific attributes
+    model: req.body.model || '',
+    storage: req.body.storage || '',
+    color: req.body.color || '',
+    screenSize: req.body.screenSize || '',
+    size: req.body.size || '',
+    material: req.body.material || '',
+    gender: req.body.gender || '',
+    author: req.body.author || '',
+    publisher: req.body.publisher || '',
+    pages: req.body.pages || 0,
+    weight: req.body.weight || '',
+    dimensions: req.body.dimensions || ''
   });
 
   const createdProduct = await product.save();
@@ -82,28 +106,49 @@ const createProduct = asyncHandler(async (req, res) => {
 // @route   PUT /api/products/:id
 // @access  Private/Admin
 const updateProduct = asyncHandler(async (req, res) => {
-  const {
-    name,
-    price,
-    description,
-    image,
-    brand,
-    category,
-    countInStock,
-  } = req.body;
-
   const product = await Product.findById(req.params.id);
 
   if (product) {
-    product.name = name;
-    product.price = price;
-    product.description = description;
-    product.image = image;
-    product.brand = brand;
-    product.category = category;
-    product.countInStock = countInStock;
+    // Store old Cloudinary ID for potential cleanup
+    const oldCloudinaryId = product.cloudinaryId;
+    
+    // Update product fields
+    product.name = req.body.name || product.name;
+    product.price = req.body.price || product.price;
+    product.description = req.body.description || product.description;
+    product.image = req.body.image || product.image;
+    product.cloudinaryId = req.body.cloudinaryId || product.cloudinaryId;
+    product.brand = req.body.brand || product.brand;
+    product.category = req.body.category || product.category;
+    product.countInStock = req.body.countInStock || product.countInStock;
+    product.specifications = req.body.specifications || product.specifications;
+    
+    // Update category-specific attributes
+    product.model = req.body.model || product.model;
+    product.storage = req.body.storage || product.storage;
+    product.color = req.body.color || product.color;
+    product.screenSize = req.body.screenSize || product.screenSize;
+    product.size = req.body.size || product.size;
+    product.material = req.body.material || product.material;
+    product.gender = req.body.gender || product.gender;
+    product.author = req.body.author || product.author;
+    product.publisher = req.body.publisher || product.publisher;
+    product.pages = req.body.pages || product.pages;
+    product.weight = req.body.weight || product.weight;
+    product.dimensions = req.body.dimensions || product.dimensions;
 
     const updatedProduct = await product.save();
+    
+    // Delete old image from Cloudinary if a new image was uploaded
+    if (oldCloudinaryId && oldCloudinaryId !== product.cloudinaryId) {
+      const cloudinary = require('../config/cloudinary');
+      try {
+        await cloudinary.uploader.destroy(oldCloudinaryId);
+      } catch (error) {
+        console.error('Error deleting old image from Cloudinary:', error.message);
+      }
+    }
+    
     res.json(updatedProduct);
   } else {
     res.status(404);

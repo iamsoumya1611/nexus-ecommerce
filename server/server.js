@@ -114,6 +114,10 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/build')));
 }
 
+// Sanitize all inputs
+const { sanitizeInput } = require('./middleware/validationMiddleware');
+app.use(sanitizeInput);
+
 // Routes
 app.use('/users', require('./routes/userRoutes'));
 app.use('/products', require('./routes/productRoutes'));
@@ -145,19 +149,67 @@ if (process.env.NODE_ENV === 'production') {
 // Error handling middleware
 app.use(require('./middleware/errorMiddleware'));
 
+// Graceful shutdown handling
+let server;
+let connections = [];
+
+const gracefulShutdown = async (signal) => {
+  console.log(`${signal} signal received: closing HTTP server`);
+  
+  // Close server
+  if (server) {
+    server.close(() => {
+      console.log('HTTP server closed');
+    });
+    
+    // Close all connections
+    connections.forEach(conn => conn.end());
+    connections = [];
+  }
+  
+  // Close database connection
+  const mongoose = require('mongoose');
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.connection.close();
+    console.log('MongoDB connection closed');
+  }
+  
+  // Exit process
+  process.exit(0);
+};
+
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err, promise) => {
-  console.error(`Error: ${err.message}`);
-  // Close server & exit process
-  // server.close(() => {
-    process.exit(1);
-  // });
+  console.error(`Unhandled Rejection at: ${promise}, reason: ${err.message}`);
+  // Application specific logging, throwing an error, or other logic here
+  gracefulShutdown('UNHANDLED_REJECTION');
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-  console.error(`Error: ${err.message}`);
-  process.exit(1);
+  console.error(`Uncaught Exception: ${err.message}`);
+  console.error(err.stack);
+  // Application specific logging, throwing an error, or other logic here
+  gracefulShutdown('UNCAUGHT_EXCEPTION');
+});
+
+// Handle SIGTERM and SIGINT signals
+process.on('SIGTERM', () => {
+  console.log('SIGTERM signal received');
+  gracefulShutdown('SIGTERM');
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT signal received');
+  gracefulShutdown('SIGINT');
+});
+
+// Track active connections for graceful shutdown
+app.on('connection', (connection) => {
+  connections.push(connection);
+  connection.on('close', () => {
+    connections = connections.filter(conn => conn !== connection);
+  });
 });
 
 // Connect to database and start server
@@ -166,7 +218,7 @@ const startServer = async () => {
     await connectDB();
     console.log('Database connected successfully');
     
-    const server = app.listen(PORT, () => {
+    server = app.listen(PORT, () => {
       console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
     });
     
