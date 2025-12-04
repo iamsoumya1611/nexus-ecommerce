@@ -1,0 +1,35 @@
+{
+  "name": "nexus-ecommerce",
+  "version": "1.0.0",
+  "description": "A full-featured e-commerce platform built with MERN stack",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm start",
+    "build": "cd client && npm run build",
+    "render-build": "cd client && npm install && npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iamsoumya1611/nexus-ecommerce.git"
+  },
+  "keywords": [
+    "e-commerce",
+    "mern",
+    "react",
+    "node",
+    "mongodb"
+  ],
+  "author": "Soumya Majumder",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/iamsoumya1611/nexus-ecommerce/issues"
+  },
+  "homepage": "https://github.com/iamsoumya1611/nexus-ecommerce#readme"
+}
