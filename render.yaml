@@ -11,7 +11,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 10000
+        fromValue: PORT
       - key: MONGO_URI
         value: mongodb+srv://soumyamajumder201817_db_user:nspL11g0bWzlWZHa@nexusecommerceapi.vp5ywmd.mongodb.net/nexus-ecommerce?appName=nexusEcommerceApi
       - key: JWT_SECRET
