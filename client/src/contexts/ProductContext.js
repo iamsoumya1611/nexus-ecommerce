@@ -306,15 +306,9 @@ export const productActions = {
     try {
       dispatch({ type: 'PRODUCT_LIST_REQUEST' });
 
-      // Construct the URL correctly based on environment
-      let finalUrl;
-      if (process.env.NODE_ENV === 'development') {
-        // In development, use relative paths for proxy
-        finalUrl = `/products?keyword=${keyword}&pageNumber=${pageNumber}`;
-      } else {
-        // In production, use full URL
-        finalUrl = `${API_BASE_URL.replace(/\/$/, '')}/products?keyword=${keyword}&pageNumber=${pageNumber}`;
-      }
+      // Use proxy path in development, full URL in production
+      const baseUrl = process.env.NODE_ENV === 'development' ? '' : API_BASE_URL || '';
+      const finalUrl = `${baseUrl.replace(/\/$/, '')}/products?keyword=${keyword}&pageNumber=${pageNumber}`;
 
       const { data } = await axios.get(finalUrl);
 
@@ -347,17 +341,9 @@ export const productActions = {
     try {
       dispatch({ type: 'PRODUCT_DETAILS_REQUEST' });
 
-      // Construct the URL correctly based on environment
-      let baseUrl = API_BASE_URL;
-      if (process.env.NODE_ENV === 'development') {
-        baseUrl = '';
-      }
-
-      // Ensure we're using HTTPS in production
-      let finalUrl = `${baseUrl}/products/${id}`;
-      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
-        finalUrl = finalUrl.replace('http://', 'https://');
-      }
+      // Use proxy path in development, full URL in production
+      const baseUrl = process.env.NODE_ENV === 'development' ? '' : API_BASE_URL || '';
+      const finalUrl = `${baseUrl.replace(/\/$/, '')}/products/${id}`;
 
       const { data } = await axios.get(finalUrl);
 
@@ -403,17 +389,9 @@ export const productActions = {
         withCredentials: true
       };
 
-      // Construct the URL correctly based on environment
-      let baseUrl = API_BASE_URL;
-      if (process.env.NODE_ENV === 'development') {
-        baseUrl = '';
-      }
-
-      // Ensure we're using HTTPS in production
-      let finalUrl = `${baseUrl}/products/${productId}/reviews`;
-      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
-        finalUrl = finalUrl.replace('http://', 'https://');
-      }
+      // Use proxy path in development, full URL in production
+      const baseUrl = process.env.NODE_ENV === 'development' ? '' : API_BASE_URL || '';
+      const finalUrl = `${baseUrl.replace(/\/$/, '')}/products/${productId}/reviews`;
 
       const { data } = await axios.post(finalUrl, review, config);
 
@@ -457,17 +435,9 @@ export const productActions = {
         withCredentials: true
       };
 
-      // Construct the URL correctly based on environment
-      let baseUrl = API_BASE_URL;
-      if (process.env.NODE_ENV === 'development') {
-        baseUrl = '';
-      }
-
-      // Ensure we're using HTTPS in production
-      let finalUrl = `${baseUrl}/products/${id}`;
-      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
-        finalUrl = finalUrl.replace('http://', 'https://');
-      }
+      // Use proxy path in development, full URL in production
+      const baseUrl = process.env.NODE_ENV === 'development' ? '' : API_BASE_URL || '';
+      const finalUrl = `${baseUrl.replace(/\/$/, '')}/products/${id}`;
 
       await axios.delete(finalUrl, config);
 
@@ -511,17 +481,9 @@ export const productActions = {
         withCredentials: true
       };
 
-      // Construct the URL correctly based on environment
-      let baseUrl = API_BASE_URL;
-      if (process.env.NODE_ENV === 'development') {
-        baseUrl = '';
-      }
-
-      // Ensure we're using HTTPS in production
-      let finalUrl = `${baseUrl}/products`;
-      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
-        finalUrl = finalUrl.replace('http://', 'https://');
-      }
+      // Use proxy path in development, full URL in production
+      const baseUrl = process.env.NODE_ENV === 'development' ? '' : API_BASE_URL || '';
+      const finalUrl = `${baseUrl.replace(/\/$/, '')}/products`;
 
       const { data } = await axios.post(finalUrl, product, config);
 
@@ -566,17 +528,9 @@ export const productActions = {
         withCredentials: true
       };
 
-      // Construct the URL correctly based on environment
-      let baseUrl = API_BASE_URL;
-      if (process.env.NODE_ENV === 'development') {
-        baseUrl = '';
-      }
-
-      // Ensure we're using HTTPS in production
-      let finalUrl = `${baseUrl}/products/${product._id}`;
-      if (process.env.NODE_ENV === 'production' && finalUrl.startsWith('http://')) {
-        finalUrl = finalUrl.replace('http://', 'https://');
-      }
+      // Use proxy path in development, full URL in production
+      const baseUrl = process.env.NODE_ENV === 'development' ? '' : API_BASE_URL || '';
+      const finalUrl = `${baseUrl.replace(/\/$/, '')}/products/${product._id}`;
 
       const { data } = await axios.put(finalUrl, product, config);
 

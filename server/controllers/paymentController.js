@@ -1,25 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
-const winston = require('winston');
-
-// Configure Winston logger
-const logger = winston.createLogger({
-  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      )
-    })
-  ]
-});
 
 // Initialize Razorpay instance only if credentials are available
 let razorpay = null;
@@ -29,9 +10,9 @@ if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
     key_secret: process.env.RAZORPAY_KEY_SECRET
   });
   
-  logger.info('Razorpay initialized successfully');
+  console.log('Razorpay initialized successfully');
 } else {
-  logger.warn('Razorpay credentials not found. Payment functionality will be disabled.');
+  console.warn('Razorpay credentials not found. Payment functionality will be disabled.');
 }
 
 // Helper function to check if Razorpay is configured
@@ -45,7 +26,7 @@ const isRazorpayConfigured = () => {
 const createOrder = asyncHandler(async (req, res) => {
   // Check if Razorpay is configured
   if (!isRazorpayConfigured()) {
-    logger.warn('Payment service not configured when creating order', {
+    console.warn('Payment service not configured when creating order:', {
       userId: req.user._id
     });
     
@@ -56,11 +37,11 @@ const createOrder = asyncHandler(async (req, res) => {
   }
   
   try {
-    const { amount, currency = 'INR', receipt } = req.body;
+    const { amount, currency = 'INR', receipt, orderId } = req.body;
     
     // Validate amount
     if (!amount || amount <= 0) {
-      logger.warn('Invalid amount provided for order creation', {
+      console.warn('Invalid amount provided for order creation:', {
         userId: req.user._id,
         amount
       });
@@ -69,9 +50,31 @@ const createOrder = asyncHandler(async (req, res) => {
       throw new Error('Invalid amount');
     }
     
+    // Validate that amount is a number
+    if (isNaN(amount)) {
+      console.warn('Non-numeric amount provided for order creation:', {
+        userId: req.user._id,
+        amount
+      });
+      
+      res.status(400);
+      throw new Error('Amount must be a number');
+    }
+    
+    // If orderId is provided, verify it matches the amount
+    if (orderId) {
+      // Here you would typically verify the order exists in your database
+      // and that the amount matches the order total
+      console.log('Order ID provided for payment verification:', {
+        orderId,
+        amount,
+        userId: req.user._id
+      });
+    }
+    
     // Create order options
     const options = {
-      amount: amount * 100, // Razorpay expects amount in paise
+      amount: Math.round(amount * 100), // Razorpay expects amount in paise, round to avoid floating point issues
       currency,
       receipt: receipt || `receipt_${Date.now()}`,
       payment_capture: 1 // Auto-capture payment
@@ -80,7 +83,7 @@ const createOrder = asyncHandler(async (req, res) => {
     // Create order
     const order = await razorpay.orders.create(options);
     
-    logger.info('Razorpay order created successfully', {
+    console.log('Razorpay order created successfully:', {
       orderId: order.id,
       amount: order.amount,
       currency: order.currency,
@@ -92,7 +95,7 @@ const createOrder = asyncHandler(async (req, res) => {
       order
     });
   } catch (error) {
-    logger.error('Error creating Razorpay order', {
+    console.error('Error creating Razorpay order:', {
       error: error.message,
       userId: req.user._id,
       body: req.body
@@ -112,7 +115,7 @@ const createOrder = asyncHandler(async (req, res) => {
 const verifyPayment = asyncHandler(async (req, res) => {
   // Check if Razorpay is configured
   if (!isRazorpayConfigured()) {
-    logger.warn('Payment service not configured when verifying payment', {
+    console.warn('Payment service not configured when verifying payment:', {
       userId: req.user._id
     });
     
@@ -127,7 +130,7 @@ const verifyPayment = asyncHandler(async (req, res) => {
     
     // Validate required fields
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      logger.warn('Missing required fields for payment verification', {
+      console.warn('Missing required fields for payment verification:', {
         userId: req.user._id,
         orderId: razorpay_order_id,
         paymentId: razorpay_payment_id
@@ -137,17 +140,51 @@ const verifyPayment = asyncHandler(async (req, res) => {
       throw new Error('Missing required payment information');
     }
     
+    // Validate field formats
+    if (typeof razorpay_order_id !== 'string' || razorpay_order_id.length > 50) {
+      console.warn('Invalid razorpay_order_id format:', {
+        userId: req.user._id,
+        orderId: razorpay_order_id
+      });
+      
+      res.status(400);
+      throw new Error('Invalid order ID format');
+    }
+    
+    if (typeof razorpay_payment_id !== 'string' || razorpay_payment_id.length > 50) {
+      console.warn('Invalid razorpay_payment_id format:', {
+        userId: req.user._id,
+        paymentId: razorpay_payment_id
+      });
+      
+      res.status(400);
+      throw new Error('Invalid payment ID format');
+    }
+    
+    if (typeof razorpay_signature !== 'string' || razorpay_signature.length !== 64) {
+      console.warn('Invalid razorpay_signature format:', {
+        userId: req.user._id,
+        signatureLength: razorpay_signature ? razorpay_signature.length : 0
+      });
+      
+      res.status(400);
+      throw new Error('Invalid signature format');
+    }
+    
     // Create expected signature
     const expectedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
     
-    // Verify signature
-    const isVerified = expectedSignature === razorpay_signature;
+    // Verify signature with timing-safe comparison to prevent timing attacks
+    const isVerified = crypto.timingSafeEqual(
+      Buffer.from(expectedSignature, 'hex'),
+      Buffer.from(razorpay_signature, 'hex')
+    );
     
     if (isVerified) {
-      logger.info('Payment verified successfully', {
+      console.log('Payment verified successfully:', {
         orderId: razorpay_order_id,
         paymentId: razorpay_payment_id,
         userId: req.user._id
@@ -158,7 +195,7 @@ const verifyPayment = asyncHandler(async (req, res) => {
         message: 'Payment verified successfully'
       });
     } else {
-      logger.warn('Payment verification failed - invalid signature', {
+      console.warn('Payment verification failed - invalid signature:', {
         orderId: razorpay_order_id,
         paymentId: razorpay_payment_id,
         userId: req.user._id
@@ -168,17 +205,26 @@ const verifyPayment = asyncHandler(async (req, res) => {
       throw new Error('Invalid payment signature');
     }
   } catch (error) {
-    logger.error('Error verifying payment', {
+    console.error('Error verifying payment:', {
       error: error.message,
       userId: req.user._id,
       body: req.body
     });
     
-    res.status(400).json({ 
-      success: false, 
-      message: 'Payment verification failed', 
-      error: error.message 
-    });
+    // Differentiate between validation errors and server errors
+    if (error.message.includes('Invalid') || error.message.includes('Missing')) {
+      res.status(400).json({ 
+        success: false, 
+        message: 'Payment verification failed', 
+        error: error.message 
+      });
+    } else {
+      res.status(500).json({ 
+        success: false, 
+        message: 'Payment verification failed', 
+        error: 'Internal server error during verification' 
+      });
+    }
   }
 });
 
@@ -188,7 +234,7 @@ const verifyPayment = asyncHandler(async (req, res) => {
 const getPaymentDetails = asyncHandler(async (req, res) => {
   // Check if Razorpay is configured
   if (!isRazorpayConfigured()) {
-    logger.warn('Payment service not configured when fetching payment details', {
+    console.warn('Payment service not configured when fetching payment details:', {
       userId: req.user._id
     });
     
@@ -203,7 +249,7 @@ const getPaymentDetails = asyncHandler(async (req, res) => {
     
     // Validate payment ID
     if (!paymentId) {
-      logger.warn('Payment ID missing when fetching payment details', {
+      console.warn('Payment ID missing when fetching payment details:', {
         userId: req.user._id
       });
       
@@ -214,7 +260,7 @@ const getPaymentDetails = asyncHandler(async (req, res) => {
     // Fetch payment details from Razorpay
     const payment = await razorpay.payments.fetch(paymentId);
     
-    logger.info('Payment details fetched successfully', {
+    console.log('Payment details fetched successfully:', {
       paymentId: payment.id,
       userId: req.user._id
     });
@@ -224,7 +270,7 @@ const getPaymentDetails = asyncHandler(async (req, res) => {
       payment
     });
   } catch (error) {
-    logger.error('Error fetching payment details', {
+    console.error('Error fetching payment details:', {
       error: error.message,
       paymentId: req.params.paymentId,
       userId: req.user._id
@@ -238,8 +284,96 @@ const getPaymentDetails = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Verify payment status with Razorpay API
+// @route   GET /payment/status/:paymentId
+// @access  Private
+const verifyPaymentStatus = asyncHandler(async (req, res) => {
+  // Check if Razorpay is configured
+  if (!isRazorpayConfigured()) {
+    console.warn('Payment service not configured when verifying payment status:', {
+      userId: req.user._id
+    });
+    
+    return res.status(503).json({ 
+      success: false, 
+      message: 'Payment service is not configured' 
+    });
+  }
+  
+  try {
+    const { paymentId } = req.params;
+    
+    // Validate payment ID
+    if (!paymentId) {
+      console.warn('Payment ID missing when verifying payment status:', {
+        userId: req.user._id
+      });
+      
+      res.status(400);
+      throw new Error('Payment ID is required');
+    }
+    
+    // Validate payment ID format
+    if (typeof paymentId !== 'string' || paymentId.length > 50) {
+      console.warn('Invalid payment ID format when verifying payment status:', {
+        userId: req.user._id,
+        paymentId
+      });
+      
+      res.status(400);
+      throw new Error('Invalid payment ID format');
+    }
+    
+    // Fetch payment details from Razorpay
+    const payment = await razorpay.payments.fetch(paymentId);
+    
+    // Verify payment status
+    const isValidStatus = ['captured', 'authorized'].includes(payment.status);
+    
+    console.log('Payment status verified:', {
+      paymentId: payment.id,
+      status: payment.status,
+      isValid: isValidStatus,
+      userId: req.user._id
+    });
+    
+    res.json({
+      success: true,
+      payment: {
+        id: payment.id,
+        status: payment.status,
+        amount: payment.amount,
+        currency: payment.currency,
+        isValid: isValidStatus
+      }
+    });
+  } catch (error) {
+    console.error('Error verifying payment status:', {
+      error: error.message,
+      paymentId: req.params.paymentId,
+      userId: req.user._id
+    });
+    
+    // Handle specific Razorpay errors
+    if (error.statusCode === 404) {
+      res.status(404).json({ 
+        success: false, 
+        message: 'Payment not found', 
+        error: 'Payment ID does not exist' 
+      });
+    } else {
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to verify payment status', 
+        error: error.message 
+      });
+    }
+  }
+});
+
 module.exports = {
   createOrder,
   verifyPayment,
-  getPaymentDetails
+  getPaymentDetails,
+  verifyPaymentStatus
 };

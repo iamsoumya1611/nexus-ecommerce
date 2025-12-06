@@ -1,145 +1,65 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useProduct, productActions } from '../../contexts/ProductContext';
-import axios from 'axios';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useAdmin } from '../../contexts/AdminContext';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 const ProductEdit = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+
+  const { getProductDetails, updateProduct, product, loading, error, successUpdate, errorUpdate, loadingUpdate } = useAdmin();
 
   const [name, setName] = useState('');
   const [price, setPrice] = useState(0);
   const [image, setImage] = useState('');
-  const [cloudinaryId, setCloudinaryId] = useState('');
   const [brand, setBrand] = useState('');
   const [category, setCategory] = useState('');
   const [countInStock, setCountInStock] = useState(0);
   const [description, setDescription] = useState('');
-  const [model, setModel] = useState('');
-  const [storage, setStorage] = useState('');
-  const [color, setColor] = useState('');
-  const [screenSize, setScreenSize] = useState('');
-  const [size, setSize] = useState('');
-  const [material, setMaterial] = useState('');
-  const [gender, setGender] = useState('');
-  const [author, setAuthor] = useState('');
-  const [publisher, setPublisher] = useState('');
-  const [pages, setPages] = useState(0);
-  const [weight, setWeight] = useState('');
-  const [dimensions, setDimensions] = useState('');
-  const [specifications, setSpecifications] = useState({});
   const [uploading, setUploading] = useState(false);
-
-  const { state: productState, dispatch: productDispatch } = useProduct();
-  const { details: productDetails, update: productUpdate } = productState;
-  const { loading, error, product } = productDetails;
-  const { loading: loadingUpdate, error: errorUpdate, success: successUpdate } = productUpdate;
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (successUpdate) {
-      productActions.resetUpdateProduct()(productDispatch);
       navigate('/admin/productlist');
     } else {
       if (!product.name || product._id !== id) {
-        productActions.listProductDetails(id)(productDispatch);
+        getProductDetails(id);
       } else {
         setName(product.name);
         setPrice(product.price);
         setImage(product.image);
-        setCloudinaryId(product.cloudinaryId || '');
         setBrand(product.brand);
         setCategory(product.category);
         setCountInStock(product.countInStock);
         setDescription(product.description);
-        setModel(product.model || '');
-        setStorage(product.storage || '');
-        setColor(product.color || '');
-        setScreenSize(product.screenSize || '');
-        setSize(product.size || '');
-        setMaterial(product.material || '');
-        setGender(product.gender || '');
-        setAuthor(product.author || '');
-        setPublisher(product.publisher || '');
-        setPages(product.pages || 0);
-        setWeight(product.weight || '');
-        setDimensions(product.dimensions || '');
-        setSpecifications(product.specifications || {});
       }
     }
-  }, [productDispatch, navigate, product, id, successUpdate]);
+  }, [getProductDetails, id, product, successUpdate, navigate]);
 
   const uploadFileHandler = async (e) => {
     const file = e.target.files[0];
-    const formData = new FormData();
-    formData.append('image', file);
+    // In a real app, you would upload the file to your server
+    // For now, we'll just simulate the upload
     setUploading(true);
-
-    try {
-      // Convert file to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = async () => {
-        const base64Image = reader.result;
-        
-        const config = {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        };
-
-        // Set base URL for axios
-        const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
-        
-        const { data } = await axios.post(`${API_BASE_URL}/upload`, { image: base64Image }, config);
-        
-        setImage(data.url);
-        setCloudinaryId(data.cloudinaryId);
-        setUploading(false);
-      };
-    } catch (error) {
-      console.error('Upload error:', error);
+    setTimeout(() => {
+      setImage(URL.createObjectURL(file));
       setUploading(false);
-    }
+    }, 1000);
   };
 
   const submitHandler = (e) => {
     e.preventDefault();
-    productActions.updateProduct({
+    updateProduct({
       _id: id,
       name,
       price,
       image,
-      cloudinaryId,
       brand,
       category,
       description,
-      countInStock,
-      model,
-      storage,
-      color,
-      screenSize,
-      size,
-      material,
-      gender,
-      author,
-      publisher,
-      pages,
-      weight,
-      dimensions,
-      specifications
-    })(productDispatch);
+      countInStock: parseInt(countInStock)
+    });
   };
-
-  // Categories for the dropdown
-  const categories = [
-    'Electronics',
-    'Fashion',
-    'Home & Kitchen',
-    'Sports',
-    'Books',
-    'Beauty'
-  ];
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -148,7 +68,7 @@ const ProductEdit = () => {
         Go Back
       </Link>
       
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold text-primary-900 mb-6">Edit Product</h1>
         
         {loadingUpdate && (
@@ -164,7 +84,7 @@ const ProductEdit = () => {
         
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+            <LoadingSpinner size="md" />
           </div>
         ) : error ? (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
@@ -205,25 +125,32 @@ const ProductEdit = () => {
               
               <div className="mb-4">
                 <label htmlFor="image" className="block text-sm font-medium text-primary-700 mb-2">
-                  Image URL
+                  Image
                 </label>
-                <input
-                  type="text"
-                  className="form-input w-full mb-2"
-                  id="image"
-                  placeholder="Enter image URL"
-                  value={image}
-                  onChange={(e) => setImage(e.target.value)}
-                  required
-                />
-                <div className="mt-2">
-                  <input
-                    type="file"
-                    className="form-input w-full"
-                    onChange={uploadFileHandler}
-                    disabled={uploading}
-                  />
-                  {uploading && <div>Uploading...</div>}
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <img className="h-16 w-16 rounded-md object-cover" src={image} alt={name} />
+                  </div>
+                  <div className="flex-grow">
+                    <input
+                      type="text"
+                      className="form-input w-full mb-2"
+                      id="image"
+                      placeholder="Enter image url"
+                      value={image}
+                      onChange={(e) => setImage(e.target.value)}
+                    />
+                    <input
+                      type="file"
+                      className="block w-full text-sm text-primary-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                      onChange={uploadFileHandler}
+                    />
+                    {uploading && (
+                      <div className="mt-2">
+                        <LoadingSpinner size="sm" centered={false} />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               
@@ -238,26 +165,7 @@ const ProductEdit = () => {
                   placeholder="Enter brand"
                   value={brand}
                   onChange={(e) => setBrand(e.target.value)}
-                  required
                 />
-              </div>
-              
-              <div className="mb-4">
-                <label htmlFor="category" className="block text-sm font-medium text-primary-700 mb-2">
-                  Category
-                </label>
-                <select
-                  className="form-input w-full"
-                  id="category"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  required
-                >
-                  <option value="">Select Category</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
               </div>
               
               <div className="mb-4">
@@ -275,6 +183,20 @@ const ProductEdit = () => {
                 />
               </div>
               
+              <div className="mb-4">
+                <label htmlFor="category" className="block text-sm font-medium text-primary-700 mb-2">
+                  Category
+                </label>
+                <input
+                  type="text"
+                  className="form-input w-full"
+                  id="category"
+                  placeholder="Enter category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                />
+              </div>
+              
               <div className="mb-6">
                 <label htmlFor="description" className="block text-sm font-medium text-primary-700 mb-2">
                   Description
@@ -282,205 +204,22 @@ const ProductEdit = () => {
                 <textarea
                   className="form-input w-full"
                   id="description"
-                  rows="4"
+                  rows="3"
                   placeholder="Enter description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  required
                 ></textarea>
               </div>
               
-              {/* Category-specific fields */}
-              {category === 'Electronics' && (
-                <>
-                  <div className="mb-4">
-                    <label htmlFor="model" className="block text-sm font-medium text-primary-700 mb-2">
-                      Model
-                    </label>
-                    <input
-                      type="text"
-                      className="form-input w-full"
-                      id="model"
-                      placeholder="Enter model"
-                      value={model}
-                      onChange={(e) => setModel(e.target.value)}
-                    />
+              <button type="submit" className="btn btn-primary w-full" disabled={loadingUpdate}>
+                {loadingUpdate ? (
+                  <div className="flex items-center justify-center">
+                    <LoadingSpinner size="sm" centered={false} />
+                    <span className="ml-2">Updating...</span>
                   </div>
-                  
-                  <div className="mb-4">
-                    <label htmlFor="storage" className="block text-sm font-medium text-primary-700 mb-2">
-                      Storage
-                    </label>
-                    <input
-                      type="text"
-                      className="form-input w-full"
-                      id="storage"
-                      placeholder="Enter storage"
-                      value={storage}
-                      onChange={(e) => setStorage(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="mb-4">
-                    <label htmlFor="color" className="block text-sm font-medium text-primary-700 mb-2">
-                      Color
-                    </label>
-                    <input
-                      type="text"
-                      className="form-input w-full"
-                      id="color"
-                      placeholder="Enter color"
-                      value={color}
-                      onChange={(e) => setColor(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="mb-4">
-                    <label htmlFor="screenSize" className="block text-sm font-medium text-primary-700 mb-2">
-                      Screen Size
-                    </label>
-                    <input
-                      type="text"
-                      className="form-input w-full"
-                      id="screenSize"
-                      placeholder="Enter screen size"
-                      value={screenSize}
-                      onChange={(e) => setScreenSize(e.target.value)}
-                    />
-                  </div>
-                </>
-              )}
-              
-              {category === 'Fashion' && (
-                <>
-                  <div className="mb-4">
-                    <label htmlFor="size" className="block text-sm font-medium text-primary-700 mb-2">
-                      Size
-                    </label>
-                    <input
-                      type="text"
-                      className="form-input w-full"
-                      id="size"
-                      placeholder="Enter size"
-                      value={size}
-                      onChange={(e) => setSize(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="mb-4">
-                    <label htmlFor="material" className="block text-sm font-medium text-primary-700 mb-2">
-                      Material
-                    </label>
-                    <input
-                      type="text"
-                      className="form-input w-full"
-                      id="material"
-                      placeholder="Enter material"
-                      value={material}
-                      onChange={(e) => setMaterial(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="mb-4">
-                    <label htmlFor="gender" className="block text-sm font-medium text-primary-700 mb-2">
-                      Gender
-                    </label>
-                    <input
-                      type="text"
-                      className="form-input w-full"
-                      id="gender"
-                      placeholder="Enter gender"
-                      value={gender}
-                      onChange={(e) => setGender(e.target.value)}
-                    />
-                  </div>
-                </>
-              )}
-              
-              {category === 'Books' && (
-                <>
-                  <div className="mb-4">
-                    <label htmlFor="author" className="block text-sm font-medium text-primary-700 mb-2">
-                      Author
-                    </label>
-                    <input
-                      type="text"
-                      className="form-input w-full"
-                      id="author"
-                      placeholder="Enter author"
-                      value={author}
-                      onChange={(e) => setAuthor(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="mb-4">
-                    <label htmlFor="publisher" className="block text-sm font-medium text-primary-700 mb-2">
-                      Publisher
-                    </label>
-                    <input
-                      type="text"
-                      className="form-input w-full"
-                      id="publisher"
-                      placeholder="Enter publisher"
-                      value={publisher}
-                      onChange={(e) => setPublisher(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="mb-4">
-                    <label htmlFor="pages" className="block text-sm font-medium text-primary-700 mb-2">
-                      Pages
-                    </label>
-                    <input
-                      type="number"
-                      className="form-input w-full"
-                      id="pages"
-                      placeholder="Enter number of pages"
-                      value={pages}
-                      onChange={(e) => setPages(e.target.value)}
-                    />
-                  </div>
-                </>
-              )}
-              
-              {(category === 'Home & Kitchen' || category === 'Sports' || category === 'Beauty') && (
-                <>
-                  <div className="mb-4">
-                    <label htmlFor="weight" className="block text-sm font-medium text-primary-700 mb-2">
-                      Weight
-                    </label>
-                    <input
-                      type="text"
-                      className="form-input w-full"
-                      id="weight"
-                      placeholder="Enter weight"
-                      value={weight}
-                      onChange={(e) => setWeight(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="mb-4">
-                    <label htmlFor="dimensions" className="block text-sm font-medium text-primary-700 mb-2">
-                      Dimensions
-                    </label>
-                    <input
-                      type="text"
-                      className="form-input w-full"
-                      id="dimensions"
-                      placeholder="Enter dimensions"
-                      value={dimensions}
-                      onChange={(e) => setDimensions(e.target.value)}
-                    />
-                  </div>
-                </>
-              )}
-              
-              <button 
-                type="submit" 
-                className="btn btn-primary w-full"
-                disabled={loadingUpdate}
-              >
-                {loadingUpdate ? 'Updating...' : 'Update Product'}
+                ) : (
+                  'Update'
+                )}
               </button>
             </form>
           </div>

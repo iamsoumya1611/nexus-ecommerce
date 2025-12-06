@@ -1,25 +1,15 @@
 const Product = require('../models/Product');
 const asyncHandler = require('express-async-handler');
-const winston = require('winston');
 const { cache, clearCache } = require('../middleware/cacheMiddleware');
+const { 
+  successResponse, 
+  errorResponse, 
+  notFoundResponse, 
+  badRequestResponse 
+} = require('../utils/apiResponse');
 
-// Configure Winston logger
-const logger = winston.createLogger({
-  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      )
-    })
-  ]
-});
+// Add the ObjectId validator
+const { isValidObjectId } = require('../utils/objectIdValidator');
 
 // @desc    Fetch all products
 // @route   GET /api/products
@@ -27,42 +17,82 @@ const logger = winston.createLogger({
 const getProducts = [
   cache('products', 300), // Cache for 5 minutes
   asyncHandler(async (req, res) => {
-    const pageSize = 12;
-    const page = Number(req.query.pageNumber) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 12;
+    const page = parseInt(req.query.pageNumber) || 1;
+    
+    // Validate pagination parameters
+    if (page < 1 || pageSize < 1 || pageSize > 50) {
+      console.warn('Invalid pagination parameters:', { page, pageSize });
+      return res.status(400).json(badRequestResponse('Invalid pagination parameters'));
+    }
 
-    const keyword = req.query.keyword
-      ? {
-          name: {
-            $regex: req.query.keyword,
-            $options: 'i',
-          },
-        }
-      : {};
+    // Build query object
+    let query = {};
+    
+    // Add keyword search if provided
+    if (req.query.keyword) {
+      query.$or = [
+        { name: { $regex: req.query.keyword, $options: 'i' } },
+        { description: { $regex: req.query.keyword, $options: 'i' } },
+        { brand: { $regex: req.query.keyword, $options: 'i' } },
+        { category: { $regex: req.query.keyword, $options: 'i' } }
+      ];
+    }
+    
+    // Add category filter if provided
+    if (req.query.category) {
+      query.category = req.query.category;
+    }
+    
+    // Add brand filter if provided
+    if (req.query.brand) {
+      query.brand = req.query.brand;
+    }
+    
+    // Add price range filters if provided
+    if (req.query.minPrice || req.query.maxPrice) {
+      query.price = {};
+      if (req.query.minPrice) {
+        query.price.$gte = parseFloat(req.query.minPrice);
+      }
+      if (req.query.maxPrice) {
+        query.price.$lte = parseFloat(req.query.maxPrice);
+      }
+    }
+    
+    // Add rating filter if provided
+    if (req.query.rating) {
+      query.rating = { $gte: parseFloat(req.query.rating) };
+    }
 
     try {
-      const count = await Product.countDocuments({ ...keyword });
-      const products = await Product.find({ ...keyword })
-        .limit(pageSize)
-        .skip(pageSize * (page - 1));
+      // Use Promise.all for concurrent operations
+      const [count, products] = await Promise.all([
+        Product.countDocuments(query),
+        Product.find(query)
+          .limit(pageSize)
+          .skip(pageSize * (page - 1))
+          .sort({ createdAt: -1 }) // Sort by newest first
+          .lean() // Use lean for better performance
+      ]);
 
-      logger.info('Products fetched successfully', {
-        count: products.length,
-        page,
-        totalPages: Math.ceil(count / pageSize),
-        keyword: req.query.keyword || 'none'
-      });
-
-      res.json({
+      res.json(successResponse({
         products,
         page,
         pages: Math.ceil(count / pageSize),
-      });
+        total: count
+      }, 'Products fetched successfully'));
     } catch (error) {
-      logger.error('Error fetching products', {
+      console.error('Error fetching products:', {
         error: error.message,
-        keyword: req.query.keyword || 'none'
+        stack: error.stack,
+        filters: {
+          keyword: req.query.keyword || 'none',
+          category: req.query.category || 'all',
+          brand: req.query.brand || 'all'
+        }
       });
-      throw new Error('Failed to fetch products');
+      return res.status(500).json(errorResponse(error, 'Failed to fetch products'));
     }
   })
 ];
@@ -74,35 +104,59 @@ const getProductById = [
   cache('product', 600), // Cache for 10 minutes
   asyncHandler(async (req, res) => {
     try {
-      const product = await Product.findById(req.params.id);
+      // Validate ObjectId format using utility
+      if (!isValidObjectId(req.params.id)) {
+        console.warn('Invalid product ID format:', {
+          productId: req.params.id,
+          ip: req.ip,
+          userAgent: req.get('User-Agent')
+        });
+        
+        return res.status(400).json(badRequestResponse('Invalid product ID format'));
+      }
+      
+      const product = await Product.findById(req.params.id).lean();
 
       if (product) {
-        logger.info('Product fetched successfully', {
+        console.log('Product fetched successfully:', {
           productId: product._id,
           productName: product.name
         });
         
-        res.json(product);
+        // Add related products
+        const relatedProducts = await Product.find({
+          _id: { $ne: product._id },
+          category: product.category
+        })
+        .limit(4)
+        .select('name image price rating')
+        .lean();
+        
+        res.json(successResponse({
+          product: {
+            ...product,
+            relatedProducts
+          }
+        }, 'Product fetched successfully'));
       } else {
-        logger.warn('Product not found', {
+        console.warn('Product not found:', {
           productId: req.params.id
         });
         
-        res.status(404);
-        throw new Error('Product not found');
+        return res.status(404).json(notFoundResponse('Product'));
       }
     } catch (error) {
-      logger.error('Error fetching product', {
+      console.error('Error fetching product:', {
         error: error.message,
+        stack: error.stack,
         productId: req.params.id
       });
       
       if (error.name === 'CastError') {
-        res.status(404);
-        throw new Error('Product not found');
+        return res.status(400).json(badRequestResponse('Invalid product ID'));
       }
       
-      throw error;
+      return res.status(500).json(errorResponse(error, 'Failed to fetch product'));
     }
   })
 ];
@@ -120,15 +174,15 @@ const deleteProduct = [
       if (product) {
         await product.remove();
         
-        logger.info('Product deleted successfully', {
+        console.log('Product deleted successfully:', {
           productId: product._id,
           productName: product.name,
           deletedBy: req.user._id
         });
         
-        res.json({ message: 'Product removed' });
+        res.json(successResponse(null, 'Product removed successfully'));
       } else {
-        logger.warn('Attempt to delete non-existent product', {
+        console.warn('Attempt to delete non-existent product:', {
           productId: req.params.id,
           userId: req.user._id
         });
@@ -137,7 +191,7 @@ const deleteProduct = [
         throw new Error('Product not found');
       }
     } catch (error) {
-      logger.error('Error deleting product', {
+      console.error('Error deleting product:', {
         error: error.message,
         productId: req.params.id,
         userId: req.user._id
@@ -174,21 +228,21 @@ const createProduct = [
 
       const createdProduct = await product.save();
       
-      logger.info('Product created successfully', {
+      console.log('Product created successfully:', {
         productId: createdProduct._id,
         productName: createdProduct.name,
         createdBy: req.user._id
       });
       
-      res.status(201).json(createdProduct);
+      res.status(201).json(successResponse(createdProduct, 'Product created successfully', 201));
     } catch (error) {
-      logger.error('Error creating product', {
+      console.error('Error creating product:', {
         error: error.message,
-        userId: req.user._id
+        createdBy: req.user._id,
+        body: req.body
       });
       
-      res.status(400);
-      throw new Error('Invalid product data');
+      throw error;
     }
   })
 ];
@@ -215,6 +269,8 @@ const updateProduct = [
       const product = await Product.findById(req.params.id);
 
       if (product) {
+        const oldCategory = product.category;
+        
         product.name = name || product.name;
         product.price = price || product.price;
         product.description = description || product.description;
@@ -225,6 +281,11 @@ const updateProduct = [
         product.specifications = specifications || product.specifications;
 
         const updatedProduct = await product.save();
+        
+        // Clear cache for related products if category changed
+        if (oldCategory !== product.category) {
+          await clearCacheByKey(`GET_product_${req.originalUrl}_${JSON.stringify(req.query)}`);
+        }
         
         logger.info('Product updated successfully', {
           productId: updatedProduct._id,

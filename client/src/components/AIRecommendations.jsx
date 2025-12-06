@@ -3,6 +3,7 @@ import { useRecommendation, recommendationActions } from '../contexts/Recommenda
 import { useAuth } from '../contexts/AuthContext';
 import Product from './Product';
 import { ClipLoader } from 'react-spinners';
+import LoadingSpinner from './LoadingSpinner';
 
 const AIRecommendations = () => {
   const { state: recommendationState, dispatch: recommendationDispatch } = useRecommendation();
@@ -29,7 +30,7 @@ const AIRecommendations = () => {
 
       {loading ? (
         <div className="flex justify-center items-center h-64">
-          <ClipLoader color="#4F46E5" size={50} />
+          <LoadingSpinner size="md" />
         </div>
       ) : error ? (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6" role="alert">

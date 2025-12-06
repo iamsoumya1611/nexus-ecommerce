@@ -2,6 +2,13 @@ const Review = require('../models/Review');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const asyncHandler = require('express-async-handler');
+const { 
+  successResponse, 
+  errorResponse, 
+  notFoundResponse, 
+  badRequestResponse,
+  forbiddenResponse
+} = require('../utils/apiResponse');
 
 // @desc    Get all reviews for a product
 // @route   GET /api/reviews/product/:productId
@@ -13,20 +20,27 @@ const getProductReviews = asyncHandler(async (req, res) => {
     // Check if product exists
     const product = await Product.findById(productId);
     if (!product) {
-      res.status(404);
-      throw new Error('Product not found');
+      console.warn('Product not found when fetching reviews:', { productId });
+      return res.status(404).json(notFoundResponse('Product'));
     }
     
     const reviews = await Review.find({ product: productId })
       .populate('user', 'name')
-      .sort('-createdAt');
+      .sort({ createdAt: -1 });
     
-    res.json(reviews);
+    console.log('Product reviews fetched successfully:', {
+      productId,
+      reviewCount: reviews.length
+    });
+    
+    res.json(successResponse(reviews, 'Product reviews fetched successfully'));
   } catch (error) {
-    if (res.statusCode === 404) {
-      throw error;
-    }
-    res.status(500).json({ message: 'Failed to fetch product reviews', error: error.message });
+    console.error('Error fetching product reviews:', {
+      error: error.message,
+      productId: req.params.productId
+    });
+    
+    res.status(500).json(errorResponse(error, 'Failed to fetch product reviews'));
   }
 });
 
@@ -35,56 +49,84 @@ const getProductReviews = asyncHandler(async (req, res) => {
 // @access  Private
 const createReview = asyncHandler(async (req, res) => {
   try {
-    const { productId, rating, title, comment } = req.body;
+    const { rating, comment, productId } = req.body;
+    
+    // Validate required fields
+    if (!rating || !productId) {
+      console.warn('Missing required fields for review creation:', {
+        userId: req.user._id,
+        rating,
+        productId
+      });
+      return res.status(400).json(badRequestResponse('Rating and product ID are required'));
+    }
     
     // Check if product exists
     const product = await Product.findById(productId);
     if (!product) {
-      res.status(404);
-      throw new Error('Product not found');
+      console.warn('Product not found when creating review:', {
+        userId: req.user._id,
+        productId
+      });
+      return res.status(404).json(notFoundResponse('Product'));
     }
     
     // Check if user has purchased this product
     const order = await Order.findOne({
       user: req.user._id,
       'orderItems.product': productId,
-      isDelivered: true
+      isPaid: true
     });
     
-    const verifiedPurchase = !!order;
+    if (!order) {
+      console.warn('User has not purchased product for review:', {
+        userId: req.user._id,
+        productId
+      });
+      return res.status(400).json(badRequestResponse('You must purchase this product to review it'));
+    }
     
     // Check if user has already reviewed this product
     const existingReview = await Review.findOne({
-      product: productId,
-      user: req.user._id
+      user: req.user._id,
+      product: productId
     });
     
     if (existingReview) {
-      res.status(400);
-      throw new Error('You have already reviewed this product');
+      console.warn('User has already reviewed product:', {
+        userId: req.user._id,
+        productId
+      });
+      return res.status(400).json(badRequestResponse('You have already reviewed this product'));
     }
     
-    // Create review
     const review = new Review({
-      product: productId,
-      user: req.user._id,
       rating: Number(rating),
-      title,
       comment,
-      verifiedPurchase
+      user: req.user._id,
+      product: productId
     });
     
     const createdReview = await review.save();
     
-    // Populate user details
+    // Populate user name for response
     await createdReview.populate('user', 'name');
     
-    res.status(201).json(createdReview);
+    console.log('Review created successfully:', {
+      reviewId: createdReview._id,
+      userId: req.user._id,
+      productId
+    });
+    
+    res.status(201).json(successResponse(createdReview, 'Review created successfully', 201));
   } catch (error) {
-    if (res.statusCode === 404 || res.statusCode === 400) {
-      throw error;
-    }
-    res.status(500).json({ message: 'Failed to create review', error: error.message });
+    console.error('Error creating review:', {
+      error: error.message,
+      userId: req.user._id,
+      body: req.body
+    });
+    
+    res.status(500).json(errorResponse(error, 'Failed to create review'));
   }
 });
 
@@ -93,39 +135,59 @@ const createReview = asyncHandler(async (req, res) => {
 // @access  Private
 const updateReview = asyncHandler(async (req, res) => {
   try {
-    const { id } = req.params;
-    const { rating, title, comment } = req.body;
+    const { rating, comment } = req.body;
     
-    // Find review
-    const review = await Review.findById(id);
+    // Validate required fields
+    if (!rating) {
+      console.warn('Missing rating for review update:', {
+        userId: req.user._id,
+        reviewId: req.params.id
+      });
+      return res.status(400).json(badRequestResponse('Rating is required'));
+    }
+    
+    const review = await Review.findById(req.params.id);
     
     if (!review) {
-      res.status(404);
-      throw new Error('Review not found');
+      console.warn('Review not found for update:', {
+        userId: req.user._id,
+        reviewId: req.params.id
+      });
+      return res.status(404).json(notFoundResponse('Review'));
     }
     
-    // Check if user is authorized to update this review
+    // Check if user owns this review
     if (review.user.toString() !== req.user._id.toString()) {
-      res.status(403);
-      throw new Error('Not authorized to update this review');
+      console.warn('Unauthorized review update attempt:', {
+        userId: req.user._id,
+        reviewId: req.params.id,
+        reviewOwnerId: review.user.toString()
+      });
+      return res.status(403).json(forbiddenResponse('Not authorized to update this review'));
     }
     
-    // Update review
-    review.rating = rating || review.rating;
-    review.title = title || review.title;
+    review.rating = Number(rating);
     review.comment = comment || review.comment;
     
     const updatedReview = await review.save();
     
-    // Populate user details
+    // Populate user name for response
     await updatedReview.populate('user', 'name');
     
-    res.json(updatedReview);
+    console.log('Review updated successfully:', {
+      reviewId: updatedReview._id,
+      userId: req.user._id
+    });
+    
+    res.json(successResponse(updatedReview, 'Review updated successfully'));
   } catch (error) {
-    if (res.statusCode === 404 || res.statusCode === 403) {
-      throw error;
-    }
-    res.status(500).json({ message: 'Failed to update review', error: error.message });
+    console.error('Error updating review:', {
+      error: error.message,
+      userId: req.user._id,
+      reviewId: req.params.id
+    });
+    
+    res.status(500).json(errorResponse(error, 'Failed to update review'));
   }
 });
 
@@ -134,30 +196,42 @@ const updateReview = asyncHandler(async (req, res) => {
 // @access  Private
 const deleteReview = asyncHandler(async (req, res) => {
   try {
-    const { id } = req.params;
-    
-    // Find review
-    const review = await Review.findById(id);
+    const review = await Review.findById(req.params.id);
     
     if (!review) {
-      res.status(404);
-      throw new Error('Review not found');
+      console.warn('Review not found for deletion:', {
+        userId: req.user._id,
+        reviewId: req.params.id
+      });
+      return res.status(404).json(notFoundResponse('Review'));
     }
     
-    // Check if user is authorized to delete this review
+    // Check if user owns this review or is admin
     if (review.user.toString() !== req.user._id.toString() && !req.user.isAdmin) {
-      res.status(403);
-      throw new Error('Not authorized to delete this review');
+      console.warn('Unauthorized review deletion attempt:', {
+        userId: req.user._id,
+        reviewId: req.params.id,
+        reviewOwnerId: review.user.toString()
+      });
+      return res.status(403).json(forbiddenResponse('Not authorized to delete this review'));
     }
     
     await review.remove();
     
-    res.json({ message: 'Review removed' });
+    console.log('Review deleted successfully:', {
+      reviewId: req.params.id,
+      userId: req.user._id
+    });
+    
+    res.json(successResponse({}, 'Review deleted successfully'));
   } catch (error) {
-    if (res.statusCode === 404 || res.statusCode === 403) {
-      throw error;
-    }
-    res.status(500).json({ message: 'Failed to delete review', error: error.message });
+    console.error('Error deleting review:', {
+      error: error.message,
+      userId: req.user._id,
+      reviewId: req.params.id
+    });
+    
+    res.status(500).json(errorResponse(error, 'Failed to delete review'));
   }
 });
 
@@ -166,26 +240,45 @@ const deleteReview = asyncHandler(async (req, res) => {
 // @access  Private
 const markReviewAsHelpful = asyncHandler(async (req, res) => {
   try {
-    const { id } = req.params;
-    
-    // Find review
-    const review = await Review.findById(id);
+    const review = await Review.findById(req.params.id);
     
     if (!review) {
-      res.status(404);
-      throw new Error('Review not found');
+      console.warn('Review not found when marking as helpful:', {
+        userId: req.user._id,
+        reviewId: req.params.id
+      });
+      return res.status(404).json(notFoundResponse('Review'));
     }
     
-    // Increment helpful count
-    review.helpful += 1;
+    // Check if user has already marked this review as helpful
+    if (review.helpfulUsers.includes(req.user._id)) {
+      console.warn('User has already marked review as helpful:', {
+        userId: req.user._id,
+        reviewId: req.params.id
+      });
+      return res.status(400).json(badRequestResponse('You have already marked this review as helpful'));
+    }
+    
+    // Add user to helpful users and increment helpful count
+    review.helpfulUsers.push(req.user._id);
+    review.helpfulCount = review.helpfulUsers.length;
+    
     const updatedReview = await review.save();
     
-    res.json(updatedReview);
+    console.log('Review marked as helpful:', {
+      reviewId: updatedReview._id,
+      userId: req.user._id
+    });
+    
+    res.json(successResponse(updatedReview, 'Review marked as helpful'));
   } catch (error) {
-    if (res.statusCode === 404) {
-      throw error;
-    }
-    res.status(500).json({ message: 'Failed to mark review as helpful', error: error.message });
+    console.error('Error marking review as helpful:', {
+      error: error.message,
+      userId: req.user._id,
+      reviewId: req.params.id
+    });
+    
+    res.status(500).json(errorResponse(error, 'Failed to mark review as helpful'));
   }
 });
 
@@ -194,26 +287,46 @@ const markReviewAsHelpful = asyncHandler(async (req, res) => {
 // @access  Private
 const markReviewAsNotHelpful = asyncHandler(async (req, res) => {
   try {
-    const { id } = req.params;
-    
-    // Find review
-    const review = await Review.findById(id);
+    const review = await Review.findById(req.params.id);
     
     if (!review) {
-      res.status(404);
-      throw new Error('Review not found');
+      console.warn('Review not found when marking as not helpful:', {
+        userId: req.user._id,
+        reviewId: req.params.id
+      });
+      return res.status(404).json(notFoundResponse('Review'));
     }
     
-    // Increment not helpful count
-    review.notHelpful += 1;
+    // Check if user has marked this review as helpful
+    const userIndex = review.helpfulUsers.indexOf(req.user._id);
+    if (userIndex === -1) {
+      console.warn('User has not marked review as helpful:', {
+        userId: req.user._id,
+        reviewId: req.params.id
+      });
+      return res.status(400).json(badRequestResponse('You have not marked this review as helpful'));
+    }
+    
+    // Remove user from helpful users and decrement helpful count
+    review.helpfulUsers.splice(userIndex, 1);
+    review.helpfulCount = review.helpfulUsers.length;
+    
     const updatedReview = await review.save();
     
-    res.json(updatedReview);
+    console.log('Review marked as not helpful:', {
+      reviewId: updatedReview._id,
+      userId: req.user._id
+    });
+    
+    res.json(successResponse(updatedReview, 'Review marked as not helpful'));
   } catch (error) {
-    if (res.statusCode === 404) {
-      throw error;
-    }
-    res.status(500).json({ message: 'Failed to mark review as not helpful', error: error.message });
+    console.error('Error marking review as not helpful:', {
+      error: error.message,
+      userId: req.user._id,
+      reviewId: req.params.id
+    });
+    
+    res.status(500).json(errorResponse(error, 'Failed to mark review as not helpful'));
   }
 });
 

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import axios from 'axios';
 
 // Initial state
 const initialState = {
@@ -116,71 +117,94 @@ export const useCart = () => {
 
 // Action creators (similar to Redux actions)
 export const cartActions = {
-  addToCart: (id, qty) => async (dispatch, getState) => {
+  addToCart: (id, qty) => async (dispatch) => {
     try {
-      // In a real app, you would fetch product data from an API
-      // For now, we'll simulate getting product data
-      // This would typically be an API call like:
-      // const response = await fetch(`/api/products/${id}`);
-      // const data = await response.json();
+      // Use proxy path in development, full URL in production
+      const baseUrl = process.env.NODE_ENV === 'development' ? '' : process.env.REACT_APP_API_URL || '';
+      const finalUrl = `${baseUrl.replace(/\/$/, '')}/cart`;
       
-      // For demo purposes, we'll create a mock product object
-      // In a real implementation, replace this with actual API call
-      const mockProductData = {
-        _id: id,
-        name: `Product ${id}`,
-        image: '/placeholder.jpg',
-        price: 29.99,
-        countInStock: 5
+      const config = {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       };
       
-      const item = {
-        product: mockProductData._id,
-        name: mockProductData.name,
-        image: mockProductData.image,
-        price: mockProductData.price,
-        countInStock: mockProductData.countInStock,
-        qty
-      };
+      const { data } = await axios.post(finalUrl, { productId: id, qty }, config);
       
       dispatch({
         type: 'CART_ADD_ITEM',
-        payload: item
+        payload: data
       });
       
       toast.success('Item added to cart!');
+      return { success: true, data };
     } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to add item to cart';
       console.error('Error adding item to cart:', error);
-      toast.error('Failed to add item to cart');
+      toast.error(errorMessage);
+      return { success: false, error: errorMessage };
     }
   },
   
-  removeFromCart: (id) => (dispatch) => {
-    dispatch({
-      type: 'CART_REMOVE_ITEM',
-      payload: id
-    });
-    
-    toast.success('Item removed from cart!');
+  removeFromCart: (id) => async (dispatch) => {
+    try {
+      // Use proxy path in development, full URL in production
+      const baseUrl = process.env.NODE_ENV === 'development' ? '' : process.env.REACT_APP_API_URL || '';
+      const finalUrl = `${baseUrl.replace(/\/$/, '')}/cart/${id}`;
+      
+      await axios.delete(finalUrl);
+      
+      dispatch({
+        type: 'CART_REMOVE_ITEM',
+        payload: id
+      });
+      
+      toast.success('Item removed from cart!');
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to remove item from cart';
+      console.error('Error removing item from cart:', error);
+      toast.error(errorMessage);
+      return { success: false, error: errorMessage };
+    }
   },
   
-  saveShippingAddress: (data) => (dispatch) => {
-    dispatch({
-      type: 'CART_SAVE_SHIPPING_ADDRESS',
-      payload: data
-    });
+  saveShippingAddress: (data) => async (dispatch) => {
+    try {
+      dispatch({
+        type: 'CART_SAVE_SHIPPING_ADDRESS',
+        payload: data
+      });
+      localStorage.setItem('shippingAddress', JSON.stringify(data));
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to save shipping address';
+      console.error('Error saving shipping address:', error);
+      toast.error(errorMessage);
+      return { success: false, error: errorMessage };
+    }
   },
   
-  savePaymentMethod: (data) => (dispatch) => {
-    dispatch({
-      type: 'CART_SAVE_PAYMENT_METHOD',
-      payload: data
-    });
+  savePaymentMethod: (data) => async (dispatch) => {
+    try {
+      dispatch({
+        type: 'CART_SAVE_PAYMENT_METHOD',
+        payload: data
+      });
+      localStorage.setItem('paymentMethod', JSON.stringify(data));
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to save payment method';
+      console.error('Error saving payment method:', error);
+      toast.error(errorMessage);
+      return { success: false, error: errorMessage };
+    }
   },
   
   clearCartItems: () => (dispatch) => {
     dispatch({
       type: 'CART_CLEAR_ITEMS'
     });
+    localStorage.removeItem('cartItems');
   }
 };

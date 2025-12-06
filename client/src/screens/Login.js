@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -32,7 +33,7 @@ const Login = () => {
           <h2 className="text-2xl font-bold text-center text-primary-900 mb-6">Welcome Back</h2>
           {loading && (
             <div className="flex justify-center my-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500"></div>
+              <LoadingSpinner size="sm" />
             </div>
           )}
           {error && (
@@ -49,12 +50,13 @@ const Login = () => {
                 type="email"
                 className="form-input w-full"
                 id="email"
-                placeholder="Enter your email"
+                placeholder="Enter email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
+
             <div className="mb-6">
               <label htmlFor="password" className="block text-sm font-medium text-primary-700 mb-2">
                 Password
@@ -63,26 +65,26 @@ const Login = () => {
                 type="password"
                 className="form-input w-full"
                 id="password"
-                placeholder="Enter your password"
+                placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
-            <div className="mb-6">
-              <button type="submit" className="btn btn-primary w-full" disabled={loading}>
-                {loading ? 'Signing In...' : 'Sign In'}
-              </button>
+
+            <button type="submit" className="btn btn-primary w-full mb-4" disabled={loading}>
+              {loading ? 'Signing In...' : 'Sign In'}
+            </button>
+
+            <div className="text-center">
+              <p className="text-primary-700">
+                New Customer?{' '}
+                <Link to={redirect ? `/register?redirect=${redirect}` : '/register'} className="text-primary-600 hover:text-primary-800 font-medium">
+                  Register
+                </Link>
+              </p>
             </div>
           </form>
-          <div className="text-center">
-            <p className="text-primary-700">
-              New Customer?{' '}
-              <Link to={redirect ? `/register?redirect=${redirect}` : '/register'} className="text-primary-700 font-medium hover:underline">
-                Register
-              </Link>
-            </p>
-          </div>
         </div>
       </div>
     </div>

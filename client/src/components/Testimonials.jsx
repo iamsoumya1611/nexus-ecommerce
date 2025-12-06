@@ -4,27 +4,27 @@ const Testimonials = () => {
   const testimonials = [
     {
       id: 1,
-      name: "Ritika Jaiswal",
-      role: "Verified Customer",
-      content: "The quality of products here is exceptional. I've been a loyal customer for over a year now and have never been disappointed.",
+      name: "Gita Chodhary",
+      role: "Regular Customer",
+      avatar: "https://placehold.co/100x100/6366f1/white?text=SJ",
       rating: 5,
-      avatar: "https://placehold.co/80x80/e0e7ff/e0e7ff"
+      content: "Nexus has completely transformed my shopping experience. The quality of products and fast delivery exceeded my expectations!"
     },
     {
       id: 2,
-      name: "Anuj Desai",
-      role: "Verified Customer",
-      content: "Fast shipping and excellent customer service. The product arrived in perfect condition and exceeded my expectations.",
+      name: "Mayank Sharma",
+      role: "Tech Enthusiast",
+      avatar: "https://placehold.co/100x100/4f46e5/white?text=MC",
       rating: 5,
-      avatar: "https://placehold.co/80x80/a5b4fc/a5b4fc"
+      content: "As someone who values efficiency, I appreciate how easy it is to find exactly what I need. The AI recommendations are spot on!"
     },
     {
       id: 3,
-      name: "Nikhil Verma",
-      role: "Verified Customer",
-      content: "Great prices and wide selection. I always find what I'm looking for here. Will definitely recommend to friends and family.",
+      name: "Ekta Rastogi",
+      role: "Fashion Blogger",
+      avatar: "https://placehold.co/100x100/a5b4fc/white?text=ER",
       rating: 4,
-      avatar: "https://placehold.co/80x80/6366f1/6366f1"
+      content: "The fashion section is well-curated with trendy pieces. Customer service resolved my sizing issue promptly. Will shop again!"
     }
   ];
 
@@ -33,7 +33,7 @@ const Testimonials = () => {
       <div className="text-center mb-12">
         <h2 className="text-3xl font-bold text-primary-900 mb-4">What Our Customers Say</h2>
         <p className="text-primary-700 max-w-2xl mx-auto">
-          Don't just take our word for it. Here's what our satisfied customers have to say about their experience.
+          Don't just take our word for it. Hear from our satisfied customers about their shopping experiences.
         </p>
       </div>
       
@@ -45,6 +45,7 @@ const Testimonials = () => {
                 src={testimonial.avatar} 
                 alt={testimonial.name} 
                 className="w-12 h-12 rounded-full mr-4"
+                loading="lazy"
               />
               <div>
                 <h4 className="font-bold text-primary-900">{testimonial.name}</h4>

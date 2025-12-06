@@ -1,25 +1,17 @@
 const Order = require('../models/Order');
-const Cart = require('../models/Cart');
+const Product = require('../models/Product');
 const asyncHandler = require('express-async-handler');
-const winston = require('winston');
+const mongoose = require('mongoose');
+const { 
+  successResponse, 
+  errorResponse, 
+  notFoundResponse, 
+  badRequestResponse,
+  forbiddenResponse
+} = require('../utils/apiResponse');
 
-// Configure Winston logger
-const logger = winston.createLogger({
-  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      )
-    })
-  ]
-});
+// Add the ObjectId validator
+const { isValidObjectId } = require('../utils/objectIdValidator');
 
 // @desc    Create new order
 // @route   POST /api/orders
@@ -36,47 +28,53 @@ const addOrderItems = asyncHandler(async (req, res) => {
       totalPrice,
     } = req.body;
 
-    if (orderItems && orderItems.length === 0) {
-      logger.warn('Attempt to create order with no items', {
-        userId: req.user._id
-      });
-      
-      res.status(400);
-      throw new Error('No order items');
-    } else {
-      const order = new Order({
-        orderItems,
-        user: req.user._id,
-        shippingAddress,
-        paymentMethod,
-        itemsPrice,
-        taxPrice,
-        shippingPrice,
-        totalPrice,
-      });
-
-      const createdOrder = await order.save();
-      
-      // Clear cart after order creation
-      await Cart.findOneAndDelete({ user: req.user._id });
-      
-      logger.info('Order created successfully', {
-        orderId: createdOrder._id,
-        userId: req.user._id,
-        totalAmount: totalPrice,
-        itemCount: orderItems.length
-      });
-
-      res.status(201).json(createdOrder);
+    // Validate required fields
+    if (!orderItems || orderItems.length === 0) {
+      console.warn('No order items provided:', { userId: req.user._id });
+      return res.status(400).json(badRequestResponse('No order items'));
     }
+
+    // Validate each order item
+    for (const item of orderItems) {
+      if (!item.product || !item.qty || !item.price) {
+        console.warn('Invalid order item data:', { 
+          userId: req.user._id, 
+          item 
+        });
+        return res.status(400).json(badRequestResponse('Invalid order item data'));
+      }
+    }
+
+    // Create order
+    const order = new Order({
+      orderItems,
+      user: req.user._id,
+      shippingAddress,
+      paymentMethod,
+      itemsPrice,
+      taxPrice,
+      shippingPrice,
+      totalPrice,
+    });
+
+    const createdOrder = await order.save();
+    
+    console.log('Order created successfully:', {
+      orderId: createdOrder._id,
+      userId: req.user._id,
+      total: totalPrice
+    });
+
+    res.status(201).json(successResponse(createdOrder, 'Order created successfully', 201));
   } catch (error) {
-    logger.error('Error creating order', {
+    console.error('Error creating order:', {
       error: error.message,
+      stack: error.stack,
       userId: req.user._id,
       body: req.body
     });
     
-    throw error;
+    return res.status(500).json(errorResponse(error, 'Failed to create order'));
   }
 });
 
@@ -85,40 +83,58 @@ const addOrderItems = asyncHandler(async (req, res) => {
 // @access  Private
 const getOrderById = asyncHandler(async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id).populate(
-      'user',
-      'name email'
-    );
-
-    if (order) {
-      logger.info('Order fetched successfully', {
-        orderId: order._id,
-        userId: req.user._id
-      });
-      
-      res.json(order);
-    } else {
-      logger.warn('Order not found', {
+    // Validate ObjectId format using utility
+    if (!isValidObjectId(req.params.id)) {
+      console.warn('Invalid order ID format:', {
         orderId: req.params.id,
         userId: req.user._id
       });
       
-      res.status(404);
-      throw new Error('Order not found');
+      return res.status(400).json(badRequestResponse('Invalid order ID format'));
+    }
+    
+    const order = await Order.findById(req.params.id)
+      .populate('user', 'name email')
+      .populate('orderItems.product', 'name image price')
+      .lean();
+
+    if (order) {
+      // Check if user is authorized to view this order
+      if (order.user._id.toString() !== req.user._id.toString() && !req.user.isAdmin) {
+        console.warn('Unauthorized access to order:', {
+          orderId: order._id,
+          userId: req.user._id
+        });
+        
+        return res.status(403).json(forbiddenResponse('Not authorized to view this order'));
+      }
+      
+      console.log('Order fetched successfully:', {
+        orderId: order._id,
+        userId: req.user._id
+      });
+      
+      res.json(successResponse(order, 'Order fetched successfully'));
+    } else {
+      console.warn('Order not found:', {
+        orderId: req.params.id,
+        userId: req.user._id
+      });
+      
+      res.status(404).json(notFoundResponse('Order'));
     }
   } catch (error) {
-    logger.error('Error fetching order', {
+    console.error('Error fetching order:', {
       error: error.message,
       orderId: req.params.id,
       userId: req.user._id
     });
     
     if (error.name === 'CastError') {
-      res.status(404);
-      throw new Error('Order not found');
+      res.status(404).json(notFoundResponse('Order'));
     }
     
-    throw error;
+    res.status(500).json(errorResponse(error, 'Failed to fetch order'));
   }
 });
 
@@ -127,49 +143,56 @@ const getOrderById = asyncHandler(async (req, res) => {
 // @access  Private
 const updateOrderToPaid = asyncHandler(async (req, res) => {
   try {
+    // Validate ObjectId format using utility
+    if (!isValidObjectId(req.params.id)) {
+      console.warn('Invalid order ID format for payment update:', {
+        orderId: req.params.id,
+        userId: req.user._id
+      });
+      
+      return res.status(400).json(badRequestResponse('Invalid order ID format'));
+    }
+    
     const order = await Order.findById(req.params.id);
 
     if (order) {
       order.isPaid = true;
       order.paidAt = Date.now();
       order.paymentResult = {
-        id: req.body.id || req.body.razorpay_payment_id || 'payment_id',
-        status: req.body.status || 'completed',
-        update_time: Date.now(),
-        email_address: req.user.email,
+        id: req.body.id,
+        status: req.body.status,
+        update_time: req.body.update_time,
+        email_address: req.body.payer?.email_address,
       };
 
       const updatedOrder = await order.save();
       
-      logger.info('Order marked as paid', {
+      console.log('Order marked as paid:', {
         orderId: updatedOrder._id,
-        userId: req.user._id,
-        paymentId: order.paymentResult.id
+        updatedBy: req.user._id
       });
 
-      res.json(updatedOrder);
+      res.json(successResponse(updatedOrder, 'Order marked as paid'));
     } else {
-      logger.warn('Attempt to update payment for non-existent order', {
+      console.warn('Attempt to update payment status for non-existent order:', {
         orderId: req.params.id,
         userId: req.user._id
       });
       
-      res.status(404);
-      throw new Error('Order not found');
+      res.status(404).json(notFoundResponse('Order'));
     }
   } catch (error) {
-    logger.error('Error updating order payment status', {
+    console.error('Error updating order payment status:', {
       error: error.message,
       orderId: req.params.id,
       userId: req.user._id
     });
     
     if (error.name === 'CastError') {
-      res.status(404);
-      throw new Error('Order not found');
+      res.status(404).json(notFoundResponse('Order'));
     }
     
-    throw error;
+    res.status(500).json(errorResponse(error, 'Failed to update order payment status'));
   }
 });
 
@@ -178,6 +201,16 @@ const updateOrderToPaid = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 const updateOrderToDelivered = asyncHandler(async (req, res) => {
   try {
+    // Validate ObjectId format using utility
+    if (!isValidObjectId(req.params.id)) {
+      console.warn('Invalid order ID format for delivery update:', {
+        orderId: req.params.id,
+        userId: req.user._id
+      });
+      
+      return res.status(400).json(badRequestResponse('Invalid order ID format'));
+    }
+    
     const order = await Order.findById(req.params.id);
 
     if (order) {
@@ -186,34 +219,32 @@ const updateOrderToDelivered = asyncHandler(async (req, res) => {
 
       const updatedOrder = await order.save();
       
-      logger.info('Order marked as delivered', {
+      console.log('Order marked as delivered:', {
         orderId: updatedOrder._id,
         updatedBy: req.user._id
       });
 
-      res.json(updatedOrder);
+      res.json(successResponse(updatedOrder, 'Order marked as delivered'));
     } else {
-      logger.warn('Attempt to update delivery status for non-existent order', {
+      console.warn('Attempt to update delivery status for non-existent order:', {
         orderId: req.params.id,
         userId: req.user._id
       });
       
-      res.status(404);
-      throw new Error('Order not found');
+      res.status(404).json(notFoundResponse('Order'));
     }
   } catch (error) {
-    logger.error('Error updating order delivery status', {
+    console.error('Error updating order delivery status:', {
       error: error.message,
       orderId: req.params.id,
       userId: req.user._id
     });
     
     if (error.name === 'CastError') {
-      res.status(404);
-      throw new Error('Order not found');
+      res.status(404).json(notFoundResponse('Order'));
     }
     
-    throw error;
+    res.status(500).json(errorResponse(error, 'Failed to update order delivery status'));
   }
 });
 
@@ -224,19 +255,19 @@ const getMyOrders = asyncHandler(async (req, res) => {
   try {
     const orders = await Order.find({ user: req.user._id });
     
-    logger.info('User orders fetched successfully', {
+    console.log('User orders fetched successfully:', {
       userId: req.user._id,
       orderCount: orders.length
     });
     
-    res.json(orders);
+    res.json(successResponse(orders, 'User orders fetched successfully'));
   } catch (error) {
-    logger.error('Error fetching user orders', {
+    console.error('Error fetching user orders:', {
       error: error.message,
       userId: req.user._id
     });
     
-    throw error;
+    res.status(500).json(errorResponse(error, 'Failed to fetch user orders'));
   }
 });
 
@@ -247,17 +278,17 @@ const getOrders = asyncHandler(async (req, res) => {
   try {
     const orders = await Order.find({}).populate('user', 'id name');
     
-    logger.info('All orders fetched successfully', {
+    console.log('All orders fetched successfully:', {
       orderCount: orders.length
     });
     
-    res.json(orders);
+    res.json(successResponse(orders, 'All orders fetched successfully'));
   } catch (error) {
-    logger.error('Error fetching all orders', {
+    console.error('Error fetching all orders:', {
       error: error.message
     });
     
-    throw error;
+    res.status(500).json(errorResponse(error, 'Failed to fetch orders'));
   }
 });
 

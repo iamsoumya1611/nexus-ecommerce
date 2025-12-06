@@ -30,7 +30,6 @@
     "razorpay": "^2.9.6",
     "redis": "^5.10.0",
     "stripe": "^13.5.0",
-    "winston": "^3.10.0",
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {

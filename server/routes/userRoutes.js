@@ -5,6 +5,7 @@ const {
   authUser,
   getUserProfile,
   updateUserProfile,
+  logoutUser,
   getUsers,
   deleteUser,
   getUserById,
@@ -18,6 +19,9 @@ router.post('/register', validateUserRegistration, registerUser);
 
 // User login route
 router.post('/login', validateUserLogin, authUser);
+
+// User logout route
+router.post('/logout', protect, logoutUser);
 
 // User profile routes
 router.route('/profile')

@@ -9,15 +9,16 @@ const {
   setDefaultAddress
 } = require('../controllers/addressController');
 const { protect } = require('../middleware/authMiddleware');
+const { validateAddress } = require('../middleware/validationMiddleware');
 
 // All routes are protected
 router.route('/')
   .get(protect, getAddresses)
-  .post(protect, createAddress);
+  .post(protect, validateAddress, createAddress);
 
 router.route('/:id')
   .get(protect, getAddressById)
-  .put(protect, updateAddress)
+  .put(protect, validateAddress, updateAddress)
   .delete(protect, deleteAddress);
 
 router.route('/:id/default')

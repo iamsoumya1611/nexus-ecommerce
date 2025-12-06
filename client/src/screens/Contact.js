@@ -20,7 +20,6 @@ const Contact = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     // In a real app, you would send this to your backend
-    console.log('Form submitted:', formData);
     setSubmitted(true);
     setFormData({ name: '', email: '', subject: '', message: '' });
     

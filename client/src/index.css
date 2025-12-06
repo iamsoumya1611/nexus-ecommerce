@@ -185,6 +185,77 @@ body {
   .xl\:grid-cols-4, .lg\:grid-cols-4, .md\:grid-cols-2 {
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
+  
+  /* Adjust font sizes for better mobile readability */
+  h1 {
+    @apply text-2xl;
+  }
+  
+  h2 {
+    @apply text-xl;
+  }
+  
+  h3 {
+    @apply text-lg;
+  }
+  
+  /* Adjust padding and margins for mobile */
+  .container {
+    @apply px-4;
+  }
+  
+  .card {
+    @apply p-4;
+  }
+  
+  /* Make buttons full width on mobile */
+  .btn {
+    @apply w-full;
+  }
+}
+
+/* Extra small devices (phones, 480px and down) */
+@media (max-width: 480px) {
+  /* Further adjust spacing for very small screens */
+  .gap-8 {
+    @apply gap-4;
+  }
+  
+  .p-8 {
+    @apply p-4;
+  }
+  
+  .m-8 {
+    @apply m-4;
+  }
+  
+  /* Adjust form elements for small screens */
+  .form-input {
+    @apply px-3 py-2 text-sm;
+  }
+  
+  /* Make navigation elements more touch-friendly */
+  .navbar-mobile .nav-link {
+    @apply py-3 text-base;
+  }
+}
+
+/* Large screens (2K and above) */
+@media (min-width: 2048px) {
+  .container {
+    max-width: 1600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  /* Adjust grid columns for large screens */
+  .xl\:grid-cols-4 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 /* Carousel item padding */
@@ -194,4 +265,17 @@ body {
 
 .carousel-item-padding-40-px {
   padding: 20px;
+}
+
+/* Ensure images are responsive */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Fix for sticky elements on mobile */
+@media (max-width: 768px) {
+  .sticky {
+    position: static;
+  }
 }

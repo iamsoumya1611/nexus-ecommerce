@@ -13,12 +13,6 @@ connectDB();
 // Initialize app
 const app = express();
 
-// Add request logging
-app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-    next();
-});
-
 // Body parser
 app.use(express.json());
 
@@ -50,7 +44,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: 'Something went wrong!' });
 });
 
-// For cPanel, we need to use the port provided in the environment
+// we need to use the port provided in the environment
 const PORT = process.env.PORT || 5000;
 
 // Handle unhandled promise rejections
@@ -61,7 +55,7 @@ process.on('unhandledRejection', (err) => {
 
 const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-    console.log('MongoDB URI:', process.env.MONGO_URI ? 'Connected' : 'Not found');
+    // console.log('MongoDB URI:', process.env.MONGO_URI ? 'Connected' : 'Not found');
     console.log('CORS origins:', ['https://nexus-ecommerce-chi.vercel.app', 'http://localhost:3000', 'http://localhost:5000']);
 });
 

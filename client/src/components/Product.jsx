@@ -1,16 +1,11 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 
 // Product Component
 // This component displays a single product card with its details
 const Product = ({ product }) => {
-  // Check if product exists, if not return nothing
-  if (!product) {
-    return null;
-  }
-
   // Format price to Indian Rupees (INR)
-  const formatPrice = (price) => {
+  const formatPrice = React.useMemo(() => (price) => {
     // Check if price is a valid number
     const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
     if (typeof numericPrice !== 'number' || isNaN(numericPrice)) return '₹0';
@@ -21,13 +16,28 @@ const Product = ({ product }) => {
       currency: 'INR',
       maximumFractionDigits: 0
     }).format(numericPrice);
-  };
+  }, []);
 
   // Render star ratings for the product
-  const renderRating = (rating) => {
+  const renderRating = React.useMemo(() => (rating) => {
     // Ensure rating is a number, default to 0 if not
     const numericRating = typeof rating === 'number' ? rating : 0;
-    const numReviews = product.numReviews || 0;
+    const numReviews = product ? (product.numReviews || 0) : 0;
+    
+    // Handle case where product is null
+    if (!product) {
+      return (
+        <div className="flex items-center">
+          {[...Array(5)].map((_, i) => (
+            <i 
+              key={i} 
+              className="fas fa-star text-gray-300"
+            ></i>
+          ))}
+          <span className="text-primary-700 text-sm font-medium ml-2">(0)</span>
+        </div>
+      );
+    }
     
     return (
       <div className="flex items-center">
@@ -42,18 +52,24 @@ const Product = ({ product }) => {
         <span className="text-primary-700 text-sm font-medium ml-2">({numReviews})</span>
       </div>
     );
-  };
+  }, [product]);
+
+  // Check if product exists, if not return nothing
+  if (!product) {
+    return null;
+  }
 
   return (
     // Product card container with hover effects
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
       {/* Product Image Section */}
       <div className="relative">
-        {/* Product image with error handling */}
+        {/* Product image with error handling and lazy loading */}
         <img 
           src={product.image || '/placeholder.svg'} 
           className="w-full h-56 object-cover" 
           alt={product.name || 'Product'} 
+          loading="lazy"
           onError={(e) => {
             // Fallback to placeholder image if the product image fails to load
             e.target.src = '/placeholder.svg';
@@ -145,4 +161,5 @@ const Product = ({ product }) => {
   );
 };
 
-export default Product;
+// Memoize the Product component to prevent unnecessary re-renders
+export default memo(Product);

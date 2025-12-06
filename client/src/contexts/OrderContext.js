@@ -232,13 +232,11 @@ export const orderActions = {
         withCredentials: true
       };
 
-      // Construct the URL correctly based on environment
-      let baseUrl = API_BASE_URL;
-      if (process.env.NODE_ENV === 'development') {
-        baseUrl = '';
-      }
+      // Use proxy path in development, full URL in production
+      const baseUrl = process.env.NODE_ENV === 'development' ? '' : API_BASE_URL || '';
+      const finalUrl = `${baseUrl.replace(/\/$/, '')}/orders`;
 
-      const { data } = await axios.post(`${baseUrl}/orders`, order, config);
+      const { data } = await axios.post(finalUrl, order, config);
 
       dispatch({
         type: 'ORDER_CREATE_SUCCESS',
@@ -280,13 +278,11 @@ export const orderActions = {
         withCredentials: true
       };
 
-      // Construct the URL correctly based on environment
-      let baseUrl = API_BASE_URL;
-      if (process.env.NODE_ENV === 'development') {
-        baseUrl = '';
-      }
+      // Use proxy path in development, full URL in production
+      const baseUrl = process.env.NODE_ENV === 'development' ? '' : API_BASE_URL || '';
+      const finalUrl = `${baseUrl.replace(/\/$/, '')}/orders/${id}`;
 
-      const { data } = await axios.get(`${baseUrl}/orders/${id}`, config);
+      const { data } = await axios.get(finalUrl, config);
 
       dispatch({
         type: 'ORDER_DETAILS_SUCCESS',
@@ -327,13 +323,11 @@ export const orderActions = {
         withCredentials: true
       };
 
-      // Construct the URL correctly based on environment
-      let baseUrl = API_BASE_URL;
-      if (process.env.NODE_ENV === 'development') {
-        baseUrl = '';
-      }
+      // Use proxy path in development, full URL in production
+      const baseUrl = process.env.NODE_ENV === 'development' ? '' : API_BASE_URL || '';
+      const finalUrl = `${baseUrl.replace(/\/$/, '')}/orders/${orderId}/pay`;
 
-      const { data } = await axios.put(`${baseUrl}/orders/${orderId}/pay`, paymentResult, config);
+      const { data } = await axios.put(finalUrl, paymentResult, config);
 
       dispatch({
         type: 'ORDER_PAY_SUCCESS',
@@ -380,13 +374,11 @@ export const orderActions = {
         withCredentials: true
       };
 
-      // Construct the URL correctly based on environment
-      let baseUrl = API_BASE_URL;
-      if (process.env.NODE_ENV === 'development') {
-        baseUrl = '';
-      }
+      // Use proxy path in development, full URL in production
+      const baseUrl = process.env.NODE_ENV === 'development' ? '' : API_BASE_URL || '';
+      const finalUrl = `${baseUrl.replace(/\/$/, '')}/orders/myorders`;
 
-      const { data } = await axios.get(`${baseUrl}/orders/myorders`, config);
+      const { data } = await axios.get(finalUrl, config);
 
       dispatch({
         type: 'ORDER_LIST_MY_SUCCESS',

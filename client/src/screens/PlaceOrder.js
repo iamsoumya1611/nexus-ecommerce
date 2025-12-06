@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useOrder, orderActions } from '../contexts/OrderContext';
 import { usePayment, paymentActions } from '../contexts/PaymentContext';
 import { useCart } from '../contexts/CartContext';
+import { toast } from 'react-toastify';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const PlaceOrder = () => {
   const { state: orderState, dispatch: orderDispatch } = useOrder();
@@ -10,8 +12,9 @@ const PlaceOrder = () => {
   const { order, success, error } = orderCreate;
 
   const { state: paymentState, dispatch: paymentDispatch } = usePayment();
-  const { process: paymentProcess } = paymentState;
-  const { loading: paymentLoading } = paymentProcess;
+  const { process: paymentProcess, verify: paymentVerify } = paymentState;
+  const { loading: paymentLoading, success: paymentSuccess } = paymentProcess;
+  const { loading: verifyLoading, success: verifySuccess } = paymentVerify;
 
   const { state: cartState } = useCart();
   const { cartItems, shippingAddress, paymentMethod } = cartState;
@@ -50,6 +53,7 @@ const PlaceOrder = () => {
       orderActions.createOrder(orderData)(orderDispatch);
     } catch (error) {
       console.error('Error placing order:', error);
+      toast.error('Failed to place order. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -100,7 +104,7 @@ const PlaceOrder = () => {
                 }
               } catch (verificationError) {
                 console.error('Payment verification failed:', verificationError);
-                alert('Payment verification failed. Please try again.');
+                toast.error('Payment verification failed. Please try again.');
               }
             },
             prefill: {
@@ -116,10 +120,15 @@ const PlaceOrder = () => {
           const rzp = new window.Razorpay(options);
           rzp.open();
         };
+        
+        script.onerror = () => {
+          toast.error('Failed to load payment gateway. Please try again.');
+          setLoading(false);
+        };
       }
     } catch (error) {
       console.error('Error processing payment:', error);
-    } finally {
+      toast.error('Failed to process payment. Please try again.');
       setLoading(false);
     }
   };
@@ -155,7 +164,7 @@ const PlaceOrder = () => {
                 {cartItems.map((item, index) => (
                   <div key={index} className="flex items-center border-b border-primary-200 pb-4 last:border-0 last:pb-0">
                     <div className="flex-shrink-0 w-24 h-24 mr-4">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
+                      <img src={item.image} alt={item.name} className="w-full h-full object-contain" loading="lazy" />
                     </div>
                     <div className="flex-grow">
                       <Link to={`/product/${item.product}`} className="text-lg font-semibold text-primary-900 hover:text-primary-700">
@@ -197,13 +206,16 @@ const PlaceOrder = () => {
               <button
                 type="button"
                 className="btn btn-primary w-full"
-                disabled={cartItems.length === 0 || loading || paymentLoading}
+                disabled={cartItems.length === 0 || loading || paymentLoading || verifyLoading}
                 onClick={razorpayPaymentHandler}
               >
-                {(loading || paymentLoading) ? (
+                {(loading || paymentLoading || verifyLoading) ? (
                   <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
-                    Processing...
+                    <LoadingSpinner size="sm" centered={false} />
+                    <span className="ml-2">
+                      {paymentLoading ? 'Processing Payment...' : 
+                       verifyLoading ? 'Verifying Payment...' : 'Placing Order...'}
+                    </span>
                   </div>
                 ) : 'Pay with Razorpay'}
               </button>
@@ -216,8 +228,8 @@ const PlaceOrder = () => {
               >
                 {loading ? (
                   <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
-                    Processing...
+                    <LoadingSpinner size="sm" centered={false} />
+                    <span className="ml-2">Placing Order...</span>
                   </div>
                 ) : 'Place Order'}
               </button>

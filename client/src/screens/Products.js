@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useProduct, productActions } from '../contexts/ProductContext';
 import Product from '../components/Product';
 import CategoryRecommendations from '../components/CategoryRecommendations';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const Products = () => {
   const { state: productState, dispatch: productDispatch } = useProduct();
@@ -607,7 +608,7 @@ const Products = () => {
 
       {loading ? (
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary-500"></div>
+          <LoadingSpinner size="lg" />
         </div>
       ) : error ? (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6" role="alert">

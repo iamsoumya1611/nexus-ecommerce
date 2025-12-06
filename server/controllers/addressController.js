@@ -1,6 +1,12 @@
 const Address = require('../models/Address');
 const User = require('../models/User');
 const asyncHandler = require('express-async-handler');
+const { 
+  successResponse, 
+  errorResponse, 
+  notFoundResponse, 
+  badRequestResponse
+} = require('../utils/apiResponse');
 
 // @desc    Get all addresses for a user
 // @route   GET /api/address
@@ -8,9 +14,20 @@ const asyncHandler = require('express-async-handler');
 const getAddresses = asyncHandler(async (req, res) => {
   try {
     const addresses = await Address.find({ user: req.user._id });
-    res.json(addresses);
+    
+    console.log('User addresses fetched successfully:', {
+      userId: req.user._id,
+      addressCount: addresses.length
+    });
+    
+    res.json(successResponse(addresses, 'Addresses fetched successfully'));
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch addresses', error: error.message });
+    console.error('Error fetching addresses:', {
+      error: error.message,
+      userId: req.user._id
+    });
+    
+    res.status(500).json(errorResponse(error, 'Failed to fetch addresses'));
   }
 });
 
@@ -25,16 +42,32 @@ const getAddressById = asyncHandler(async (req, res) => {
     });
     
     if (!address) {
-      res.status(404);
-      throw new Error('Address not found');
+      console.warn('Address not found:', {
+        addressId: req.params.id,
+        userId: req.user._id
+      });
+      
+      return res.status(404).json(notFoundResponse('Address'));
     }
     
-    res.json(address);
+    console.log('Address fetched successfully:', {
+      addressId: address._id,
+      userId: req.user._id
+    });
+    
+    res.json(successResponse(address, 'Address fetched successfully'));
   } catch (error) {
-    if (res.statusCode === 404) {
-      throw error;
+    console.error('Error fetching address:', {
+      error: error.message,
+      addressId: req.params.id,
+      userId: req.user._id
+    });
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json(badRequestResponse('Invalid address ID'));
     }
-    res.status(500).json({ message: 'Failed to fetch address', error: error.message });
+    
+    res.status(500).json(errorResponse(error, 'Failed to fetch address'));
   }
 });
 
@@ -54,6 +87,24 @@ const createAddress = asyncHandler(async (req, res) => {
       isDefault
     } = req.body;
     
+    // Validate required fields
+    if (!fullName || !streetAddress || !city || !state || !postalCode || !country || !phone) {
+      console.warn('Missing required fields for address creation:', {
+        userId: req.user._id,
+        missingFields: [
+          !fullName && 'fullName',
+          !streetAddress && 'streetAddress',
+          !city && 'city',
+          !state && 'state',
+          !postalCode && 'postalCode',
+          !country && 'country',
+          !phone && 'phone'
+        ].filter(Boolean)
+      });
+      
+      return res.status(400).json(badRequestResponse('All address fields are required'));
+    }
+    
     const address = new Address({
       user: req.user._id,
       fullName,
@@ -63,13 +114,25 @@ const createAddress = asyncHandler(async (req, res) => {
       postalCode,
       country,
       phone,
-      isDefault
+      isDefault: isDefault || false
     });
     
     const createdAddress = await address.save();
-    res.status(201).json(createdAddress);
+    
+    console.log('Address created successfully:', {
+      addressId: createdAddress._id,
+      userId: req.user._id
+    });
+    
+    res.status(201).json(successResponse(createdAddress, 'Address created successfully', 201));
   } catch (error) {
-    res.status(500).json({ message: 'Failed to create address', error: error.message });
+    console.error('Error creating address:', {
+      error: error.message,
+      userId: req.user._id,
+      body: req.body
+    });
+    
+    res.status(500).json(errorResponse(error, 'Failed to create address'));
   }
 });
 
@@ -95,10 +158,15 @@ const updateAddress = asyncHandler(async (req, res) => {
     });
     
     if (!address) {
-      res.status(404);
-      throw new Error('Address not found');
+      console.warn('Address not found for update:', {
+        addressId: req.params.id,
+        userId: req.user._id
+      });
+      
+      return res.status(404).json(notFoundResponse('Address'));
     }
     
+    // Update fields if provided
     address.fullName = fullName || address.fullName;
     address.streetAddress = streetAddress || address.streetAddress;
     address.city = city || address.city;
@@ -109,12 +177,25 @@ const updateAddress = asyncHandler(async (req, res) => {
     address.isDefault = isDefault !== undefined ? isDefault : address.isDefault;
     
     const updatedAddress = await address.save();
-    res.json(updatedAddress);
+    
+    console.log('Address updated successfully:', {
+      addressId: updatedAddress._id,
+      userId: req.user._id
+    });
+    
+    res.json(successResponse(updatedAddress, 'Address updated successfully'));
   } catch (error) {
-    if (res.statusCode === 404) {
-      throw error;
+    console.error('Error updating address:', {
+      error: error.message,
+      addressId: req.params.id,
+      userId: req.user._id
+    });
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json(badRequestResponse('Invalid address ID'));
     }
-    res.status(500).json({ message: 'Failed to update address', error: error.message });
+    
+    res.status(500).json(errorResponse(error, 'Failed to update address'));
   }
 });
 
@@ -129,17 +210,34 @@ const deleteAddress = asyncHandler(async (req, res) => {
     });
     
     if (!address) {
-      res.status(404);
-      throw new Error('Address not found');
+      console.warn('Address not found for deletion:', {
+        addressId: req.params.id,
+        userId: req.user._id
+      });
+      
+      return res.status(404).json(notFoundResponse('Address'));
     }
     
     await address.remove();
-    res.json({ message: 'Address removed' });
+    
+    console.log('Address deleted successfully:', {
+      addressId: address._id,
+      userId: req.user._id
+    });
+    
+    res.json(successResponse(null, 'Address deleted successfully'));
   } catch (error) {
-    if (res.statusCode === 404) {
-      throw error;
+    console.error('Error deleting address:', {
+      error: error.message,
+      addressId: req.params.id,
+      userId: req.user._id
+    });
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json(badRequestResponse('Invalid address ID'));
     }
-    res.status(500).json({ message: 'Failed to delete address', error: error.message });
+    
+    res.status(500).json(errorResponse(error, 'Failed to delete address'));
   }
 });
 
@@ -161,18 +259,35 @@ const setDefaultAddress = asyncHandler(async (req, res) => {
     });
     
     if (!address) {
-      res.status(404);
-      throw new Error('Address not found');
+      console.warn('Address not found when setting as default:', {
+        addressId: req.params.id,
+        userId: req.user._id
+      });
+      
+      return res.status(404).json(notFoundResponse('Address'));
     }
     
     address.isDefault = true;
     const updatedAddress = await address.save();
-    res.json(updatedAddress);
+    
+    console.log('Address set as default successfully:', {
+      addressId: updatedAddress._id,
+      userId: req.user._id
+    });
+    
+    res.json(successResponse(updatedAddress, 'Address set as default successfully'));
   } catch (error) {
-    if (res.statusCode === 404) {
-      throw error;
+    console.error('Error setting address as default:', {
+      error: error.message,
+      addressId: req.params.id,
+      userId: req.user._id
+    });
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json(badRequestResponse('Invalid address ID'));
     }
-    res.status(500).json({ message: 'Failed to set default address', error: error.message });
+    
+    res.status(500).json(errorResponse(error, 'Failed to set default address'));
   }
 });
 

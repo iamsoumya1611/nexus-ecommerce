@@ -1,42 +1,26 @@
-const winston = require('winston');
-
-// Configure Winston logger
-const logger = winston.createLogger({
-  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
-  ),
-  defaultMeta: { service: 'nexus-ecommerce-server' },
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      )
-    })
-  ]
-});
-
-// Add file transport in production
-if (process.env.NODE_ENV === 'production') {
-  logger.add(new winston.transports.File({ filename: 'logs/error.log', level: 'error' }));
-  logger.add(new winston.transports.File({ filename: 'logs/combined.log' }));
-}
-
+// Error handler middleware
 const errorHandler = (err, req, res, next) => {
+  // Don't log passwords or other sensitive data
+  const sanitizedBody = { ...req.body };
+  if (sanitizedBody.password) {
+    sanitizedBody.password = '[REDACTED]';
+  }
+  if (sanitizedBody.confirmPassword) {
+    sanitizedBody.confirmPassword = '[REDACTED]';
+  }
+  
   // Log error with request context
-  logger.error({
+  console.error('Error occurred:', {
     message: err.message,
-    stack: err.stack,
+    stack: process.env.NODE_ENV === 'production' ? undefined : err.stack,
     url: req.url,
     method: req.method,
     ip: req.ip,
     userAgent: req.get('User-Agent'),
-    body: req.body,
+    body: sanitizedBody,
     params: req.params,
-    query: req.query
+    query: req.query,
+    userId: req.user ? req.user._id : 'anonymous'
   });
 
   let error = { ...err };
@@ -70,7 +54,26 @@ const errorHandler = (err, req, res, next) => {
     const message = 'Token expired';
     error = { statusCode: 401, message };
   }
+  
+  // Stripe/Billing errors
+  if (err.type === 'StripeCardError') {
+    const message = err.message;
+    error = { statusCode: 400, message };
+  }
+  
+  // Stripe API connection errors
+  if (err.type === 'StripeConnectionError') {
+    const message = 'Payment service temporarily unavailable';
+    error = { statusCode: 503, message };
+  }
+  
+  // Generic Stripe errors
+  if (err.type === 'StripeError') {
+    const message = 'Payment processing error';
+    error = { statusCode: 500, message };
+  }
 
+  // Send error response
   res.status(error.statusCode || 500).json({
     success: false,
     error: error.message || 'Server Error',

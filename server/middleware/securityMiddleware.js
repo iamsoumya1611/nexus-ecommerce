@@ -1,9 +1,13 @@
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const cors = require('cors');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
+const compression = require('compression');
 
-// Rate limiting middleware
-const limiter = rateLimit({
+// General rate limiting middleware
+const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
   message: {
@@ -14,6 +18,30 @@ const limiter = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 
+// Strict rate limiting for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 requests per windowMs for auth
+  message: {
+    success: false,
+    error: 'Too many authentication attempts, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// API rate limiting for heavy endpoints
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 50, // limit each IP to 50 requests per windowMs for API
+  message: {
+    success: false,
+    error: 'Too many API requests, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
 // Enhanced CORS configuration
 const configureCORS = cors({
   origin: process.env.CLIENT_URL || 'http://localhost:3000',
@@ -21,7 +49,7 @@ const configureCORS = cors({
   optionsSuccessStatus: 200
 });
 
-// Security headers middleware
+// Enhanced security headers middleware
 const securityHeaders = helmet({
   contentSecurityPolicy: {
     directives: {
@@ -37,11 +65,27 @@ const securityHeaders = helmet({
     maxAge: 31536000, // 1 year
     includeSubDomains: true,
     preload: true
-  }
+  },
+  frameguard: {
+    action: 'deny'
+  },
+  dnsPrefetchControl: true,
+  ieNoOpen: true,
+  noSniff: true,
+  referrerPolicy: {
+    policy: 'same-origin'
+  },
+  xssFilter: true
 });
 
 module.exports = {
-  limiter,
+  generalLimiter,
+  authLimiter,
+  apiLimiter,
   configureCORS,
-  securityHeaders
+  securityHeaders,
+  mongoSanitize,
+  xss,
+  hpp,
+  compression
 };

@@ -150,14 +150,11 @@ export const paymentActions = {
         withCredentials: true
       };
 
-      // Construct the URL correctly based on environment
-      let baseUrl = API_BASE_URL;
-      if (process.env.NODE_ENV === 'development') {
-        baseUrl = '';
-      }
+      // Use proxy path in development, full URL in production
+      const baseUrl = process.env.NODE_ENV === 'development' ? '' : API_BASE_URL || '';
+      const finalUrl = `${baseUrl.replace(/\/$/, '')}/payment/order`;
 
-      // Updated endpoint to match backend
-      const { data } = await axios.post(`${baseUrl}/payment/order`, paymentData, config);
+      const { data } = await axios.post(finalUrl, paymentData, config);
 
       dispatch({
         type: 'PAYMENT_PROCESS_SUCCESS',
@@ -203,14 +200,11 @@ export const paymentActions = {
         withCredentials: true
       };
 
-      // Construct the URL correctly based on environment
-      let baseUrl = API_BASE_URL;
-      if (process.env.NODE_ENV === 'development') {
-        baseUrl = '';
-      }
+      // Use proxy path in development, full URL in production
+      const baseUrl = process.env.NODE_ENV === 'development' ? '' : API_BASE_URL || '';
+      const finalUrl = `${baseUrl.replace(/\/$/, '')}/payment/verify`;
 
-      // Updated endpoint to match backend
-      const { data } = await axios.post(`${baseUrl}/payment/verify`, verificationData, config);
+      const { data } = await axios.post(finalUrl, verificationData, config);
 
       dispatch({
         type: 'PAYMENT_VERIFY_SUCCESS',
@@ -255,14 +249,11 @@ export const paymentActions = {
         withCredentials: true
       };
 
-      // Construct the URL correctly based on environment
-      let baseUrl = API_BASE_URL;
-      if (process.env.NODE_ENV === 'development') {
-        baseUrl = '';
-      }
+      // Use proxy path in development, full URL in production
+      const baseUrl = process.env.NODE_ENV === 'development' ? '' : API_BASE_URL || '';
+      const finalUrl = `${baseUrl.replace(/\/$/, '')}/payment/${paymentId}`;
 
-      // Updated endpoint to match backend
-      const { data } = await axios.get(`${baseUrl}/payment/${paymentId}`, config);
+      const { data } = await axios.get(finalUrl, config);
 
       dispatch({
         type: 'PAYMENT_PROCESS_SUCCESS',

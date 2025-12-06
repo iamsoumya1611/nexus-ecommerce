@@ -2,6 +2,12 @@ const Wishlist = require('../models/Wishlist');
 const Product = require('../models/Product');
 const User = require('../models/User');
 const asyncHandler = require('express-async-handler');
+const { 
+  successResponse, 
+  errorResponse, 
+  notFoundResponse, 
+  badRequestResponse
+} = require('../utils/apiResponse');
 
 // @desc    Get user's wishlist
 // @route   GET /api/wishlist
@@ -17,11 +23,23 @@ const getWishlist = asyncHandler(async (req, res) => {
         items: []
       });
       await wishlist.save();
+      
+      console.log('New wishlist created for user:', { userId: req.user._id });
     }
     
-    res.json(wishlist);
+    console.log('Wishlist fetched successfully:', {
+      userId: req.user._id,
+      itemCount: wishlist.items.length
+    });
+    
+    res.json(successResponse(wishlist, 'Wishlist fetched successfully'));
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch wishlist', error: error.message });
+    console.error('Error fetching wishlist:', {
+      error: error.message,
+      userId: req.user._id
+    });
+    
+    res.status(500).json(errorResponse(error, 'Failed to fetch wishlist'));
   }
 });
 
@@ -32,11 +50,21 @@ const addToWishlist = asyncHandler(async (req, res) => {
   try {
     const { productId } = req.body;
     
+    // Validate required fields
+    if (!productId) {
+      console.warn('Missing product ID for wishlist addition:', { userId: req.user._id });
+      return res.status(400).json(badRequestResponse('Product ID is required'));
+    }
+    
     // Check if product exists
     const product = await Product.findById(productId);
     if (!product) {
-      res.status(404);
-      throw new Error('Product not found');
+      console.warn('Product not found when adding to wishlist:', {
+        userId: req.user._id,
+        productId
+      });
+      
+      return res.status(404).json(notFoundResponse('Product'));
     }
     
     // Find or create wishlist
@@ -55,8 +83,12 @@ const addToWishlist = asyncHandler(async (req, res) => {
     );
     
     if (existingItemIndex > -1) {
-      res.status(400);
-      throw new Error('Product already in wishlist');
+      console.warn('Product already in wishlist:', {
+        userId: req.user._id,
+        productId
+      });
+      
+      return res.status(400).json(badRequestResponse('Product already in wishlist'));
     }
     
     // Add product to wishlist
@@ -69,12 +101,24 @@ const addToWishlist = asyncHandler(async (req, res) => {
     // Populate product details
     await updatedWishlist.populate('items.product');
     
-    res.status(201).json(updatedWishlist);
+    console.log('Product added to wishlist successfully:', {
+      userId: req.user._id,
+      productId
+    });
+    
+    res.status(201).json(successResponse(updatedWishlist, 'Product added to wishlist successfully', 201));
   } catch (error) {
-    if (res.statusCode === 404 || res.statusCode === 400) {
-      throw error;
+    console.error('Error adding product to wishlist:', {
+      error: error.message,
+      userId: req.user._id,
+      body: req.body
+    });
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json(badRequestResponse('Invalid product ID'));
     }
-    res.status(500).json({ message: 'Failed to add item to wishlist', error: error.message });
+    
+    res.status(500).json(errorResponse(error, 'Failed to add item to wishlist'));
   }
 });
 
@@ -85,12 +129,18 @@ const removeFromWishlist = asyncHandler(async (req, res) => {
   try {
     const { productId } = req.params;
     
+    // Validate product ID
+    if (!productId) {
+      console.warn('Missing product ID for wishlist removal:', { userId: req.user._id });
+      return res.status(400).json(badRequestResponse('Product ID is required'));
+    }
+    
     // Find wishlist
     const wishlist = await Wishlist.findOne({ user: req.user._id });
     
     if (!wishlist) {
-      res.status(404);
-      throw new Error('Wishlist not found');
+      console.warn('Wishlist not found for user:', { userId: req.user._id });
+      return res.status(404).json(notFoundResponse('Wishlist'));
     }
     
     // Check if product is in wishlist
@@ -99,8 +149,12 @@ const removeFromWishlist = asyncHandler(async (req, res) => {
     );
     
     if (existingItemIndex === -1) {
-      res.status(404);
-      throw new Error('Product not found in wishlist');
+      console.warn('Product not found in wishlist:', {
+        userId: req.user._id,
+        productId
+      });
+      
+      return res.status(404).json(notFoundResponse('Product in wishlist'));
     }
     
     // Remove product from wishlist
@@ -111,12 +165,24 @@ const removeFromWishlist = asyncHandler(async (req, res) => {
     // Populate product details
     await updatedWishlist.populate('items.product');
     
-    res.json(updatedWishlist);
+    console.log('Product removed from wishlist successfully:', {
+      userId: req.user._id,
+      productId
+    });
+    
+    res.json(successResponse(updatedWishlist, 'Product removed from wishlist successfully'));
   } catch (error) {
-    if (res.statusCode === 404) {
-      throw error;
+    console.error('Error removing product from wishlist:', {
+      error: error.message,
+      userId: req.user._id,
+      productId: req.params.productId
+    });
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json(badRequestResponse('Invalid product ID'));
     }
-    res.status(500).json({ message: 'Failed to remove item from wishlist', error: error.message });
+    
+    res.status(500).json(errorResponse(error, 'Failed to remove item from wishlist'));
   }
 });
 
@@ -128,19 +194,23 @@ const clearWishlist = asyncHandler(async (req, res) => {
     const wishlist = await Wishlist.findOne({ user: req.user._id });
     
     if (!wishlist) {
-      res.status(404);
-      throw new Error('Wishlist not found');
+      console.warn('Wishlist not found for user:', { userId: req.user._id });
+      return res.status(404).json(notFoundResponse('Wishlist'));
     }
     
     wishlist.items = [];
     const updatedWishlist = await wishlist.save();
     
-    res.json(updatedWishlist);
+    console.log('Wishlist cleared successfully:', { userId: req.user._id });
+    
+    res.json(successResponse(updatedWishlist, 'Wishlist cleared successfully'));
   } catch (error) {
-    if (res.statusCode === 404) {
-      throw error;
-    }
-    res.status(500).json({ message: 'Failed to clear wishlist', error: error.message });
+    console.error('Error clearing wishlist:', {
+      error: error.message,
+      userId: req.user._id
+    });
+    
+    res.status(500).json(errorResponse(error, 'Failed to clear wishlist'));
   }
 });
 

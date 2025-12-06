@@ -51,6 +51,7 @@ const CategoryShowcase = () => {
                   src={category.image} 
                   alt={category.name} 
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary-900 to-transparent opacity-70"></div>
                 <h3 className="absolute bottom-4 left-4 text-xl font-bold text-white">

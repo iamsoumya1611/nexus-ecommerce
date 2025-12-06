@@ -52,7 +52,7 @@ const Hero = () => {
             <Slider {...settings}>
                 {data.map((item, i) => (
                     <div key={i}>
-                        <img src={item} alt={`Banner ${i + 1}`} className='banner_img' />
+                        <img src={item} alt={`Banner ${i + 1}`} className='banner_img' loading="lazy" />
                     </div>
                 ))}
             </Slider>

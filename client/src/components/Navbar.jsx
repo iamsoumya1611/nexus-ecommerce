@@ -1,57 +1,59 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
-import SearchIcon from '@mui/icons-material/Search';
-import Badge from '@mui/material/Badge';
 import { styled } from '@mui/material/styles';
+import Badge from '@mui/material/Badge';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import SearchIcon from '@mui/icons-material/Search';
 
-// Style for the shopping cart badge
+// Style the badge component
 const StyledBadge = styled(Badge)(() => ({
   '& .MuiBadge-badge': {
+    right: -3,
+    top: 13,
+    border: `2px solid #4F46E5`,
+    padding: '0 4px',
     backgroundColor: '#4F46E5',
+    color: 'white',
   },
 }));
 
-// Navbar Component
-// This component displays the navigation bar at the top of the page
 const Navbar = () => {
-  // State variables for controlling menu visibility
-  const [isMenuOpen, setIsMenuOpen] = useState(false);        // Mobile menu
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false); // User dropdown menu
-  const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false); // Admin dropdown menu
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
 
-  // Get user login state from Context
   const { user: userInfo, logout } = useAuth();
-
-  // Get cart items from Context
   const { state: cartState } = useCart();
   const { cartItems } = cartState;
 
-  // Calculate total number of items in cart
+  const navigate = useNavigate();
+
+  // Calculate cart item count
   const cartItemCount = cartItems && Array.isArray(cartItems) 
-    ? cartItems.reduce((acc, item) => acc + item.qty, 0) 
+    ? cartItems.reduce((acc, item) => acc + item.qty, 0)
     : 0;
 
   // Handle user logout
   const logoutHandler = () => {
     logout();
-    setIsUserMenuOpen(false); // Close user menu after logout
+    setIsUserMenuOpen(false);
+    setIsAdminMenuOpen(false);
   };
 
   // Handle search form submission
   const handleSearch = (e) => {
     e.preventDefault();
-    // Redirect to search results page if search keyword is not empty
     if (searchKeyword.trim()) {
-      window.location.href = `/products/search/${searchKeyword}`;
+      navigate(`/search/${searchKeyword}`);
+      setSearchKeyword('');
+      setIsMenuOpen(false);
     }
   };
 
   return (
-    // Main header container
     <header className="bg-white shadow-md">
       <div className="container mx-auto px-4">
         {/* Main navigation bar */}
@@ -59,7 +61,7 @@ const Navbar = () => {
           {/* Logo and site name */}
           <div className="flex items-center">
             <Link to="/" className="text-xl font-bold text-primary-700 flex items-center">
-              <img src="./Nexus_logo.png" alt="" className='w-52' />
+              <img src="./Nexus_logo.png" alt="Nexus Logo" className='w-52' loading="lazy" />
             </Link>
           </div>
 
@@ -252,42 +254,40 @@ const Navbar = () => {
             >
               <i className="fas fa-shopping-cart mr-1"></i>
               Cart
-              {cartItemCount > 0 && (
-                <span className="ml-1 bg-primary-500 text-white text-xs font-bold rounded-full h-5 w-5 inline-flex items-center justify-center">
-                  {cartItemCount}
-                </span>
-              )}
             </Link>
             
-            {/* Mobile user navigation */}
+            {/* Mobile user actions */}
             {userInfo ? (
-              // If user is logged in
               <>
                 <Link
                   to="/profile"
                   className="text-primary-700 hover:text-primary-900 block px-3 py-2 rounded-md text-base font-medium"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <i className="fas fa-user mr-2"></i>
+                  <i className="fas fa-user mr-1"></i>
                   Profile
                 </Link>
                 <button
-                  onClick={logoutHandler}
-                  className="text-primary-700 hover:text-primary-900 block px-3 py-2 rounded-md text-base font-medium w-full text-left"
+                  onClick={() => {
+                    logoutHandler();
+                    setIsMenuOpen(false);
+                  }}
+                  className="text-primary-700 hover:text-primary-900 block w-full text-left px-3 py-2 rounded-md text-base font-medium"
                 >
-                  <i className="fas fa-sign-out-alt mr-2"></i>
+                  <i className="fas fa-sign-out-alt mr-1"></i>
                   Logout
                 </button>
                 
-                {/* Admin links - only shown if user is an admin */}
+                {/* Admin links for mobile - only shown if user is an admin */}
                 {userInfo.isAdmin && (
                   <>
+                    <div className="border-t border-primary-200 my-2"></div>
                     <Link
                       to="/admin/userlist"
                       className="text-primary-700 hover:text-primary-900 block px-3 py-2 rounded-md text-base font-medium"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <i className="fas fa-users mr-2"></i>
+                      <i className="fas fa-users mr-1"></i>
                       Users
                     </Link>
                     <Link
@@ -295,7 +295,7 @@ const Navbar = () => {
                       className="text-primary-700 hover:text-primary-900 block px-3 py-2 rounded-md text-base font-medium"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <i className="fas fa-box-open mr-2"></i>
+                      <i className="fas fa-box-open mr-1"></i>
                       Products
                     </Link>
                     <Link
@@ -303,14 +303,13 @@ const Navbar = () => {
                       className="text-primary-700 hover:text-primary-900 block px-3 py-2 rounded-md text-base font-medium"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <i className="fas fa-shopping-bag mr-2"></i>
+                      <i className="fas fa-shopping-bag mr-1"></i>
                       Orders
                     </Link>
                   </>
                 )}
               </>
             ) : (
-              // If user is not logged in
               <Link
                 to="/login"
                 className="text-primary-700 hover:text-primary-900 block px-3 py-2 rounded-md text-base font-medium"
@@ -324,7 +323,7 @@ const Navbar = () => {
         </div>
       )}
     </header>
-  );
-};
+  )
+}
 
 export default Navbar;

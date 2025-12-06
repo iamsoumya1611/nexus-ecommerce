@@ -7,6 +7,7 @@ import Testimonials from '../components/Testimonials';
 import Newsletter from '../components/Newsletter';
 import Slide from '../components/Slide';
 import AIRecommendations from '../components/AIRecommendations';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 // Home Screen Component
 // This is the main landing page of the e-commerce application
@@ -24,33 +25,55 @@ const Home = () => {
 
   // Get first 4 products to display as featured products
   const featuredProducts = Array.isArray(products) ? products.slice(0, 4) : [];
+  
+  // Get best seller products (first 8 products)
+  const bestSellerProducts = Array.isArray(products) ? products.slice(0, 8).map((product, index) => ({
+    id: product._id,
+    url: product.image,
+    title: {
+      shortTitle: product.name
+    },
+    discount: `${Math.floor(Math.random() * 50) + 10}% Off`,
+    tagline: product.category || 'Electronics'
+  })) : [];
+  
+  // Get discounted products (next 8 products or first 8 if less than 16 total)
+  const discountedProducts = Array.isArray(products) ? products.slice(8, 16).map((product, index) => ({
+    id: product._id,
+    url: product.image,
+    title: {
+      shortTitle: product.name
+    },
+    discount: `${Math.floor(Math.random() * 70) + 20}% Off`,
+    tagline: product.category || 'Limited Offer'
+  })) : [];
 
   return (
     // Main container with padding and margin
     <div className="container mx-auto px-4 py-8 font-sans">
       {/* Hero section - displays promotional content */}
-      <Hero />
+        <Hero />
+
 
       {/* AI Recommendations Section - only shown when user is logged in */}
       <AIRecommendations />
 
-      <div className="my-8">
-        <Slide title="Best Seller" />
-      </div>
+        <div className="my-8">
+          <Slide title="Best Seller" products={bestSellerProducts} />
+        </div>
 
-      <div className="my-8">
-        <Slide title="Upto 80% Off" />
-      </div>
+        <div className="my-8">
+          <Slide title="Upto 80% Off" products={discountedProducts} />
+        </div>
 
-      <div className="my-8">
-        <img className='block w-full lg:w-[80%] h-[300px] mx-auto' src="https://res.cloudinary.com/dm4hy8ivc/image/upload/v1762882112/desktop_banner_kikeem.png" alt="Banner" />
-      </div>
+        <div className="my-8">
+          <img className='block w-full lg:w-[80%] h-[300px] mx-auto' src="https://res.cloudinary.com/dm4hy8ivc/image/upload/v1762882112/desktop_banner_kikeem.png" alt="Banner" />
+        </div>
 
       {/* Category showcase - displays product categories */}
       <CategoryShowcase />
 
-      {/* Featured Products Section */
-}
+      {/* Featured Products Section */}
       <div className="mb-16">
         {/* Section header with title and description */}
         <div className="text-center mb-12">
@@ -64,7 +87,7 @@ const Home = () => {
         {loading ? (
           // Show loading spinner while products are being fetched
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+            <LoadingSpinner size="md" />
           </div>
         ) : error ? (
           // Show error message if there was a problem fetching products
@@ -77,14 +100,17 @@ const Home = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {/* Map through featured products and render Product component for each */}
             {featuredProducts.map((product) => (
-              <Product key={product._id} product={product} />
+              <div key={product._id}>
+                <Product product={product} />
+              </div>
             ))}
           </div>
         )}
       </div>
 
       {/* Testimonials section - displays customer reviews */}
-      <Testimonials />
+  
+        <Testimonials />
 
       {/* Newsletter section - allows users to subscribe to updates */}
       <Newsletter />

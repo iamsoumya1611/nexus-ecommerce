@@ -1,25 +1,6 @@
-const jwt = require('jsonwebtoken');
 const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
-const winston = require('winston');
-
-// Configure Winston logger
-const logger = winston.createLogger({
-  level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      )
-    })
-  ]
-});
+const { verifyToken } = require('../config/jwt');
 
 const protect = asyncHandler(async (req, res, next) => {
     let token;
@@ -34,23 +15,56 @@ const protect = asyncHandler(async (req, res, next) => {
         try {
             token = req.headers.authorization.split(' ')[1];
         } catch (error) {
-            logger.warn('Malformed authorization header', {
+            console.warn('Malformed authorization header:', {
                 ip: req.ip,
                 userAgent: req.get('User-Agent')
+            });
+            return res.status(401).json({
+                success: false,
+                error: 'Malformed authorization header'
             });
         }
     }
 
     if (token) {
         try {
-            // Verify token
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            // Verify token with enhanced security
+            const decoded = verifyToken(token);
+            
+            // Check if user still exists
+            const user = await User.findById(decoded.id).select('-password');
+            
+            if (!user) {
+                console.warn('Token user not found:', {
+                    userId: decoded.id,
+                    ip: req.ip,
+                    userAgent: req.get('User-Agent')
+                });
+                return res.status(401).json({
+                    success: false,
+                    error: 'Not authorized, user not found'
+                });
+            }
+            
+            // Check if user is active
+            if (user.isActive === false) {
+                console.warn('Inactive user attempted access:', {
+                    userId: user._id,
+                    email: user.email,
+                    ip: req.ip,
+                    userAgent: req.get('User-Agent')
+                });
+                return res.status(401).json({
+                    success: false,
+                    error: 'Account deactivated'
+                });
+            }
             
             // Add user to request object
-            req.user = await User.findById(decoded.id).select('-password');
+            req.user = user;
             
             // Log successful authentication
-            logger.info('User authenticated', {
+            console.log('User authenticated:', {
                 userId: req.user._id,
                 email: req.user.email,
                 ip: req.ip,
@@ -59,23 +73,42 @@ const protect = asyncHandler(async (req, res, next) => {
             
             next();
         } catch (error) {
-            logger.warn('Token verification failed', {
+            console.warn('Token verification failed:', {
                 error: error.message,
                 ip: req.ip,
                 userAgent: req.get('User-Agent')
             });
             
-            res.status(401);
-            throw new Error('Not authorized, token failed');
+            // Specific error handling for JWT errors
+            if (error.name === 'JsonWebTokenError') {
+                return res.status(401).json({
+                    success: false,
+                    error: 'Invalid token'
+                });
+            }
+            
+            if (error.name === 'TokenExpiredError') {
+                return res.status(401).json({
+                    success: false,
+                    error: 'Token expired'
+                });
+            }
+            
+            return res.status(401).json({
+                success: false,
+                error: 'Not authorized, token failed'
+            });
         }
     } else {
-        logger.warn('No token provided', {
+        console.warn('No token provided:', {
             ip: req.ip,
             userAgent: req.get('User-Agent')
         });
         
-        res.status(401);
-        throw new Error('Not authorized, no token');
+        return res.status(401).json({
+            success: false,
+            error: 'Not authorized, no token'
+        });
     }
 });
 
@@ -84,15 +117,17 @@ const admin = (req, res, next) => {
     if (req.user && req.user.isAdmin) {
         next();
     } else {
-        logger.warn('Unauthorized admin access attempt', {
+        console.warn('Unauthorized admin access attempt:', {
             userId: req.user ? req.user._id : 'unknown',
             email: req.user ? req.user.email : 'unknown',
             ip: req.ip,
             userAgent: req.get('User-Agent')
         });
         
-        res.status(401);
-        throw new Error('Not authorized as admin');
+        return res.status(403).json({
+            success: false,
+            error: 'Forbidden: Admin access required'
+        });
     }
 };
 

@@ -1,89 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import axios from 'axios';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useAdmin } from '../../contexts/AdminContext';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 const UserEdit = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+
+  const { getUserDetails, updateUser, user, loading, error, successUpdate, errorUpdate, loadingUpdate } = useAdmin();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [loadingUpdate, setLoadingUpdate] = useState(false);
-  const [error, setError] = useState(null);
-  const [errorUpdate, setErrorUpdate] = useState(null);
-  const [successUpdate, setSuccessUpdate] = useState(false);
-  const [user, setUser] = useState({});
-
-  const { user: userInfo } = useAuth();
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (successUpdate) {
       navigate('/admin/userlist');
     } else {
-      const fetchUser = async () => {
-        try {
-          setLoading(true);
-          const config = {
-            headers: {
-              Authorization: `Bearer ${userInfo.token}`
-            }
-          };
-
-          // Use proxy path in development, full URL in production
-          const finalUrl = process.env.NODE_ENV === 'development' 
-            ? `/users/${id}` 
-            : `${process.env.REACT_APP_API_URL.replace(/\/$/, '')}/users/${id}`;
-
-          const { data } = await axios.get(finalUrl, config);
-          setUser(data);
-          setName(data.name);
-          setEmail(data.email);
-          setIsAdmin(data.isAdmin);
-        } catch (err) {
-          setError(err.response?.data?.message || err.message || 'Error fetching user');
-        } finally {
-          setLoading(false);
-        }
-      };
-
       if (!user.name || user._id !== id) {
-        fetchUser();
+        getUserDetails(id);
       } else {
         setName(user.name);
         setEmail(user.email);
         setIsAdmin(user.isAdmin);
       }
     }
-  }, [navigate, user, id, successUpdate, userInfo.token]);
+  }, [getUserDetails, id, user, successUpdate, navigate]);
 
-  const submitHandler = async (e) => {
+  const submitHandler = (e) => {
     e.preventDefault();
-    try {
-      setLoadingUpdate(true);
-      const config = {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${userInfo.token}`
-        }
-      };
-
-      // Use proxy path in development, full URL in production
-      const finalUrl = process.env.NODE_ENV === 'development' 
-        ? `/users/${id}` 
-        : `${process.env.REACT_APP_API_URL.replace(/\/$/, '')}/users/${id}`;
-
-      const { data } = await axios.put(finalUrl, { name, email, isAdmin }, config);
-      
-      setUser(data);
-      setSuccessUpdate(true);
-    } catch (err) {
-      setErrorUpdate(err.response?.data?.message || err.message || 'Error updating user');
-    } finally {
-      setLoadingUpdate(false);
-    }
+    updateUser({ _id: id, name, email, isAdmin });
   };
 
   return (
@@ -109,7 +55,7 @@ const UserEdit = () => {
         
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+            <LoadingSpinner size="md" />
           </div>
         ) : error ? (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
@@ -148,24 +94,28 @@ const UserEdit = () => {
                 />
               </div>
               
-              <div className="mb-6">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    className="rounded border-primary-300 text-primary-500 focus:ring-primary-500"
-                    checked={isAdmin}
-                    onChange={(e) => setIsAdmin(e.target.checked)}
-                  />
-                  <span className="ml-2 text-sm text-primary-700">Is Admin</span>
+              <div className="mb-6 flex items-center">
+                <input
+                  type="checkbox"
+                  className="form-checkbox h-4 w-4 text-primary-600"
+                  id="isAdmin"
+                  checked={isAdmin}
+                  onChange={(e) => setIsAdmin(e.target.checked)}
+                />
+                <label htmlFor="isAdmin" className="ml-2 block text-sm text-primary-700">
+                  Is Admin
                 </label>
               </div>
               
-              <button 
-                type="submit" 
-                className="btn btn-primary w-full"
-                disabled={loadingUpdate}
-              >
-                {loadingUpdate ? 'Updating...' : 'Update User'}
+              <button type="submit" className="btn btn-primary w-full" disabled={loadingUpdate}>
+                {loadingUpdate ? (
+                  <div className="flex items-center justify-center">
+                    <LoadingSpinner size="sm" centered={false} />
+                    <span className="ml-2">Updating...</span>
+                  </div>
+                ) : (
+                  'Update'
+                )}
               </button>
             </form>
           </div>

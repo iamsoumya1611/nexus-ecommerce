@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useAdmin } from '../../contexts/AdminContext';
 import { ClipLoader } from 'react-spinners';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 const LowStockAlerts = () => {
   const { getLowStockProducts, lowStockProducts, loading, error } = useAdmin();
@@ -12,7 +13,7 @@ const LowStockAlerts = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <ClipLoader color="#4F46E5" size={50} />
+        <LoadingSpinner size="md" />
       </div>
     );
   }
@@ -40,23 +41,15 @@ const LowStockAlerts = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Product
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Category
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Stock
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Stock</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {lowStockProducts.map((product) => (
-                <tr key={product._id} className="hover:bg-gray-50">
+                <tr key={product._id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
@@ -67,25 +60,11 @@ const LowStockAlerts = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {product.category}
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.category}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.countInStock}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900 font-medium">{product.countInStock}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      product.countInStock === 0
-                        ? 'bg-red-100 text-red-800'
-                        : product.countInStock <= 2
-                        ? 'bg-orange-100 text-orange-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {product.countInStock === 0
-                        ? 'Out of Stock'
-                        : product.countInStock <= 2
-                        ? 'Very Low'
-                        : 'Low Stock'}
+                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                      Low Stock
                     </span>
                   </td>
                 </tr>
@@ -94,12 +73,9 @@ const LowStockAlerts = () => {
           </table>
         </div>
       ) : (
-        <div className="text-center py-12">
-          <svg className="mx-auto h-12 w-12 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No low stock products</h3>
-          <p className="mt-1 text-sm text-gray-500">All products have sufficient inventory.</p>
+        <div className="text-center py-8">
+          <i className="fas fa-check-circle text-green-500 text-4xl mb-4"></i>
+          <p className="text-gray-500">All products have sufficient stock levels</p>
         </div>
       )}
     </div>

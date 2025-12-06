@@ -11,196 +11,246 @@ const mongoose = require('mongoose');
 const recommendationCache = new Map();
 const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
+// Cache statistics
+const cacheStats = {
+  hits: 0,
+  misses: 0
+};
+
 // @desc    Get AI-powered product recommendations based on a specific product
-// @route   GET /api/recommendations/:productId
+// @route   GET /api/recommendations/product/:productId
 // @access  Public
-const getProductRecommendations = asyncHandler(async (req, res) => {
+const getRecommendationsByProduct = asyncHandler(async (req, res) => {
   try {
     const { productId } = req.params;
     
     // Validate product ID
     if (!mongoose.Types.ObjectId.isValid(productId)) {
+      console.warn('Invalid product ID for recommendations:', { productId });
       return res.status(400).json({ message: 'Invalid product ID' });
     }
-    
+
     // Check cache first
     const cacheKey = `product_${productId}`;
     const cachedResult = recommendationCache.get(cacheKey);
+    
     if (cachedResult && Date.now() - cachedResult.timestamp < CACHE_DURATION) {
+      cacheStats.hits++;
+      console.log('Returning cached product recommendations:', { 
+        productId, 
+        cacheHit: true,
+        cacheAge: Date.now() - cachedResult.timestamp
+      });
       return res.json(cachedResult.data);
     }
     
-    // Get content-based recommendations
-    const contentRecommendations = await getContentBasedRecommendations(productId, 5);
-    
-    // Get collaborative recommendations if user is logged in
-    let collaborativeRecommendations = [];
-    if (req.user) {
-      collaborativeRecommendations = await getCollaborativeRecommendations(req.user._id, 5);
+    cacheStats.misses++;
+
+    // Get the reference product
+    const product = await Product.findById(productId);
+    if (!product) {
+      console.warn('Product not found for recommendations:', { productId });
+      return res.status(404).json({ message: 'Product not found' });
     }
+
+    // Get content-based recommendations
+    const recommendations = await getContentBasedRecommendations(product);
     
-    // Combine recommendations
-    let recommendations = [...contentRecommendations];
-    
-    // Add collaborative recommendations, avoiding duplicates
-    collaborativeRecommendations.forEach(collabProduct => {
-      if (!recommendations.some(rec => rec._id.toString() === collabProduct._id.toString())) {
-        recommendations.push(collabProduct);
-      }
-    });
-    
-    // Limit to 10 recommendations
-    recommendations = recommendations.slice(0, 10);
-    
+    const result = {
+      product: {
+        _id: product._id,
+        name: product.name,
+        category: product.category,
+        brand: product.brand
+      },
+      recommendations
+    };
+
     // Cache the result
     recommendationCache.set(cacheKey, {
-      data: recommendations,
+      data: result,
       timestamp: Date.now()
     });
+
+    console.log('Product recommendations generated:', { 
+      productId, 
+      recommendationCount: recommendations.length,
+      cacheHit: false
+    });
     
-    res.json(recommendations);
+    res.json(result);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch product recommendations', error: error.message });
+    console.error('Error generating product recommendations:', {
+      error: error.message,
+      productId: req.params.productId
+    });
+    
+    res.status(500).json({ message: 'Failed to generate recommendations' });
   }
 });
 
 // @desc    Get personalized recommendations for a user
 // @route   GET /api/recommendations/user/:userId
 // @access  Private
-const getUserRecommendations = asyncHandler(async (req, res) => {
+const getRecommendationsForUser = asyncHandler(async (req, res) => {
   try {
     const { userId } = req.params;
     
     // Validate user ID
     if (!mongoose.Types.ObjectId.isValid(userId)) {
+      console.warn('Invalid user ID for recommendations:', { userId });
       return res.status(400).json({ message: 'Invalid user ID' });
     }
-    
-    // Check if user is authorized to get recommendations for this user
-    if (req.user._id.toString() !== userId && !req.user.isAdmin) {
-      return res.status(403).json({ message: 'Not authorized to access these recommendations' });
-    }
-    
+
     // Check cache first
     const cacheKey = `user_${userId}`;
     const cachedResult = recommendationCache.get(cacheKey);
+    
     if (cachedResult && Date.now() - cachedResult.timestamp < CACHE_DURATION) {
+      cacheStats.hits++;
+      console.log('Returning cached user recommendations:', { 
+        userId, 
+        cacheHit: true,
+        cacheAge: Date.now() - cachedResult.timestamp
+      });
       return res.json(cachedResult.data);
     }
     
-    // Get collaborative recommendations
-    const collaborativeRecommendations = await getCollaborativeRecommendations(userId, 8);
+    cacheStats.misses++;
+
+    // Get user's purchase history
+    const userOrders = await Order.find({ user: userId, isPaid: true })
+      .populate('orderItems.product');
+
+    if (userOrders.length === 0) {
+      // If no purchase history, return popular products
+      console.log('No purchase history found, returning popular products:', { userId });
+      const popularProducts = await getPopularProducts(10);
+      
+      const result = {
+        user: userId,
+        type: 'popular',
+        recommendations: popularProducts
+      };
+
+      // Cache the result
+      recommendationCache.set(cacheKey, {
+        data: result,
+        timestamp: Date.now()
+      });
+
+      return res.json(result);
+    }
+
+    // Get content-based recommendations based on user's purchased products
+    const userRecommendations = await getUserContentBasedRecommendations(userOrders);
     
-    // Get user's recent activity for content-based recommendations
-    const userOrders = await Order.find({ user: userId }).populate('orderItems.product');
-    
-    // Extract user preferences from order history
-    const userPreferences = extractUserPreferences(userOrders);
-    
-    // Get content-based recommendations
-    const contentRecommendations = await getUserContentBasedRecommendations(userPreferences, 8);
-    
-    // Combine recommendations
-    let recommendations = [...collaborativeRecommendations];
-    
-    // Add content-based recommendations, avoiding duplicates
-    contentRecommendations.forEach(contentProduct => {
-      if (!recommendations.some(rec => rec._id.toString() === contentProduct._id.toString())) {
-        recommendations.push(contentProduct);
-      }
-    });
-    
-    // Limit to 10 recommendations
-    recommendations = recommendations.slice(0, 10);
-    
+    const result = {
+      user: userId,
+      type: 'personalized',
+      recommendations: userRecommendations
+    };
+
     // Cache the result
     recommendationCache.set(cacheKey, {
-      data: recommendations,
+      data: result,
       timestamp: Date.now()
     });
+
+    console.log('User recommendations generated:', { 
+      userId, 
+      recommendationCount: userRecommendations.length,
+      cacheHit: false
+    });
     
-    res.json(recommendations);
+    res.json(result);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch user recommendations', error: error.message });
+    console.error('Error generating user recommendations:', {
+      error: error.message,
+      userId: req.params.userId
+    });
+    
+    res.status(500).json({ message: 'Failed to generate user recommendations' });
   }
 });
 
-// @desc    Get popular products for non-logged-in users
-// @route   GET /api/recommendations/popular
+// @desc    Get collaborative filtering recommendations
+// @route   GET /api/recommendations/collaborative
 // @access  Public
-const getPopularRecommendations = asyncHandler(async (req, res) => {
+const getCollaborativeRecommendationsCtrl = asyncHandler(async (req, res) => {
   try {
-    // Check cache first
-    const cacheKey = 'popular';
-    const cachedResult = recommendationCache.get(cacheKey);
-    if (cachedResult && Date.now() - cachedResult.timestamp < CACHE_DURATION) {
-      return res.json(cachedResult.data);
+    const { productId, limit = 10 } = req.query;
+    
+    // Validate product ID if provided
+    if (productId && !mongoose.Types.ObjectId.isValid(productId)) {
+      console.warn('Invalid product ID for collaborative recommendations:', { productId });
+      return res.status(400).json({ message: 'Invalid product ID' });
     }
+
+    let recommendations;
     
-    // Get popular products
-    const popularProducts = await getPopularProducts(10);
-    
-    // Cache the result
-    recommendationCache.set(cacheKey, {
-      data: popularProducts,
-      timestamp: Date.now()
+    if (productId) {
+      // Get recommendations based on a specific product
+      recommendations = await getCollaborativeRecommendations(productId, parseInt(limit));
+      console.log('Collaborative recommendations generated for product:', { 
+        productId, 
+        recommendationCount: recommendations.length
+      });
+    } else {
+      // Get popular products
+      recommendations = await getPopularProducts(parseInt(limit));
+      console.log('Popular products fetched:', { count: recommendations.length });
+    }
+
+    res.json({
+      recommendations
+    });
+  } catch (error) {
+    console.error('Error generating collaborative recommendations:', {
+      error: error.message,
+      productId: req.query.productId
     });
     
-    res.json(popularProducts);
-  } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch popular recommendations', error: error.message });
+    res.status(500).json({ message: 'Failed to generate collaborative recommendations' });
   }
 });
 
-// Extract user preferences from order history
-const extractUserPreferences = (userOrders) => {
-  const preferences = {
-    categories: [],
-    brands: [],
-    priceRange: { min: 0, max: 0 }
-  };
-  
-  if (!userOrders || userOrders.length === 0) {
-    return preferences;
-  }
-  
-  const categories = [];
-  const brands = [];
-  const prices = [];
-  
-  userOrders.forEach(order => {
-    order.orderItems.forEach(item => {
-      if (item.product) {
-        categories.push(item.product.category);
-        brands.push(item.product.brand);
-        prices.push(item.product.price);
-      }
-    });
+// @desc    Get cache statistics
+// @route   GET /api/recommendations/cache-stats
+// @access  Private/Admin
+const getCacheStats = asyncHandler(async (req, res) => {
+  console.log('Cache statistics requested:', { 
+    hits: cacheStats.hits,
+    misses: cacheStats.misses,
+    cacheSize: recommendationCache.size
   });
   
-  // Get unique categories and brands
-  preferences.categories = [...new Set(categories)];
-  preferences.brands = [...new Set(brands)];
-  
-  // Calculate price range
-  if (prices.length > 0) {
-    preferences.priceRange = {
-      min: Math.min(...prices),
-      max: Math.max(...prices)
-    };
-  }
-  
-  return preferences;
-};
+  res.json({
+    hits: cacheStats.hits,
+    misses: cacheStats.misses,
+    cacheSize: recommendationCache.size,
+    hitRate: cacheStats.hits / (cacheStats.hits + cacheStats.misses || 1)
+  });
+});
 
-// Clear recommendation cache
-const clearRecommendationCache = () => {
+// @desc    Clear recommendation cache
+// @route   DELETE /api/recommendations/cache
+// @access  Private/Admin
+const clearCache = asyncHandler(async (req, res) => {
+  const sizeBefore = recommendationCache.size;
   recommendationCache.clear();
-};
+  cacheStats.hits = 0;
+  cacheStats.misses = 0;
+  
+  console.log('Recommendation cache cleared:', { sizeBefore });
+  
+  res.json({ message: `Cache cleared. ${sizeBefore} entries removed.` });
+});
 
 module.exports = {
-  getProductRecommendations,
-  getUserRecommendations,
-  getPopularRecommendations,
-  clearRecommendationCache
+  getRecommendationsByProduct,
+  getRecommendationsForUser,
+  getCollaborativeRecommendationsCtrl,
+  getCacheStats,
+  clearCache
 };

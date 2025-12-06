@@ -14,7 +14,13 @@ export const AuthProvider = ({ children }) => {
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
             try {
-                setUser(JSON.parse(storedUser));
+                const parsedUser = JSON.parse(storedUser);
+                // Verify token is still valid
+                if (parsedUser.token) {
+                    setUser(parsedUser);
+                } else {
+                    localStorage.removeItem('user');
+                }
             } catch (error) {
                 console.error('Failed to parse user data from localStorage', error);
                 localStorage.removeItem('user');
@@ -29,9 +35,8 @@ export const AuthProvider = ({ children }) => {
             setError(null);
             
             // Use proxy path in development, full URL in production
-            const finalUrl = process.env.NODE_ENV === 'development' 
-                ? '/users/login' 
-                : `${process.env.REACT_APP_API_URL.replace(/\/$/, '')}/users/login`;
+            const baseUrl = process.env.NODE_ENV === 'development' ? '' : process.env.REACT_APP_API_URL || '';
+            const finalUrl = `${baseUrl.replace(/\/$/, '')}/users/login`;
                 
             const config = {
                 headers: {
@@ -61,9 +66,8 @@ export const AuthProvider = ({ children }) => {
             setError(null);
             
             // Use proxy path in development, full URL in production
-            const finalUrl = process.env.NODE_ENV === 'development' 
-                ? '/users/register' 
-                : `${process.env.REACT_APP_API_URL.replace(/\/$/, '')}/users/register`;
+            const baseUrl = process.env.NODE_ENV === 'development' ? '' : process.env.REACT_APP_API_URL || '';
+            const finalUrl = `${baseUrl.replace(/\/$/, '')}/users/register`;
                 
             const config = {
                 headers: {
@@ -104,9 +108,8 @@ export const AuthProvider = ({ children }) => {
             setError(null);
             
             // Use proxy path in development, full URL in production
-            const finalUrl = process.env.NODE_ENV === 'development' 
-                ? '/users/profile' 
-                : `${process.env.REACT_APP_API_URL.replace(/\/$/, '')}/users/profile`;
+            const baseUrl = process.env.NODE_ENV === 'development' ? '' : process.env.REACT_APP_API_URL || '';
+            const finalUrl = `${baseUrl.replace(/\/$/, '')}/users/profile`;
                 
             const config = {
                 headers: {
@@ -142,9 +145,8 @@ export const AuthProvider = ({ children }) => {
             setError(null);
             
             // Use proxy path in development, full URL in production
-            const finalUrl = process.env.NODE_ENV === 'development' 
-                ? '/users/profile' 
-                : `${process.env.REACT_APP_API_URL.replace(/\/$/, '')}/users/profile`;
+            const baseUrl = process.env.NODE_ENV === 'development' ? '' : process.env.REACT_APP_API_URL || '';
+            const finalUrl = `${baseUrl.replace(/\/$/, '')}/users/profile`;
                 
             const config = {
                 headers: {

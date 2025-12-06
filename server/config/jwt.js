@@ -2,7 +2,6 @@ const jwt = require('jsonwebtoken');
 
 const generateToken = (id) => {
   try {
-    
     // Ensure we have a proper secret key
     const secret = process.env.JWT_SECRET;
     
@@ -30,9 +29,18 @@ const generateToken = (id) => {
       throw new Error('User ID must be a non-empty string');
     }
     
-    const token = jwt.sign({ id: userIdString }, secret, {
-      expiresIn: '30d',
-    });
+    // Generate token with enhanced security
+    const token = jwt.sign(
+      { id: userIdString }, 
+      secret, 
+      { 
+        expiresIn: '30d',
+        issuer: 'nexus-ecommerce',
+        audience: 'nexus-users',
+        algorithm: 'HS256'
+      }
+    );
+    
     return token;
   } catch (error) {
     // Re-throw the original error with more context
@@ -40,4 +48,29 @@ const generateToken = (id) => {
   }
 };
 
-module.exports = { generateToken };
+// Verify token with enhanced security
+const verifyToken = (token) => {
+  try {
+    const secret = process.env.JWT_SECRET;
+    
+    if (!secret) {
+      throw new Error('JWT_SECRET is not defined in environment variables');
+    }
+    
+    if (!token) {
+      throw new Error('Token is required for verification');
+    }
+    
+    const decoded = jwt.verify(token, secret, {
+      issuer: 'nexus-ecommerce',
+      audience: 'nexus-users',
+      algorithms: ['HS256']
+    });
+    
+    return decoded;
+  } catch (error) {
+    throw new Error(`Error verifying authentication token: ${error.message}`);
+  }
+};
+
+module.exports = { generateToken, verifyToken };

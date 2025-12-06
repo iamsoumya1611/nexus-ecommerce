@@ -1,8 +1,11 @@
 # Environment variables
 .env
+.env.local
+.env.production
 
 # Logs
-logs/*.log
+logs/
+*.log
 
 # Dependencies
 node_modules/
@@ -18,3 +21,22 @@ build/
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Sensitive files
+cred.txt
+.env.*.local
+.env.*.production
+
+# Temporary files
+*.tmp
+*.temp
+
+# Editor backup files
+*~
+*.swp
+*.swo
+
+# NPM debug log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

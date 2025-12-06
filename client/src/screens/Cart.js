@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useCart, cartActions } from '../contexts/CartContext';
 
@@ -16,13 +16,22 @@ const Cart = () => {
     }
   }, [dispatch, id, qty]);
 
-  const removeFromCartHandler = (id) => {
+  const removeFromCartHandler = useCallback((id) => {
     cartActions.removeFromCart(id)(dispatch);
-  };
+  }, [dispatch]);
 
-  const checkoutHandler = () => {
+  const checkoutHandler = useCallback(() => {
     navigate('/login?redirect=shipping');
-  };
+  }, [navigate]);
+
+  // Memoize the select options to prevent unnecessary re-renders
+  const renderQtyOptions = useCallback((countInStock) => {
+    return [...Array(countInStock).keys()].map((x) => (
+      <option key={x + 1} value={x + 1}>
+        {x + 1}
+      </option>
+    ));
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -47,6 +56,7 @@ const Cart = () => {
                       src={item.image} 
                       alt={item.name} 
                       className="w-24 h-24 object-cover rounded-lg" 
+                      loading="lazy"
                     />
                   </div>
                   <div className="flex-grow">
@@ -67,11 +77,7 @@ const Cart = () => {
                           value={item.qty}
                           onChange={(e) => cartActions.addToCart(item.product, Number(e.target.value))(dispatch)}
                         >
-                          {[...Array(item.countInStock).keys()].map((x) => (
-                            <option key={x + 1} value={x + 1}>
-                              {x + 1}
-                            </option>
-                          ))}
+                          {renderQtyOptions(item.countInStock)}
                         </select>
                       </div>
                       <button

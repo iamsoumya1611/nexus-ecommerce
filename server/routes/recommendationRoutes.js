@@ -1,21 +1,30 @@
 const express = require('express');
 const router = express.Router();
 const {
-  getProductRecommendations,
-  getUserRecommendations,
-  getPopularRecommendations
+  getRecommendationsByProduct,
+  getRecommendationsForUser,
+  getCollaborativeRecommendationsCtrl,
+  getCacheStats,
+  clearCache
 } = require('../controllers/recommendationController');
-const { protect } = require('../middleware/authMiddleware');
+const { protect, admin } = require('../middleware/authMiddleware');
 
 // Public routes
 router.route('/popular')
-  .get(getPopularRecommendations);
+  .get(getCollaborativeRecommendationsCtrl);
 
 router.route('/:productId')
-  .get(getProductRecommendations);
+  .get(getRecommendationsByProduct);
 
 // Protected routes
 router.route('/user/:userId')
-  .get(protect, getUserRecommendations);
+  .get(protect, getRecommendationsForUser);
+
+// Admin routes
+router.route('/stats')
+  .get(protect, admin, getCacheStats);
+
+router.route('/cache')
+  .delete(protect, admin, clearCache);
 
 module.exports = router;
